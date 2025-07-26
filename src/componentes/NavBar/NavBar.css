@@ -1,15 +1,14 @@
 /* Estilos generales del navbar */
 .navbar {
-    top: 0;
-    left: 0;
-    right: 0;
-    position: fixed;
-    width: 100%;
-    background-color: var(--nb-bg-color);
-    padding: 8px;
-    box-shadow: 0px 2px 5px var(--nb-shadow-color);
-    z-index: 10;
-    transition: transform 0.3s ease-in-out;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #e6f2f0;
+  border-bottom: 1px solid #d1e7e4;
+  z-index: 100;
+  width: 100%;
+  padding: 0;
 }
 
 .navbar.hidden {
@@ -20,146 +19,353 @@
     transform: translateY(0);
 }
 
-.container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1500px;
-    margin: 0 auto;
+/* --- Desktop --- */
+.navbar-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  position: relative;
+}
+
+.navbar-logo-link {
+  display: flex;
+  align-items: center;
 }
 
 .logo {
-    height: 75px;
+  height: 40px;
+  width: auto;
+  max-width: 120px;
 }
 
-/* Menú principal */
-.menu {
-    list-style: none;
-    display: flex;
-    gap: 20px;
-    align-items: center;
+.navbar-search {
+  flex: 1;
+  margin: 0 24px;
+  max-width: 400px;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 0 8px;
 }
 
-.menu li a {
-    text-decoration: none;
-    color: var(--nb-text-color);
-    font-weight: bold;
-    transition: color 0.3s ease;
+.search-input {
+  border: none;
+  background: transparent;
+  padding: 10px 12px;
+  font-size: 1rem;
+  border-radius: 24px;
+  outline: none;
+  width: 100%;
 }
 
-.menu li a:hover {
-    color: #ce2f2a;
-}
-
-/* Botón de cambio de idioma */
-.language {
-    align-items: center;
-    display: flex;
-    text-decoration: none;
-    color: var(--nb-text-color);
-    font-weight: bold;
-    transition: color 0.3s ease;
-    gap: 5px;
-}
-
-.language button {
-    border: none;
-    cursor: pointer;
-}
-
-/* Estilo para las banderas */
-.flag-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-}
-
-.flag {
-    width: 25px;
-    height: 18px;
-    border-radius: 3px;
-    transition: transform 0.2s ease-in-out;
-}
-
-.flag-button:hover .flag {
-    transform: scale(1.1);
-}
-
-/* Boton del tema */
-.theme-toggle {
+.search-btn {
   background: none;
   border: none;
-  color: var(--nb-text-color);
-  /*padding: 0.4rem 0.8rem;*/
-  /*border-radius: 4px;*/
-  font-weight: bold;
-  font-size: 16px;
   cursor: pointer;
-  transition: background 0.3s;
-}
-.theme-toggle:hover {
-  background: var(--text-color);
-  color: #ce2f2a;
+  padding: 0 8px;
+  font-size: 1.2rem;
+  color: #009ca6;
+  border-radius: 50%;
+  transition: background 0.2s;
 }
 
-/* Menú hamburguesa con animación */
-.menu-toggle {
+.search-btn:hover {
+  background: #e6f2f0;
+}
+
+/* Iconos de la navbar */
+.navbar-icons {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.navbar-icons a,
+.navbar-icons button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #222;
+  transition: color 0.2s;
+  height: 32px;
+  width: 32px;
+}
+
+.cart-btn, .login-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  box-shadow: none;
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.cart-icon, .login-icon {
+  width: 28px;
+  height: 28px;
+  display: block;
+  margin: 0;
+  vertical-align: middle;
+  transition: filter 0.2s;
+}
+
+.navbar-icons svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.8;
+  vertical-align: middle;
+}
+
+.cart-btn:hover .cart-icon,
+.login-btn:hover .login-icon {
+  filter: drop-shadow(0 2px 8px #009ca6);
+}
+
+/* Hover elegante */
+.navbar-icons a:hover,
+.navbar-icons button:hover {
+  color: #009ca6;
+}
+
+/* Botón de cambio de tema */
+.theme-toggle-switch {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: #222;
+  transition: color 0.2s;
+}
+
+.theme-toggle-switch:hover {
+  color: #009ca6;
+}
+
+.minimal-search-btn {
+  display: none !important;
+}
+
+/* Categorías debajo del navbar */
+.navbar-categorias {
+  width: 100%;
+  background: #e6f2f0;
+  border-bottom: 1px solid #d1e7e4;
+  display: flex;
+  justify-content: center;
+}
+
+.categorias-list {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  list-style: none;
+  margin: 0;
+  padding: 12px 0;
+}
+
+.categorias-list li a {
+  font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 1rem;
+  color: #222;
+  text-decoration: none;
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-bottom 0.2s;
+}
+
+.categorias-list li a:hover,
+.categorias-list li a.active {
+  color: #009ca6;
+  border-bottom: 2px solid #009ca6;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .navbar-content {
+    height: 56px;
+    padding: 0 8px;
+    gap: 0;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* Centra el logo absolutamente */
+  .navbar-logo-link {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+  }
+
+  .logo {
+    height: 32px;
+    max-width: 80px;
+  }
+
+  /* Solo muestra la lupa, oculta la barra de búsqueda */
+  .navbar-search {
     display: none;
-    width: 30px;
-    height: 30px;
-    flex-direction: column;
-    justify-content: space-around;
+  }
+  .minimal-search-btn {
+    display: flex !important;
     align-items: center;
+    font-size: 1.7rem;
+    color: #009ca6;
     background: none;
     border: none;
     cursor: pointer;
-    z-index: 1000;
-    padding-right: 35px;
+    margin-left: 8px;
+  }
+
+  /* Ajusta los iconos a la derecha */
+  .navbar-icons {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    gap: 10px;
+    z-index: 2;
+  }
+
+  /* Muestra el menú hamburguesa a la izquierda */
+  .hamburger-btn {
+    display: flex;
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+  }
+
+  /* Menú de categorías con animación deslizante */
+  .navbar-categorias {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out, padding 0.3s ease-in-out;
+    background: #e6f2f0;
+    border-bottom: 1px solid #d1e7e4;
+    position: absolute;
+    top: 56px;
+    left: 0;
+    right: 0;
+    z-index: 101;
+    padding: 0 0;
+  }
+  .navbar-categorias.open {
+    max-height: 300px; /* ajusta según el contenido */
+    padding: 12px 0;
+  }
+  .categorias-list {
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+  }
+  .categorias-list li {
+    text-align: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #d1e7e4;
+  }
 }
 
-.menu-toggle span {
-    display: block;
-    width: 30px;
-    height: 3px;
-    background: var(--nb-text-color);
-    border-radius: 5px;
-    transition: all 0.2s ease-in-out;
+/* Modal de búsqueda en móvil */
+.mobile-search-modal {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  background: #fff;
+  z-index: 200;
+  padding: 16px 24px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
 }
 
-/* Animación cuando el menú está abierto */
-.menu-toggle.open span:nth-child(1) {
-    transform: translateY(9px) rotate(50deg);
+.mobile-search-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.menu-toggle.open span:nth-child(2) {
-    opacity: 0;
+.mobile-search-form .search-input {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 1rem;
+  border-radius: 24px;
+  border: 1px solid #d1e7e4;
+  outline: none;
 }
 
-.menu-toggle.open span:nth-child(3) {
-    transform: translateY(-10px) rotate(-50deg);
+.mobile-search-form .search-btn {
+  background: #009ca6;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  padding: 8px;
+  cursor: pointer;
 }
 
-/* Responsivo para móviles */
-@media (max-width: 768px) {
-    .menu {
-        display: none;
-        flex-direction: column;
-        box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.2);
-        background-color: var(--nb-bg-color);
-        width: 100%;
-        position: absolute;
-        top: 70px;
-        left: 0;
-        padding: 15px 0;
-        text-align: center;
-    }
+/* Animación hamburguesa a X */
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 2;
+}
 
-    .menu.open {
-        display: flex;
-    }
+.hamburger-line {
+  width: 100%;
+  height: 3px;
+  background-color: #009ca6;
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(.4,2,.3,1);
+  display: block;
+}
 
-    .menu-toggle {
-        display: flex;
-    }
+/* Animación al estar abierto */
+.hamburger-btn.open .hamburger-line:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+.hamburger-btn.open .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+.hamburger-btn.open .hamburger-line:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+/* Solo visible en móvil */
+@media (max-width: 900px) {
+  .hamburger-btn {
+    display: flex;
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

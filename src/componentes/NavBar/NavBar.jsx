@@ -1,109 +1,156 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { useTheme } from "../../context/ThemeContext";
+import { Menu, X, Search, ShoppingCart, User, Sun, Moon } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../imagenes/logo.svg";
-import mexicoFlag from "../../imagenes/mexicoFlag.svg";
-import usaFlag from "../../imagenes/usaFlag.svg";
 import "../NavBar/NavBar.css";
 
+const categorias = [
+  { nombre: "Aretes", ruta: "/aretes" },
+  { nombre: "Pulseras", ruta: "/pulseras" },
+  { nombre: "Collares", ruta: "/collares" },
+  { nombre: "Anillos", ruta: "/anillos" },
+  { nombre: "Relojes", ruta: "/relojes" },
+];
+
 const Navbar = () => {
-  const { t, i18n } = useTranslation();
-  const { lng } = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [showNavbar, setShowNavbar] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const { theme, toggleTheme } = useTheme();
+  const [search, setSearch] = useState("");
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [theme, setTheme] = useState("light");
   const menuRef = useRef(null);
+  const hamburgerRef = useRef(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Detectar si estamos en la página de inicio con idioma (ej. "/es" o "/en")
-  const isHomePage = location.pathname === `/${lng}`;
+  // Cierra el menú al hacer scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (showMobileMenu) setShowMobileMenu(false);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [showMobileMenu]);
 
-  const changeLanguage = (newLang) => {
-    i18n.changeLanguage(newLang);
-    localStorage.setItem("lng", newLang);
-
-    const currentPath = location.pathname.substring(3); // Quitar "/es" o "/en"
-    const newPath = currentPath ? `/${newLang}${currentPath}` : `/${newLang}`;
-    navigate(newPath);
-  };
-
-  // Cierra el menú si se hace clic fuera de él
+  // Cierra el menú al dar clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setMenuOpen(false);
+      if (
+        showMobileMenu &&
+        menuRef.current &&
+        !menuRef.current.contains(event.target) &&
+        !hamburgerRef.current.contains(event.target)
+      ) {
+        setShowMobileMenu(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showMobileMenu]);
 
-  useEffect(() => {
-    let lastScrollY = window.scrollY;
-    const scrollThreshold = 100; // 👉 Ajusta esta distancia a tu gusto
-  
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-  
-      if (currentScrollY > lastScrollY && currentScrollY > scrollThreshold) {
-        setShowNavbar(false);
-        setMenuOpen(false);
-      } else if (currentScrollY < lastScrollY || currentScrollY <= scrollThreshold) {
-        setShowNavbar(true);
-      }
-  
-      lastScrollY = currentScrollY;
-    };
-  
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-  
-  
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (search.trim()) {
+      navigate(`/buscar?q=${encodeURIComponent(search.trim())}`);
+      setSearch("");
+      setShowMobileSearch(false);
+    }
+  };
+
+  const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
+
   return (
-    <nav className={`navbar ${showNavbar ? "visible" : "hidden"}`} ref={menuRef}>
-      <div className="container">
-        <Link to={`/${lng || ""}`}>
+    <nav className="navbar">
+      <div className="navbar-content">
+        {/* Botón hamburguesa animado */}
+        <button
+          className={`hamburger-btn${showMobileMenu ? " open" : ""}`}
+          aria-label="Abrir menú"
+          onClick={() => setShowMobileMenu(!showMobileMenu)}
+          ref={hamburgerRef}
+        >
+          <span className="hamburger-line"></span>
+          <span className="hamburger-line"></span>
+          <span className="hamburger-line"></span>
+        </button>
+
+        <Link to="/" className="navbar-logo-link">
           <img src={logo} alt="Logo" className="logo" />
         </Link>
 
-        {/* Menú principal */}
-        <ul className={`menu ${menuOpen ? "open" : ""}`}>
-          {!isHomePage && (
-            <li><Link to={`/${lng}`} onClick={() => setMenuOpen(false)}>{t("navbar.inicio")}</Link></li>
-          )}
-          <li><Link to={`/${lng}/clubs`} onClick={() => setMenuOpen(false)}>{t("navbar.clubes")}</Link></li>
-          <li><Link to={`/${lng}/contactanos`} onClick={() => setMenuOpen(false)}>{t("navbar.contactanos")}</Link></li>
-          <li className="language">
-            <span>{t("navbar.language")}:</span>
-            <button onClick={() => changeLanguage("es")} className="flag-button">
-              <img src={mexicoFlag} alt="Español" className="flag" />
-            </button>
-            <button onClick={() => changeLanguage("en")} className="flag-button">
-              <img src={usaFlag} alt="English" className="flag" />
-            </button>
-          </li>
-          <li>
-            <button onClick={toggleTheme} className="theme-toggle">
-              {theme === "light" ? "🌙 " + t("navbar.darkmode") : "☀️ " + t("navbar.lightmode")}
-            </button>
-          </li>
-          <li></li>
-        </ul>
+        <form className="navbar-search" onSubmit={handleSearch}>
+          <input
+            type="text"
+            placeholder="Buscar joyas, colecciones..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="search-input"
+          />
+          <button type="submit" className="search-btn" aria-label="Buscar">
+            <Search size={20} />
+          </button>
+        </form>
 
-        {/* Botón de menú para móviles */}
-        <button className={`menu-toggle ${menuOpen ? "open" : ""}`} onClick={() => setMenuOpen(!menuOpen)}>
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
+        <div className="navbar-icons">
+          <button
+            className="minimal-search-btn"
+            aria-label="Buscar"
+            onClick={() => setShowMobileSearch(!showMobileSearch)}
+          >
+            <Search size={20} />
+          </button>
+          <Link to="/carrito" className="cart-btn" aria-label="Carrito">
+            <ShoppingCart size={24} />
+          </Link>
+          <Link to="/login" className="user-btn" aria-label="Iniciar sesión">
+            <User size={24} />
+          </Link>
+          <button
+            className="theme-toggle-switch"
+            onClick={toggleTheme}
+            aria-label="Cambiar tema"
+          >
+            {theme === "light" ? <Moon size={22} /> : <Sun size={22} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Modal búsqueda móvil */}
+      {showMobileSearch && (
+        <div className="mobile-search-modal">
+          <form className="mobile-search-form" onSubmit={handleSearch}>
+            <input
+              type="text"
+              placeholder="Buscar joyas, colecciones..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="search-input"
+              autoFocus
+            />
+            <button type="submit" className="search-btn" aria-label="Buscar">
+              <Search size={20} />
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Menú de categorías responsivo */}
+      <div
+        className={`navbar-categorias${showMobileMenu ? " open" : ""}`}
+        ref={menuRef}
+      >
+        <ul className="categorias-list">
+          {categorias.map(cat => (
+            <li key={cat.nombre}>
+              <Link
+                to={cat.ruta}
+                className={location.pathname.includes(cat.ruta) ? "active" : ""}
+                onClick={() => setShowMobileMenu(false)}
+              >
+                {cat.nombre}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
     </nav>
   );
