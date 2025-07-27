@@ -36,15 +36,15 @@ const Navbar = () => {
   // Cierra el menú al dar clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
+      const isHamburgerBtn = hamburgerRef.current && hamburgerRef.current.contains(event.target);
       const clickedOutsideMenu = menuRef.current && !menuRef.current.contains(event.target);
-      const clickedOutsideSearch = !event.target.closest(".mobile-search-form") && !event.target.closest(".minimal-search-btn");
 
-      // Cierra el menú si está abierto y se hace clic fuera
-      if (showMobileMenu && clickedOutsideMenu) {
+      // Solo cierra el menú si NO fue clic en el botón hamburguesa
+      if (showMobileMenu && clickedOutsideMenu && !isHamburgerBtn) {
         setShowMobileMenu(false);
       }
 
-      // Cierra la búsqueda móvil si está abierta y se hace clic fuera
+      const clickedOutsideSearch = !event.target.closest(".mobile-search-form") && !event.target.closest(".minimal-search-btn");
       if (showMobileSearch && clickedOutsideSearch && clickedOutsideMenu) {
         setShowMobileSearch(false);
       }

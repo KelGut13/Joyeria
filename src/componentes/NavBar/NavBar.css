@@ -4,7 +4,7 @@
   top: 0;
   left: 0;
   right: 0;
-  background: #e6f2f0;
+  background: var(--navbar-bg);
   border-bottom: 1px solid #d1e7e4;
   z-index: 100;
   width: 100%;
@@ -89,56 +89,24 @@
 
 .navbar-icons a,
 .navbar-icons button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  padding: 4px;
-  cursor: pointer;
-  color: #222;
+  color: var(--navbar-icon);
   transition: color 0.2s;
-  height: 32px;
-  width: 32px;
-}
-
-.cart-btn, .login-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  outline: none;
-  box-shadow: none;
-  height: 40px;
-  display: flex;
-  align-items: center;
-}
-
-.cart-icon, .login-icon {
-  width: 28px;
-  height: 28px;
-  display: block;
-  margin: 0;
-  vertical-align: middle;
-  transition: filter 0.2s;
 }
 
 .navbar-icons svg {
-  width: 24px;
-  height: 24px;
-  stroke-width: 1.8;
-  vertical-align: middle;
+  color: var(--navbar-icon);
 }
 
-.cart-btn:hover .cart-icon,
-.login-btn:hover .login-icon {
-  filter: drop-shadow(0 2px 8px #009ca6);
+/* Fuerza el color en los SVG hijos de los iconos */
+.navbar-icons a svg,
+.navbar-icons button svg {
+  color: inherit !important;
+  transition: color 0.2s;
 }
 
-/* Hover elegante */
 .navbar-icons a:hover,
 .navbar-icons button:hover {
-  color: #009ca6;
+  color: var(--navbar-icon-hover);
 }
 
 /* Botón de cambio de tema */
@@ -162,7 +130,7 @@
 /* Categorías debajo del navbar */
 .navbar-categorias {
   width: 100%;
-  background: #e6f2f0;
+  background: var(--navbar-bg);
   border-bottom: 1px solid #d1e7e4;
   display: flex;
   justify-content: center;
@@ -179,19 +147,16 @@
 }
 
 .categorias-list li a {
-  font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 1rem;
-  color: #222;
-  text-decoration: none;
-  padding: 4px 0;
+  color: var(--navbar-categoria);
   border-bottom: 2px solid transparent;
   transition: color 0.2s, border-bottom 0.2s;
+  text-decoration: none; /* <-- Esto elimina el subrayado */
 }
 
 .categorias-list li a:hover,
 .categorias-list li a.active {
-  color: #009ca6;
-  border-bottom: 2px solid #009ca6;
+  color: var(--navbar-categoria-hover);
+  border-bottom: 2px solid var(--navbar-categoria-hover);
 }
 
 /* Responsive */
@@ -257,7 +222,7 @@
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.4s ease-in-out, padding 0.3s ease-in-out;
-    background: #e6f2f0;
+    background: var(--navbar-bg);
     border-bottom: 1px solid #d1e7e4;
     position: absolute;
     top: 56px;
@@ -288,7 +253,7 @@
   top: 56px;
   left: 0;
   right: 0;
-  background: #ffffff;
+  background: var(--navbar-bg);
   z-index: 200;
   padding: 16px 24px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
@@ -358,7 +323,7 @@
 .hamburger-line {
   width: 100%;
   height: 3px;
-  background-color: #009ca6;
+  background-color: var(--navbar-icon);
   border-radius: 2px;
   transition: all 0.3s cubic-bezier(.4,2,.3,1);
   display: block;

@@ -11,6 +11,12 @@
   --cont--bg-color: #f9f9f9;
   --cont-label-color: #333;
   --cont-input-color: #ffffff;
+  --navbar-bg: #F5F5F5;
+  --navbar-text: #222;
+  --navbar-icon: #222;
+  --navbar-icon-hover: #d4a2f4; /* <-- lila pastel */
+  --navbar-categoria: #222;
+  --navbar-categoria-hover: #d4a2f4;
 }
 
 [data-theme='dark'] {
@@ -25,4 +31,10 @@
   --cont--bg-color: #616161;
   --cont-label-color: #ffffff;
   --cont-input-color: #8f8f8f;
+  --navbar-bg: #181818;
+  --navbar-text: #f5f5f5;
+  --navbar-icon: #d4a2f4;
+  --navbar-icon-hover: #fff;
+  --navbar-categoria: #f5f5f5;
+  --navbar-categoria-hover: #d4a2f4;
 }
