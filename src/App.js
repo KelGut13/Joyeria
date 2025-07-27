@@ -7,6 +7,7 @@ import Directorio from "./paginas/Directorio";
 import Contactanos from "./paginas/Contactanos";
 import Footer from "./componentes/Footer/Footer";
 import Login from "./paginas/login";
+import CrearCuenta from "./paginas/CrearCuenta";
 import "./paginas/estilos/variables.css";
 
 const LanguageWrapper = () => {
@@ -30,6 +31,7 @@ const LanguageWrapper = () => {
         <Route path="directorio" element={<Directorio />} />
         <Route path="contactanos" element={<Contactanos />} />
         <Route path="login" element={<Login />} />
+        <Route path="crear-cuenta" element={<CrearCuenta />} />
       </Routes>
       <Footer />
     </>

@@ -4,6 +4,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../imagenes/logo.svg";
 import "../NavBar/NavBar.css";
 
+
+
 const categorias = [
   { nombre: "Aretes", ruta: "/aretes" },
   { nombre: "Pulseras", ruta: "/pulseras" },
@@ -98,10 +100,10 @@ const Navbar = () => {
           >
             <Search size={20} />
           </button>
-          <Link to="/carrito" className="cart-btn" aria-label="Carrito">
+          <Link to="carrito" className="cart-btn" aria-label="Carrito">
             <ShoppingCart size={24} />
           </Link>
-          <Link to="/login" className="user-btn" aria-label="Iniciar sesión">
+          <Link to="login" className="user-btn" aria-label="Iniciar sesión">
             <User size={24} />
           </Link>
           <button

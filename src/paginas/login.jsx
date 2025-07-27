@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "./estilos/login.css";
 import chicaImg from "../imagenes/chica.jpg"; // Usa tu imagen
 
@@ -17,7 +18,7 @@ const Login = () => (
         <button type="submit" className="login-btn">ENVIAR</button>
         <div className="login-links">
           <a href="#" className="forgot-link">¿Olvidaste tu contraseña?</a>
-          <a href="#" className="create-link">Crear Cuenta</a>
+          <Link to="/crear-cuenta" className="create-link">Crear Cuenta</Link>
         </div>
       </form>
     </div>
