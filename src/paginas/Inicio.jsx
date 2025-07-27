@@ -61,7 +61,7 @@ const Inicio = () => {
           <div className="facebook-container">
             <div
               className="fb-page"
-              data-href="https://www.facebook.com/Nayaritas"
+              data-href="https://www.facebook.com/p/Curiosidades-Nancy-100063615276770/"
               data-tabs="timeline"
               data-width=""
               data-height=""
@@ -71,10 +71,10 @@ const Inicio = () => {
               data-show-facepile="true"
             >
               <blockquote
-                cite="https://www.facebook.com/Nayaritas"
+                cite="https://www.facebook.com/p/Curiosidades-Nancy-100063615276770/"
                 className="fb-xfbml-parse-ignore"
               >
-                <a href="https://www.facebook.com/Nayaritas">FENINE</a>
+                <a href="https://www.facebook.com/p/Curiosidades-Nancy-100063615276770/">Curiosidades NANCY</a>
               </blockquote>
             </div>
           </div>
