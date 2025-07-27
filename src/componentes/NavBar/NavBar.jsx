@@ -114,7 +114,7 @@ const Navbar = () => {
             onClick={toggleTheme}
             aria-label="Cambiar tema"
           >
-            {theme === "light" ? <Moon size={22} /> : <Sun size={22} />}
+            {theme === "light" ? <Moon size={24} /> : <Sun size={24} />}
           </button>
         </div>
       </div>
