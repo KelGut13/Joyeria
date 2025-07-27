@@ -1,9 +1,14 @@
-
 import React from "react";
+import { useParams } from "react-router-dom";
+import { translateText } from "../utils/translate";
+import "./estilos/CrearCuenta.css";
+import "../paginas/estilos/variables.css";
+import Separar from "../componentes/Separador NavBar/Separador";
 
 const CrearCuenta = () => {
   return (
     <div className="crear-cuenta-container">
+      <Separar />
       <h2>Crear Cuenta</h2>
       <form className="crear-cuenta-form">
         <div className="form-group">
