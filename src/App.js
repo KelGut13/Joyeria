@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
 import Navbar from "./componentes/NavBar/NavBar";
 import Inicio from "./paginas/Inicio";
+import Conocenos from "./paginas/Conocenos";
 import Clubes from "./paginas/Clubes";
 import Directorio from "./paginas/Directorio";
 import Contactanos from "./paginas/Contactanos";
@@ -24,7 +25,9 @@ const LanguageWrapper = () => {
 
   return (
     <>
-      {location.pathname !== `/${lng}/login` && <Navbar />}
+      {location.pathname !== `/${lng}/login` &&
+       location.pathname !== `/${lng}/crear-cuenta` &&
+       <Navbar />}
       <Routes>
         <Route path="/" element={<Inicio />} />
         <Route path="clubs" element={<Clubes />} />

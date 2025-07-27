@@ -1,3 +1,10 @@
     .separador{
-        height: 95px;
+        height: 108px;
+    }
+
+    @media (max-width: 900px) {
+        .separador {
+            height: 56px;
+        }
+        
     }

@@ -288,10 +288,23 @@
   top: 56px;
   left: 0;
   right: 0;
-  background: #fff;
+  background: #ffffff;
   z-index: 200;
   padding: 16px 24px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.mobile-search-modal.active {
+  max-height: 100px;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .mobile-search-form {
@@ -302,11 +315,16 @@
 
 .mobile-search-form .search-input {
   flex: 1;
-  padding: 10px 12px;
+  padding: 10px 14px;
   font-size: 1rem;
   border-radius: 24px;
   border: 1px solid #d1e7e4;
   outline: none;
+  transition: border-color 0.2s;
+}
+
+.mobile-search-form .search-input:focus {
+  border-color: #009ca6;
 }
 
 .mobile-search-form .search-btn {
@@ -317,6 +335,9 @@
   font-size: 1.2rem;
   padding: 8px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Animación hamburguesa a X */

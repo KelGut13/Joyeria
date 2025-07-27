@@ -3,8 +3,7 @@ import { Menu, X, Search, ShoppingCart, User, Sun, Moon } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../imagenes/logo.svg";
 import "../NavBar/NavBar.css";
-
-
+import { useTheme } from "../../context/ThemeContext";
 
 const categorias = [
   { nombre: "Aretes", ruta: "/aretes" },
@@ -18,36 +17,42 @@ const Navbar = () => {
   const [search, setSearch] = useState("");
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [theme, setTheme] = useState("light");
   const menuRef = useRef(null);
   const hamburgerRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   // Cierra el menú al hacer scroll
   useEffect(() => {
     const handleScroll = () => {
       if (showMobileMenu) setShowMobileMenu(false);
+      if (showMobileSearch) setShowMobileSearch(false);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [showMobileMenu]);
+  }, [showMobileMenu, showMobileSearch]);
 
   // Cierra el menú al dar clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        showMobileMenu &&
-        menuRef.current &&
-        !menuRef.current.contains(event.target) &&
-        !hamburgerRef.current.contains(event.target)
-      ) {
+      const clickedOutsideMenu = menuRef.current && !menuRef.current.contains(event.target);
+      const clickedOutsideSearch = !event.target.closest(".mobile-search-form") && !event.target.closest(".minimal-search-btn");
+
+      // Cierra el menú si está abierto y se hace clic fuera
+      if (showMobileMenu && clickedOutsideMenu) {
         setShowMobileMenu(false);
       }
+
+      // Cierra la búsqueda móvil si está abierta y se hace clic fuera
+      if (showMobileSearch && clickedOutsideSearch && clickedOutsideMenu) {
+        setShowMobileSearch(false);
+      }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showMobileMenu]);
+  }, [showMobileSearch, showMobileMenu]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -57,8 +62,6 @@ const Navbar = () => {
       setShowMobileSearch(false);
     }
   };
-
-  const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
 
   return (
     <nav className="navbar">
@@ -117,23 +120,21 @@ const Navbar = () => {
       </div>
 
       {/* Modal búsqueda móvil */}
-      {showMobileSearch && (
-        <div className="mobile-search-modal">
-          <form className="mobile-search-form" onSubmit={handleSearch}>
-            <input
-              type="text"
-              placeholder="Buscar joyas, colecciones..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="search-input"
-              autoFocus
-            />
-            <button type="submit" className="search-btn" aria-label="Buscar">
-              <Search size={20} />
-            </button>
-          </form>
-        </div>
-      )}
+      <div className={`mobile-search-modal${showMobileSearch ? " active" : ""}`}>
+        <form className="mobile-search-form" onSubmit={handleSearch}>
+          <input
+            type="text"
+            placeholder="Buscar joyas, colecciones..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="search-input"
+            autoFocus
+          />
+          <button type="submit" className="search-btn" aria-label="Buscar">
+            <Search size={20} />
+          </button>
+        </form>
+      </div>
 
       {/* Menú de categorías responsivo */}
       <div
