@@ -7,8 +7,16 @@ const CrearCuenta = () => {
       <h2>Crear Cuenta</h2>
       <form className="crear-cuenta-form">
         <div className="form-group">
-          <label htmlFor="nombre">Nombre</label>
+          <label htmlFor="nombre">Nombres</label>
           <input type="text" id="nombre" name="nombre" required />
+        </div>
+          <div className="form-group">
+          <label htmlFor="Primer Apellido">Primer Apellido</label>
+          <input type="text" id="Primer Apellido" name="Primer Apellido" required />
+        </div>
+          <div className="form-group">
+          <label htmlFor="Segundo Apellido">Segundo Apellido</label>
+          <input type="text" id="Segundo Apellido" name="Segundo Apellido" required />
         </div>
         <div className="form-group">
           <label htmlFor="email">Correo electrónico</label>
@@ -17,6 +25,14 @@ const CrearCuenta = () => {
         <div className="form-group">
           <label htmlFor="password">Contraseña</label>
           <input type="password" id="password" name="password" required />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Repetir Contraseña</label>
+          <input type="password" id="Repetir Contraseña" name="Repetir Contraseña" required />
+        </div>
+         <div className="form-group">
+          <label htmlFor="Telefono">Telefono</label>
+          <input type="text" id="Telefono" name="Telefono" required />
         </div>
         <button type="submit">Crear Cuenta</button>
       </form>
