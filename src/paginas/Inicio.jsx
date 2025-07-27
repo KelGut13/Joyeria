@@ -90,11 +90,6 @@ const Inicio = () => {
         </div>
       </div>
 
-      <div className="video-container">
-        <video width="640" height="360" controls className="video">
-          <source src={video} type="video/mp4"/>
-        </video>
-      </div>
 
       <div className="Inicio-Seccion_Dos">
         <Eventos lng={lng} />
