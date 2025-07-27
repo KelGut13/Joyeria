@@ -11,16 +11,15 @@ import { translateText } from "../utils/translate";
 
 const textos = {
   "es": {
-    tituloResena: "Federación Nacional e Internacional de Nayaritas en Estados Unidos",
-    textoResena: "Es una organización sin fines de lucro que representa a la comunidad nayarita en el exterior. Integrada por 35 clubes provenientes de distintos municipios, su misión es apoyar y promover el bienestar de los nayaritas, tanto en Estados Unidos como en México.  Con un compromiso sólido por su gente, FENINE-USA trabaja para fortalecer los lazos culturales, brindar asistencia y fomentar el desarrollo de las comunidades nayaritas en ambos países.",
-    ubicacionTitulo: "Ubicación",
-    ubicacionDireccion: "514 W Anaheim St, Wilmington, CA 90744, Estados Unidos"
+    tituloResena: "Curiosidades NANCY",
+    textoResena: "Curiosidades Nancy es un emprendimiento dedicado a la joyería artesanal, enfocado en crear piezas únicas con un estilo propio y lleno de significado. A través de ventas en línea, ofrece una amplia variedad de accesorios personalizados, ideales para cualquier ocasión. Cada pieza es elaborada con dedicación, cuidando cada detalle para reflejar la esencia y personalidad de quien la lleva. Con un enfoque creativo y cercano, Curiosidades Nancy transforma cada pedido en una experiencia especial, donde lo hecho a mano se convierte en algo inolvidable.",
+    // ...eliminado: ubicacionTitulo y ubicacionDireccion...
   }
 };
 
 const Inicio = () => {
   const { lng } = useParams();
-  const [trad, setTrad] = useState(textos["es"]);
+  const [trad, setTrad] = useState(textos["es"]); // ubicacion removida
 
   useEffect(() => {
     const traducir = async () => {
@@ -28,8 +27,7 @@ const Inicio = () => {
         setTrad({
           tituloResena: await translateText(textos.es.tituloResena, "es", lng),
           textoResena: await translateText(textos.es.textoResena, "es", lng),
-          ubicacionTitulo: await translateText(textos.es.ubicacionTitulo, "es", lng),
-          ubicacionDireccion: await translateText(textos.es.ubicacionDireccion, "es", lng),
+          // ubicacion removida
         });
       } else {
         setTrad(textos["es"]);
@@ -106,22 +104,7 @@ const Inicio = () => {
         <Convocatorias lng={lng} />
       </div>
 
-      <div className="Inicio-Seccion_Cuatro">
-        <h2 className="ubicacion-titulo">{trad.ubicacionTitulo}</h2>
-        <div className="ubicacion-contenido">
-          <div className="ubicacion-texto">
-            <p>{trad.ubicacionDireccion}</p>
-          </div>
-          <div className="ubicacion-mapa">
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3316.27409871622!2d-118.27082762065429!3d33.779419299999994!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80dd35d96391071d%3A0xf352969bdddb5f0f!2sFederaci%C3%B3n%20Nacional%20e%20International%20de%20Nayaritas%20en%20Estados%20Unidos!5e0!3m2!1ses-419!2smx!4v1744858181160!5m2!1ses-419!2smx"
-              allowFullScreen=""
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            ></iframe>
-          </div>
-        </div>
-      </div>
+      {/* Sección 4 (ubicación) eliminada */}
       <Accesibilidad />
     </div>
   );
