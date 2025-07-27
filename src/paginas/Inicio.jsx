@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Separar from "../componentes/Separador NavBar/Separador";
 import "./estilos/Inicio.css";
-import Carrusel from "../componentes/Carrusel/Carrusel";
-import Eventos from "../componentes/Eventos/Eventos";
-import Convocatorias from "../componentes/Convocatorias/Convocatorias";
 import Accesibilidad from "../componentes/Accesibilidad/Accesibilidad.jsx";
 import video from "../videos/videofenine.mp4";
 import { useParams } from "react-router-dom";
@@ -54,7 +51,7 @@ const Inicio = () => {
   return (
     <div className="Container-Inicio">
       <Separar />
-      <Carrusel />
+      
 
       <div className="Inicio-Seccion_Uno">
         <div className="facebook">
@@ -91,13 +88,7 @@ const Inicio = () => {
       </div>
 
 
-      <div className="Inicio-Seccion_Dos">
-        <Eventos lng={lng} />
-      </div>
-
-      <div className="Inicio-Seccion_Tres">
-        <Convocatorias lng={lng} />
-      </div>
+    
 
       {/* Sección 4 (ubicación) eliminada */}
       <Accesibilidad />
