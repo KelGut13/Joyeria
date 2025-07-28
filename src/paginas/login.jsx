@@ -18,7 +18,7 @@ const Login = () => {
           <input type="text" id="usuario" name="usuario" autoComplete="username" />
           <label htmlFor="password">Contraseña</label>
           <input type="password" id="password" name="password" autoComplete="current-password" />
-          <button type="submit" className="login-btn">ENVIAR</button>
+          <button type="submit" className="login-btn">ACCEDER</button>
           <div className="login-links">
             <a href="#" className="forgot-link">¿Olvidaste tu contraseña?</a>
             <Link to={`/${lng}/crear-cuenta`} className="create-link">Crear Cuenta</Link>

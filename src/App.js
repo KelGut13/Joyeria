@@ -9,6 +9,7 @@ import Contactanos from "./paginas/Contactanos";
 import Footer from "./componentes/Footer/Footer";
 import Login from "./paginas/login";
 import CrearCuenta from "./paginas/CrearCuenta";
+import PanelUsuario from "./paginas/PanelUsuario";
 import "./paginas/estilos/variables.css";
 
 const LanguageWrapper = () => {
@@ -32,9 +33,10 @@ const LanguageWrapper = () => {
         <Route path="/" element={<Inicio />} />
         <Route path="clubs" element={<Clubes />} />
         <Route path="directorio" element={<Directorio />} />
-        <Route path="contactanos" element={<Contactanos />} />
+        <Route path="conocenos" element={<Conocenos />} />
         <Route path="login" element={<Login />} />
         <Route path="crear-cuenta" element={<CrearCuenta />} />
+        <Route path="usuario" element={<PanelUsuario />} />
       </Routes>
       <Footer />
     </>
