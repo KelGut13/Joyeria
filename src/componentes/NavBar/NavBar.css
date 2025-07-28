@@ -184,11 +184,11 @@
     position: relative;
   }
 
-  /* Centra el logo absolutamente */
+  /* Se posiciona el logo al lado derecho del menu de hamburguesa */
   .navbar-logo-link {
     position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 13%;
+    /*transform: translateX(-50%);*/
     z-index: 2;
   }
 

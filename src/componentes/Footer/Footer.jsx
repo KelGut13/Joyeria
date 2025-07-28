@@ -1,5 +1,5 @@
 import React from "react";
-import logo from "../../imagenes/logo.svg";
+import logo from "../../imagenes/logo-footer.png";
 import "../Footer/Footer.css";
 import { Mail, Phone, MapPin } from "lucide-react";
 
@@ -7,7 +7,7 @@ const Footer = () => (
   <footer className="footer">
     <div className="footer-container">
       <div className="footer-logo">
-        <img src={logo} alt="Logo" className="logo" />
+        <img src={logo} alt="Logo" className="logo-footer" />
         <p>Curiosidades Nancy</p>
       </div>
       <div className="footer-links">
@@ -38,7 +38,7 @@ const Footer = () => (
     <div className="footer-bottom">
       <p>&copy; {new Date().getFullYear()} Todos los derechos reservados.</p>
       <p className="developer">
-        Desarrollado por <a href="https://www.keycapsoft.com" target="_blank" rel="noopener noreferrer" className="keycapsoft">Equipo 2</a>
+        Desarrollado por <a href="#" target="_blank" rel="noopener noreferrer" className="keycapsoft">Equipo 2</a>
       </p>
     </div>
   </footer>

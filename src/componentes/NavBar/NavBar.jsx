@@ -103,10 +103,10 @@ const Navbar = () => {
           >
             <Search size={20} />
           </button>
-          <Link to="carrito" className="cart-btn" aria-label="Carrito">
+          <Link to="/carrito" className="cart-btn" aria-label="Carrito">
             <ShoppingCart size={24} />
           </Link>
-          <Link to="login" className="user-btn" aria-label="Iniciar sesión">
+          <Link to="/login" className="user-btn" aria-label="Iniciar sesión">
             <User size={24} />
           </Link>
           <button

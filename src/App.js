@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./componentes/NavBar/NavBar";
 import Inicio from "./paginas/Inicio";
 import Conocenos from "./paginas/Conocenos";
@@ -13,30 +13,22 @@ import PanelUsuario from "./paginas/PanelUsuario";
 import "./paginas/estilos/variables.css";
 
 const LanguageWrapper = () => {
-  const { lng } = useParams();
   const location = useLocation();
-
-  // Redirige si el idioma no es válido
-  React.useEffect(() => {
-    if (!["es", "en"].includes(lng)) {
-      const savedLang = localStorage.getItem("lng") || "es";
-      window.location.replace(`/${savedLang}`);
-    }
-  }, [lng]);
 
   return (
     <>
-      {location.pathname !== `/${lng}/login` &&
-       location.pathname !== `/${lng}/crear-cuenta` &&
-       <Navbar />}
+      {location.pathname !== "/login" &&
+        location.pathname !== "/crear-cuenta" &&
+        <Navbar />}
       <Routes>
         <Route path="/" element={<Inicio />} />
-        <Route path="clubs" element={<Clubes />} />
-        <Route path="directorio" element={<Directorio />} />
-        <Route path="conocenos" element={<Conocenos />} />
-        <Route path="login" element={<Login />} />
-        <Route path="crear-cuenta" element={<CrearCuenta />} />
-        <Route path="usuario" element={<PanelUsuario />} />
+        <Route path="/clubs" element={<Clubes />} />
+        <Route path="/directorio" element={<Directorio />} />
+        <Route path="/conocenos" element={<Conocenos />} />
+        <Route path="/contactanos" element={<Contactanos />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/crear-cuenta" element={<CrearCuenta />} />
+        <Route path="/perfil" element={<PanelUsuario />} />
       </Routes>
       <Footer />
     </>
@@ -47,9 +39,8 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to={`/${localStorage.getItem("lng") || "es"}`} replace />} />
-        <Route path="/:lng/*" element={<LanguageWrapper />} />
-        <Route path="*" element={<Navigate to={`/${localStorage.getItem("lng") || "es"}`} replace />} />
+        <Route path="/*" element={<LanguageWrapper />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

@@ -1,11 +1,10 @@
 import React from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import "./estilos/login.css";
-import chicaImg from "../imagenes/chica.jpg"; // Usa tu imagen
+import chicaImg from "../imagenes/chica.jpg";
 import Separar from "../componentes/Separador NavBar/Separador";
 
 const Login = () => {
-  const { lng } = useParams();
   return (
     <div className="login-page">
       <div className="login-img-section">
@@ -21,7 +20,7 @@ const Login = () => {
           <button type="submit" className="login-btn">ACCEDER</button>
           <div className="login-links">
             <a href="#" className="forgot-link">¿Olvidaste tu contraseña?</a>
-            <Link to={`/${lng}/crear-cuenta`} className="create-link">Crear Cuenta</Link>
+            <Link to="/crear-cuenta" className="create-link">Crear Cuenta</Link>
           </div>
         </form>
       </div>
