@@ -50,21 +50,21 @@ const Inicio = () => {
       {/* Íconos de categoría */}
       <section className="seccion-categorias">
         <div className="iconos-categorias">
-          <button type="button" className="icono-btn" onClick={() => navigate("/Aretes")}> 
+          <button type="button" className="icono-btn" onClick={() => navigate("/aretes")}> 
             <img src={aretes} alt="Aretes" />
             <p>Aretes</p>
           </button>
-          <button type="button" className="icono-btn" onClick={() => navigate("/Pulsera")}> 
+          <button type="button" className="icono-btn" onClick={() => navigate("/pulseras")}> 
             <img src={pulsera} alt="Pulsera" />
-            <p>Pulsera</p>
+            <p>Pulseras</p>
           </button>
-          <button type="button" className="icono-btn" onClick={() => navigate("/Llavero")}> 
+          <button type="button" className="icono-btn" onClick={() => navigate("/llaveros")}> 
             <img src={llavero} alt="Llavero" />
-            <p>Llavero</p>
+            <p>Llaveros</p>
           </button>
-          <button type="button" className="icono-btn" onClick={() => navigate("/Juegos")}> 
+          <button type="button" className="icono-btn" onClick={() => navigate("/juegos")}> 
             <img src={juego} alt="Juego" />
-            <p>Juego</p>
+            <p>Juegos</p>
           </button>
         </div>
       </section>
@@ -80,8 +80,9 @@ const Inicio = () => {
 
       {/* A su servicio */}
       <section className="seccion-servicio">
-        <div className="servicio-contenido">
-          <img src={servicio} alt="Cadenas decorativas" />
+          <div className="imagen-servicio">
+            <img src={servicio} alt="Cadenas decorativas" />
+          </div>
           <div className="texto-servicio">
             <h3>A su servicio</h3>
             <p>
@@ -91,7 +92,6 @@ const Inicio = () => {
             </p>
             <button>Contáctanos</button>
           </div>
-        </div>
       </section>
     </div>
   );

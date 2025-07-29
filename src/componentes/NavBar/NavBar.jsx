@@ -8,9 +8,9 @@ import { useTheme } from "../../context/ThemeContext";
 const categorias = [
   { nombre: "Aretes", ruta: "/aretes" },
   { nombre: "Pulseras", ruta: "/pulseras" },
-  { nombre: "Collares", ruta: "/collares" },
-  { nombre: "Anillos", ruta: "/anillos" },
-  { nombre: "Relojes", ruta: "/relojes" },
+  { nombre: "Llaveros", ruta: "/llaveros" },
+  { nombre: "Juegos", ruta: "/juegos" },
+  { nombre: "Descubrir", ruta: "/conocenos" },
 ];
 
 const Navbar = () => {

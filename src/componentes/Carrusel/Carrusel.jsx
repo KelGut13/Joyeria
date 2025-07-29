@@ -5,13 +5,8 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "../Carrusel/Carrusel.css";
 import carrusel1 from "../../imagenes/carrusel/img1_carrusel.jpg";
-import carrusel2 from "../../imagenes/carrusel/img2_carrusel.jpeg";
+import carrusel2 from "../../imagenes/carrusel/img2_carrusel.jpg";
 import carrusel3 from "../../imagenes/carrusel/img3_carrusel.jpeg";
-
-const slideTexts = [
-  "Evento de la comunidad Nayarita en California",
-  "Banner oficial de BEU México 2024"
-];
 
 const Carrusel = () => (
   <div className="carrusel-container">
@@ -24,14 +19,12 @@ const Carrusel = () => (
     >
       <SwiperSlide>
         <div className="slide-wrapper">
-          <img src={carrusel1} alt={slideTexts[0]} />
-          <span className="slide-tooltip">{slideTexts[0]}</span>
+          <img src={carrusel1} alt="Banner" />
         </div>
       </SwiperSlide>
       <SwiperSlide>
         <div className="slide-wrapper">
-          <img src={carrusel2} alt={slideTexts[1]} />
-          <span className="slide-tooltip">{slideTexts[1]}</span>
+          <img src={carrusel2} alt="Banner" />
         </div>
       </SwiperSlide>
     </Swiper>

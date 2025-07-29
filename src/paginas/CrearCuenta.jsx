@@ -1,6 +1,5 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import { translateText } from "../utils/translate";
 import "./estilos/CrearCuenta.css";
 import "../paginas/estilos/variables.css";
 import Separar from "../componentes/Separador NavBar/Separador";
