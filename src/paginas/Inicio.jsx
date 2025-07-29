@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Separar from "../componentes/Separador NavBar/Separador";
 import Carrusel from "../componentes/Carrusel/Carrusel";
 import "./estilos/Inicio.css";
+import Accesibilidad from "../componentes/Accesibilidad/Accesibilidad";
 import producto1 from "../imagenes/Inicio/producto1.png";
 import producto2 from "../imagenes/Inicio/producto2.png";
 import producto3 from "../imagenes/Inicio/producto3.png";
@@ -90,9 +91,10 @@ const Inicio = () => {
               ayudarte con asesoría de regalos, personalización de productos o reglas básicas de
               diseño en tus ideas.
             </p>
-            <button>Contáctanos</button>
+            <button onClick={() => navigate("/contactanos")}>Contáctanos</button>
           </div>
       </section>
+      <Accesibilidad />
     </div>
   );
 };
