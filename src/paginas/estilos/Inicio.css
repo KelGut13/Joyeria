@@ -215,6 +215,10 @@
   background-color: #581c3d;
 }
 
+.icono-btn{
+  border-style: none;
+}
+
 /* Responsive para móviles */
 
 @media (max-width: 768px) {

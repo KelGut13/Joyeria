@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import Separar from "../componentes/Separador NavBar/Separador";
 import Carrusel from "../componentes/Carrusel/Carrusel";
 import "./estilos/Inicio.css";
@@ -18,6 +19,7 @@ import servicio from "../imagenes/Inicio/servicio.png";
 
 
 const Inicio = () => {
+  const navigate = useNavigate();
   return (
     <div className="Container-Inicio">
       <Separar />
@@ -48,22 +50,22 @@ const Inicio = () => {
       {/* Íconos de categoría */}
       <section className="seccion-categorias">
         <div className="iconos-categorias">
-          <div>
+          <button type="button" className="icono-btn" onClick={() => navigate("/Aretes")}> 
             <img src={aretes} alt="Aretes" />
             <p>Aretes</p>
-          </div>
-          <div>
+          </button>
+          <button type="button" className="icono-btn" onClick={() => navigate("/Pulsera")}> 
             <img src={pulsera} alt="Pulsera" />
             <p>Pulsera</p>
-          </div>
-          <div>
+          </button>
+          <button type="button" className="icono-btn" onClick={() => navigate("/Llavero")}> 
             <img src={llavero} alt="Llavero" />
             <p>Llavero</p>
-          </div>
-          <div>
+          </button>
+          <button type="button" className="icono-btn" onClick={() => navigate("/Juegos")}> 
             <img src={juego} alt="Juego" />
             <p>Juego</p>
-          </div>
+          </button>
         </div>
       </section>
 

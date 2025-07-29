@@ -11,6 +11,11 @@ import Login from "./paginas/login";
 import CrearCuenta from "./paginas/CrearCuenta";
 import PanelUsuario from "./paginas/PanelUsuario";
 import "./paginas/estilos/variables.css";
+import Aretes from "./paginas/Aretes";
+import Pulsera from "./paginas/Pulsera";
+import Llavero from "./paginas/Llavero";
+import Juegos from "./paginas/Juegos";
+
 
 const LanguageWrapper = () => {
   const location = useLocation();
@@ -29,6 +34,10 @@ const LanguageWrapper = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/crear-cuenta" element={<CrearCuenta />} />
         <Route path="/perfil" element={<PanelUsuario />} />
+        <Route path="/aretes" element={<Aretes />} />
+        <Route path="/pulseras" element={<Pulsera />} />
+        <Route path="/llaveros" element={<Llavero />} />
+        <Route path="/Juegos" element={<Juegos />} />
       </Routes>
       <Footer />
     </>
