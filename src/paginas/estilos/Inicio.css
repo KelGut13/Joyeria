@@ -12,10 +12,10 @@
 
 .seccion-creatividad {
   background-color: #f1eee9;
-  width: 100vw;
+  width: 100%;
   margin-left: calc(-50vw + 50%);
   text-align: center;
-  padding: 2rem 1rem;
+  padding: 2rem 0rem;
 }
 
 .seccion-creatividad h2 {
@@ -80,7 +80,7 @@
 
 .seccion-categorias {
   background-color: #f1eee9;
-  padding: 2rem 1rem;
+  padding: 2rem 0rem;
   width: 100%;
 }
 
@@ -120,7 +120,7 @@
 
 .seccion-nueva-coleccion {
   width: 100%;
-  padding: 2rem 1rem;
+  padding: 2rem 0rem;
   display: flex;
   justify-content: center;
 }
@@ -166,7 +166,7 @@
 .seccion-servicio {
   background-color: #e4d1d1;
   width: 100%;
-  padding: 2rem 1rem;
+  padding: 2rem 0rem;
 }
 
 .servicio-contenido {
