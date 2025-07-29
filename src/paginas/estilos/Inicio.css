@@ -1,0 +1,269 @@
+/* General */
+
+.Container-Inicio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Segoe UI', sans-serif;
+  color: #2e2e2e;
+}
+
+/* Sección: Maestros de la creatividad */
+
+.seccion-creatividad {
+  background-color: #f1eee9;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.seccion-creatividad h2 {
+  margin-bottom: 0.5rem;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.seccion-creatividad p {
+  font-size: 1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Sección: Favoritos */
+
+.seccion-favoritos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem;
+  padding: 3rem 2rem;
+  flex-wrap: wrap;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.galeria-imagenes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.galeria-imagenes img {
+  width: 180px;
+  height: auto;
+  border: 10px solid #6d3392;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: white;
+}
+
+.galeria-imagenes img:nth-child(2) {
+  margin-top: 20px;
+}
+
+.galeria-imagenes img:nth-child(5) {
+  margin-bottom: 20px;
+}
+
+.titulo-oferta {
+  font-family: 'Brush Script MT', cursive;
+  font-size: 2.5rem;
+  font-style: italic;
+  color: #2c1b33;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Sección: Íconos de categoría */
+
+.seccion-categorias {
+  background-color: #f1eee9;
+  padding: 2rem 1rem;
+  width: 100%;
+}
+
+.iconos-categorias {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.iconos-categorias div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.iconos-categorias img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid #6d3392;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.iconos-categorias p {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #2e2e2e;
+}
+
+/* Sección: Nueva colección */
+
+.seccion-nueva-coleccion {
+  width: 100%;
+  padding: 2rem 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.contenido-coleccion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6rem; /* ✅ Más separación entre texto e imágenes */
+  max-width: 1200px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.contenido-coleccion h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: left;
+  max-width: 250px; /* ✅ Texto más compacto */
+  color: #000;
+  text-shadow: 1px 1px 0 #fff, 2px 2px 2px rgba(0, 0, 0, 0.4);
+}
+
+.imagenes-coleccion {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.imagenes-coleccion img {
+  max-width: 300px;
+  width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.imagenes-coleccion img:hover {
+  transform: none; /* ✅ Sin zoom */
+}
+
+/* Sección: Servicio */
+
+.seccion-servicio {
+  background-color: #e4d1d1;
+  width: 100%;
+  padding: 2rem 1rem;
+}
+
+.servicio-contenido {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.servicio-contenido img {
+  max-width: 400px;
+  width: 100%;
+  border-radius: 8px;
+}
+
+.texto-servicio {
+  max-width: 400px;
+  text-align: left;
+}
+
+.texto-servicio h3 {
+  font-size: 1.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.texto-servicio p {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.texto-servicio button {
+  background-color: #6c244d;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.texto-servicio button:hover {
+  background-color: #581c3d;
+}
+
+/* Responsive para móviles */
+
+@media (max-width: 768px) {
+  .seccion-favoritos {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .titulo-oferta {
+    margin-top: 1rem;
+    white-space: normal;
+  }
+
+  .galeria-imagenes {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .galeria-imagenes img {
+    width: 100%;
+    max-width: 200px;
+  }
+
+  .iconos-categorias {
+    gap: 1.5rem;
+  }
+
+  .iconos-categorias img {
+    width: 70px;
+    height: 70px;
+  }
+
+  .contenido-coleccion {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 2rem;
+  }
+
+  .contenido-coleccion h2 {
+    text-align: center;
+    max-width: none;
+  }
+
+  .imagenes-coleccion {
+    justify-content: center;
+  }
+
+  .imagenes-coleccion img {
+    max-width: 90%;
+  }
+}
