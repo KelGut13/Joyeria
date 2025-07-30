@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import "./estilos/Aretes.css";
+import Separar from "../componentes/Separador NavBar/Separador";
 
 const Aretes = () => {
   const [productos, setProductos] = useState([]);
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
   useEffect(() => {
     // Aquí puedes hacer la petición a la base de datos (ej. fetch/axios)
@@ -15,17 +17,35 @@ const Aretes = () => {
     ]);
   }, []);
 
+  // Cierra los filtros al cambiar el tamaño de pantalla a desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768) setMostrarFiltros(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <div className="aretes-page">
+      <Separar />
       {/* Banner principal */}
       <div className="banner-aretes">
         <img src="/fondoAretes.jpg" alt="Banner Aretes" />
         <h2>¡Demuestra tu autenticidad con nuestros aretes!</h2>
       </div>
 
+      {/* Botón Filtro solo en móvil */}
+      <button
+        className="btn-filtro-movil"
+        onClick={() => setMostrarFiltros((prev) => !prev)}
+      >
+        {mostrarFiltros ? "Cerrar filtros" : "Filtro"}
+      </button>
+
       <div className="contenido-aretes">
         {/* Filtros */}
-        <aside className="filtros">
+        <aside className={`filtros ${mostrarFiltros ? "filtros-movil-activo" : ""}`}>
           <h3>Filtrar por:</h3>
 
           <div className="filtro-categoria">
