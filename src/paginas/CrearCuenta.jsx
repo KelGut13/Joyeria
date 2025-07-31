@@ -1,45 +1,125 @@
-import React from "react";
-import { useParams } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Separar from "../componentes/Separador NavBar/Separador";
 import "./estilos/CrearCuenta.css";
 import "../paginas/estilos/variables.css";
-import Separar from "../componentes/Separador NavBar/Separador";
 
 const CrearCuenta = () => {
+  const [form, setForm] = useState({
+    nombre: "",
+    primer_apellido: "",
+    segundo_apellido: "",
+    email: "",
+    password: "",
+    repetir_password: "",
+    telefono: ""
+  });
+
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (form.password !== form.repetir_password) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:5001/api/crear-cuenta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: form.nombre,
+          primer_apellido: form.primer_apellido,
+          segundo_apellido: form.segundo_apellido,
+          email: form.email,
+          password: form.password,
+          telefono: form.telefono
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccess("Cuenta creada correctamente.");
+        setShowModal(true); // Mostrar modal
+        setForm({
+          nombre: "",
+          primer_apellido: "",
+          segundo_apellido: "",
+          email: "",
+          password: "",
+          repetir_password: "",
+          telefono: ""
+        });
+      } else {
+        setError(data.error || "Error al crear la cuenta.");
+      }
+    } catch (err) {
+      setError("Error de conexión con el servidor.");
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    navigate("/login"); // Redirige al login
+  };
+
   return (
     <div className="crear-cuenta-container">
       <Separar />
       <h2>Crear Cuenta</h2>
-      <form className="crear-cuenta-form">
+      <form className="crear-cuenta-form" onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="nombre">Nombres</label>
-          <input type="text" id="nombre" name="nombre" required />
+          <label htmlFor="nombre">Nombre</label>
+          <input type="text" id="nombre" name="nombre" value={form.nombre} onChange={handleChange} required />
         </div>
-          <div className="form-group">
-          <label htmlFor="Primer Apellido">Primer Apellido</label>
-          <input type="text" id="Primer Apellido" name="Primer Apellido" required />
+        <div className="form-group">
+          <label htmlFor="primer_apellido">Primer Apellido</label>
+          <input type="text" id="primer_apellido" name="primer_apellido" value={form.primer_apellido} onChange={handleChange} required />
         </div>
-          <div className="form-group">
-          <label htmlFor="Segundo Apellido">Segundo Apellido</label>
-          <input type="text" id="Segundo Apellido" name="Segundo Apellido" required />
+        <div className="form-group">
+          <label htmlFor="segundo_apellido">Segundo Apellido</label>
+          <input type="text" id="segundo_apellido" name="segundo_apellido" value={form.segundo_apellido} onChange={handleChange} required />
         </div>
         <div className="form-group">
           <label htmlFor="email">Correo electrónico</label>
-          <input type="email" id="email" name="email" required />
+          <input type="email" id="email" name="email" value={form.email} onChange={handleChange} required />
         </div>
         <div className="form-group">
           <label htmlFor="password">Contraseña</label>
-          <input type="password" id="password" name="password" required />
+          <input type="password" id="password" name="password" value={form.password} onChange={handleChange} required />
         </div>
         <div className="form-group">
-          <label htmlFor="password">Repetir Contraseña</label>
-          <input type="password" id="Repetir Contraseña" name="Repetir Contraseña" required />
+          <label htmlFor="repetir_password">Repetir Contraseña</label>
+          <input type="password" id="repetir_password" name="repetir_password" value={form.repetir_password} onChange={handleChange} required />
         </div>
-         <div className="form-group">
-          <label htmlFor="Telefono">Telefono</label>
-          <input type="text" id="Telefono" name="Telefono" required />
+        <div className="form-group">
+          <label htmlFor="telefono">Teléfono</label>
+          <input type="text" id="telefono" name="telefono" value={form.telefono} onChange={handleChange} required />
         </div>
+        {error && <div className="error">{error}</div>}
+        {success && <div className="success">{success}</div>}
         <button type="submit">Crear Cuenta</button>
       </form>
+
+      {/* Modal de éxito */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>¡Cuenta creada exitosamente!</h3>
+            <button onClick={handleModalClose}>Aceptar</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
