@@ -143,3 +143,41 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
 });
+
+app.post("/api/login", (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Todos los campos son requeridos." });
+  }
+
+  const query = `SELECT * FROM usuarios WHERE email = ? LIMIT 1`;
+
+  db.query(query, [email], async (err, results) => {
+    if (err) {
+      console.error("❌ Error al buscar usuario:", err);
+      return res.status(500).json({ error: "Error interno del servidor." });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ error: "Correo o contraseña incorrectos." });
+    }
+
+    const user = results[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ error: "Correo o contraseña incorrectos." });
+    }
+
+    // No se usa JWT aquí para simplificar
+    res.status(200).json({
+      message: "Inicio de sesión exitoso.",
+      usuario: {
+        id: user.id,
+        nombre: user.nombre,
+        email: user.email
+      }
+    });
+  });
+});
