@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mysql from "mysql2";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 dotenv.config();
 
 console.log("🚀 Ejecutando server.js correcto...");
@@ -170,14 +171,24 @@ app.post("/api/login", (req, res) => {
       return res.status(401).json({ error: "Correo o contraseña incorrectos." });
     }
 
-    // No se usa JWT aquí para simplificar
+    // 🔐 GENERAR JWT
+    const token = jwt.sign(
+      { id: user.ID_usuario, rol: user.id_rol },
+      process.env.JWT_SECRET,
+      { expiresIn: "2h" }
+    );
+
+    // ✅ Enviar token al frontend
     res.status(200).json({
       message: "Inicio de sesión exitoso.",
+      token,
       usuario: {
-        id: user.id,
+        id: user.ID_usuario,
         nombre: user.nombre,
-        email: user.email
+        email: user.email,
+        rol: user.id_rol
       }
     });
   });
 });
+
