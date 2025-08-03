@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import mysql from "mysql2";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { verifyToken } from "./middlewares/verifyToken.js";
 dotenv.config();
 
 console.log("🚀 Ejecutando server.js correcto...");
@@ -192,3 +193,46 @@ app.post("/api/login", (req, res) => {
   });
 });
 
+app.post("/api/pedidos", verifyToken, (req, res) => {
+  const userId = req.user.id;
+  const { productos, total, direccionEnvio } = req.body;
+
+  if (!productos || productos.length === 0 || !total || !direccionEnvio) {
+    return res.status(400).json({ error: "Datos incompletos para crear el pedido." });
+  }
+
+  const queryPedido = `
+    INSERT INTO pedidos (ID_usuario, fecha, total, estado, ID_direccion)
+    VALUES (?, NOW(), ?, 'pendiente', ?)
+  `;
+
+  db.query(queryPedido, [userId, total, direccionEnvio], (err, result) => {
+    if (err) {
+      console.error("❌ Error al crear pedido:", err);
+      return res.status(500).json({ error: "Error al crear el pedido." });
+    }
+
+    const pedidoId = result.insertId;
+
+    const queryDetalle = `
+      INSERT INTO detalle_pedido (ID_pedido, ID_producto, cantidad, precio_unitario)
+      VALUES ?
+    `;
+
+    const valoresDetalle = productos.map(prod => [
+      pedidoId,
+      prod.id_producto,
+      prod.cantidad,
+      prod.precio
+    ]);
+
+    db.query(queryDetalle, [valoresDetalle], (err2) => {
+      if (err2) {
+        console.error("❌ Error al guardar detalles del pedido:", err2);
+        return res.status(500).json({ error: "Error al guardar productos del pedido." });
+      }
+
+      res.status(201).json({ message: "Pedido creado exitosamente", pedidoId });
+    });
+  });
+});

@@ -5,16 +5,38 @@ import Separar from "../componentes/Separador NavBar/Separador";
 const Aretes = () => {
   const [productos, setProductos] = useState([]);
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Aquí puedes hacer la petición a la base de datos (ej. fetch/axios)
-    // Simulación de datos de ejemplo:
-    setProductos([
-      { id: 1, nombre: "Chiles mexicanos", precio: 75, imagen: "catalogos1.jpg" },
-      { id: 2, nombre: "Macarons rosas", precio: 100, imagen: "catalogos2.jpg" },
-      { id: 3, nombre: "Groths", precio: 75, imagen: "catalogos3.jpg" },
-      // ...
-    ]);
+    // Obtener productos de la base de datos
+    const obtenerProductos = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("http://localhost:5001/api/productos");
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("✅ Todos los productos:", data);
+        
+        // Filtrar solo aretes (categoria ID = 1)
+        const aretes = data.filter((producto) => producto.id_categoria === 1);
+        console.log("🔍 Aretes filtrados:", aretes);
+        
+        setProductos(aretes);
+        setError(null);
+      } catch (err) {
+        console.error("❌ Error al cargar productos:", err);
+        setError(`Error al cargar productos: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    obtenerProductos();
   }, []);
 
   // Cierra los filtros al cambiar el tamaño de pantalla a desktop
@@ -45,17 +67,31 @@ const Aretes = () => {
 
       <div className="contenido-aretes">
         {/* Filtros */}
-        <aside className={`filtros ${mostrarFiltros ? "filtros-movil-activo" : ""}`}>
+        <aside
+          className={`filtros ${
+            mostrarFiltros ? "filtros-movil-activo" : ""
+          }`}
+        >
           <h3>Filtrar por:</h3>
 
           <div className="filtro-categoria">
             <label>Material</label>
             <ul>
-              <li><input type="checkbox" /> Pasta francesa</li>
-              <li><input type="checkbox" /> Resina</li>
-              <li><input type="checkbox" /> Chapa de oro</li>
-              <li><input type="checkbox" /> Acero inoxidable</li>
-              <li><button className="mostrar-mas">Mostrar más</button></li>
+              <li>
+                <input type="checkbox" /> Pasta francesa
+              </li>
+              <li>
+                <input type="checkbox" /> Resina
+              </li>
+              <li>
+                <input type="checkbox" /> Chapa de oro
+              </li>
+              <li>
+                <input type="checkbox" /> Acero inoxidable
+              </li>
+              <li>
+                <button className="mostrar-mas">Mostrar más</button>
+              </li>
             </ul>
           </div>
 
@@ -71,13 +107,33 @@ const Aretes = () => {
 
         {/* Productos */}
         <section className="productos">
-          {productos.map((producto) => (
-            <div className="producto" key={producto.id}>
-              <img src={`/${producto.imagen}`} alt={producto.nombre} />
-              <p>{producto.nombre}</p>
-              <span>${producto.precio}</span>
-            </div>
-          ))}
+          {loading ? (
+            <p>Cargando productos...</p>
+          ) : error ? (
+            <p style={{ color: "red" }}>{error}</p>
+          ) : productos.length === 0 ? (
+            <p>No hay aretes disponibles.</p>
+          ) : (
+            productos.map((producto) => (
+              <div className="producto" key={producto.ID_producto}>
+                <img
+                  src={
+                    producto.imagen
+                      ? Array.isArray(producto.imagen)
+                        ? producto.imagen[0]
+                        : producto.imagen.split(",")[0]
+                      : "/placeholder.jpg"
+                  }
+                  alt={producto.nombre}
+                  onError={(e) => {
+                    e.target.src = "/placeholder.jpg";
+                  }}
+                />
+                <p>{producto.nombre}</p>
+                <span>${producto.precio}</span>
+              </div>
+            ))
+          )}
         </section>
       </div>
 
@@ -90,3 +146,7 @@ const Aretes = () => {
 };
 
 export default Aretes;
+
+/* Actualizar el producto "Anillo" para que tenga la categoría correcta
+UPDATE productos SET id_categoria = 2 WHERE ID_producto = 4;
+*/

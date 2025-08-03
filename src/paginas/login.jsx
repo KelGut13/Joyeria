@@ -27,10 +27,13 @@ const Login = () => {
       const data = await res.json();
 
       if (res.ok) {
-        // Aquí puedes guardar el usuario en el estado global o localStorage
-        // localStorage.setItem("usuario", JSON.stringify(data.usuario));
-        navigate("/"); // Redirige a la página principal
-      } else {
+        // Guarda el token y el usuario
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("usuario", JSON.stringify(data.usuario));
+
+        // Redirige al perfil del cliente
+        navigate("/perfil");
+      }else {
         setError(data.error || "Error al iniciar sesión.");
       }
     } catch (err) {

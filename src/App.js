@@ -15,7 +15,7 @@ import Aretes from "./paginas/Aretes";
 import Pulsera from "./paginas/Pulsera";
 import Llavero from "./paginas/Llavero";
 import Juegos from "./paginas/Juegos";
-
+import Carrito from "./paginas/Carrito";
 
 const LanguageWrapper = () => {
   const location = useLocation();
@@ -38,6 +38,7 @@ const LanguageWrapper = () => {
         <Route path="/pulseras" element={<Pulsera />} />
         <Route path="/llaveros" element={<Llavero />} />
         <Route path="/Juegos" element={<Juegos />} />
+        <Route path="/carrito" element={<Carrito />} />
       </Routes>
       <Footer />
     </>

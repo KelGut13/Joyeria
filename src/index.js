@@ -5,14 +5,17 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 
 import { ThemeProvider } from './context/ThemeContext'; 
+import { CartProvider } from './context/CartContext'; // 👈 importar carrito
 import './paginas/estilos/variables.css'; 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <ThemeProvider>
-      <App />
-    </ThemeProvider>
+    <CartProvider> {/* 👈 envolvemos todo */}
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
+    </CartProvider>
   </React.StrictMode>
 );
 
