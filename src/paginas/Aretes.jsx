@@ -9,11 +9,20 @@ const Aretes = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Obtener productos de la base de datos
-    const obtenerProductos = async () => {
+    // Obtener productos de la base de datos con retry logic
+    const obtenerProductos = async (retryCount = 0) => {
+      const maxRetries = 3;
+      
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:5001/api/productos");
+        console.log(`🔄 Intento ${retryCount + 1} de obtener productos...`);
+        
+        const response = await fetch("http://localhost:5001/api/productos", {
+          timeout: 10000, // 10 second timeout
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -29,10 +38,27 @@ const Aretes = () => {
         setProductos(aretes);
         setError(null);
       } catch (err) {
-        console.error("❌ Error al cargar productos:", err);
-        setError(`Error al cargar productos: ${err.message}`);
+        console.error(`❌ Error al cargar productos (intento ${retryCount + 1}):`, err);
+        
+        // Handle specific error types
+        if (err.message.includes('Failed to fetch') || err.name === 'TypeError') {
+          if (retryCount < maxRetries) {
+            console.log(`🔄 Reintentando en 3 segundos... (${retryCount + 1}/${maxRetries})`);
+            setTimeout(() => {
+              obtenerProductos(retryCount + 1);
+            }, 3000);
+            return;
+          }
+          setError("No se pudo conectar con el servidor. Verifique su conexión a internet.");
+        } else if (err.message.includes('503')) {
+          setError("El servidor está experimentando problemas temporales. Reintente en unos segundos.");
+        } else {
+          setError(`Error al cargar productos: ${err.message}`);
+        }
       } finally {
-        setLoading(false);
+        if (retryCount === 0 || retryCount >= maxRetries) {
+          setLoading(false);
+        }
       }
     };
 
@@ -47,6 +73,33 @@ const Aretes = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Add manual retry function
+  const handleRetry = () => {
+    setError(null);
+    setLoading(true);
+    // Restart the fetch process
+    const obtenerProductos = async () => {
+      try {
+        const response = await fetch("http://localhost:5001/api/productos");
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const aretes = data.filter((producto) => producto.id_categoria === 1);
+        setProductos(aretes);
+        setError(null);
+      } catch (err) {
+        setError(`Error al cargar productos: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    obtenerProductos();
+  };
 
   return (
     <div className="aretes-page">
@@ -118,7 +171,7 @@ const Aretes = () => {
                 ⚠️ {error}
                 <br />
                 <button 
-                  onClick={() => window.location.reload()} 
+                  onClick={handleRetry} 
                   className="retry-btn"
                 >
                   Intentar de nuevo
