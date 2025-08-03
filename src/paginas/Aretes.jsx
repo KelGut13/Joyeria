@@ -108,14 +108,31 @@ const Aretes = () => {
         {/* Productos */}
         <section className="productos">
           {loading ? (
-            <p>Cargando productos...</p>
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p>Cargando productos...</p>
+            </div>
           ) : error ? (
-            <p style={{ color: "red" }}>{error}</p>
+            <div className="error-container">
+              <p style={{ color: "red" }}>
+                ⚠️ {error}
+                <br />
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="retry-btn"
+                >
+                  Intentar de nuevo
+                </button>
+              </p>
+            </div>
           ) : productos.length === 0 ? (
-            <p>No hay aretes disponibles.</p>
+            <div className="empty-container">
+              <p>🔍 No hay aretes disponibles en este momento.</p>
+            </div>
           ) : (
             productos.map((producto) => (
               <div className="producto" key={producto.ID_producto}>
+                <div className="producto-badge">Nuevo</div>
                 <img
                   src={
                     producto.imagen
@@ -131,6 +148,7 @@ const Aretes = () => {
                 />
                 <p>{producto.nombre}</p>
                 <span>${producto.precio}</span>
+                <button className="add-to-cart-btn">Agregar al carrito</button>
               </div>
             ))
           )}

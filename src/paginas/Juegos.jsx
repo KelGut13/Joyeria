@@ -3,14 +3,46 @@ import "./estilos/Juegos.css";
 
 const Juegos = () => {
   const [productos, setProductos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    setProductos([
-      { id: 1, nombre: "Juego mexicano", precio: 75, imagen: "catalogos1.jpg" },
-      { id: 2, nombre: "Juego de flores", precio: 75, imagen: "catalogos2.jpg" },
-      { id: 3, nombre: "Juego girasol", precio: 75, imagen: "catalogos3.jpg" },
-      // ...
-    ]);
+    const obtenerProductos = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("http://localhost:5001/api/productos");
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("✅ Todos los productos:", data);
+
+        // Como no hay categoría específica para "Juegos", mostramos todos los productos
+        // o podrías filtrar por algún criterio específico como nombre que contenga "juego" o "set"
+        const juegos = data.filter((producto) =>
+          producto.nombre.toLowerCase().includes("juego") ||
+          producto.nombre.toLowerCase().includes("set") ||
+          producto.nombre.toLowerCase().includes("colección")
+        );
+
+        // Si no hay productos específicos de "juegos", mostrar una selección de todas las categorías
+        const productosParaJuegos = juegos.length > 0 ? juegos : data.slice(0, 6);
+
+        console.log("🔍 Productos para juegos filtrados:", productosParaJuegos);
+
+        setProductos(productosParaJuegos);
+        setError(null);
+      } catch (err) {
+        console.error("❌ Error al cargar productos:", err);
+        setError(`Error al cargar productos: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    obtenerProductos();
   }, []);
 
   return (
@@ -18,7 +50,7 @@ const Juegos = () => {
       {/* Banner principal */}
       <div className="banner-juegos">
         <img src="/fondoJuegos.jpg" alt="Banner Juegos" />
-        <h2>“Accesorios hechos a mano, con alma y corazón.”</h2>
+        <h2>"Accesorios hechos a mano, con alma y corazón."</h2>
       </div>
 
       <div className="contenido-juegos">
@@ -49,13 +81,33 @@ const Juegos = () => {
 
         {/* Productos */}
         <section className="productos">
-          {productos.map((producto) => (
-            <div className="producto" key={producto.id}>
-              <img src={`/${producto.imagen}`} alt={producto.nombre} />
-              <p>{producto.nombre}</p>
-              <span>${producto.precio}</span>
-            </div>
-          ))}
+          {loading ? (
+            <p>Cargando productos...</p>
+          ) : error ? (
+            <p style={{ color: "red" }}>{error}</p>
+          ) : productos.length === 0 ? (
+            <p>No hay juegos disponibles.</p>
+          ) : (
+            productos.map((producto) => (
+              <div className="producto" key={producto.ID_producto}>
+                <img
+                  src={
+                    producto.imagen
+                      ? Array.isArray(producto.imagen)
+                        ? producto.imagen[0]
+                        : producto.imagen.split(",")[0]
+                      : "/placeholder.jpg"
+                  }
+                  alt={producto.nombre}
+                  onError={(e) => {
+                    e.target.src = "/placeholder.jpg";
+                  }}
+                />
+                <p>{producto.nombre}</p>
+                <span>${producto.precio}</span>
+              </div>
+            ))
+          )}
         </section>
       </div>
 

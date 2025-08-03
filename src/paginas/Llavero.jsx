@@ -3,14 +3,45 @@ import "./estilos/Llavero.css";
 
 const Llavero = () => {
   const [productos, setProductos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    setProductos([
-      { id: 1, nombre: "Corazones partidos", precio: 85, imagen: "catalogos1.jpg" },
-      { id: 2, nombre: "Minion", precio: 90, imagen: "catalogos2.jpg" },
-      { id: 3, nombre: "Mickey", precio: 95, imagen: "catalogos3.jpg" },
-      // ...
-    ]);
+    const obtenerProductos = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("http://localhost:5001/api/productos");
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("✅ Todos los productos:", data);
+
+        // Como no hay categoría específica para "Llaveros", filtrar por nombre que contenga palabras relacionadas
+        const llaveros = data.filter((producto) =>
+          producto.nombre.toLowerCase().includes("llavero") ||
+          producto.nombre.toLowerCase().includes("chaveiro") ||
+          producto.nombre.toLowerCase().includes("keychain")
+        );
+
+        // Si no hay productos específicos de "llaveros", mostrar una selección de productos pequeños/accesorios
+        const productosParaLlaveros = llaveros.length > 0 ? llaveros : data.slice(0, 6);
+
+        console.log("🔍 Productos para llaveros filtrados:", productosParaLlaveros);
+
+        setProductos(productosParaLlaveros);
+        setError(null);
+      } catch (err) {
+        console.error("❌ Error al cargar productos:", err);
+        setError(`Error al cargar productos: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    obtenerProductos();
   }, []);
 
   return (
@@ -18,7 +49,7 @@ const Llavero = () => {
       {/* Banner principal */}
       <div className="banner-llavero">
         <img src="/fondoLlaveros.jpg" alt="Banner Llaveros" />
-        <h2>“Llaveros que hablan por ti”</h2>
+        <h2>"Llaveros que hablan por ti"</h2>
       </div>
 
       <div className="contenido-llavero">
@@ -49,13 +80,33 @@ const Llavero = () => {
 
         {/* Productos */}
         <section className="productos">
-          {productos.map((producto) => (
-            <div className="producto" key={producto.id}>
-              <img src={`/${producto.imagen}`} alt={producto.nombre} />
-              <p>{producto.nombre}</p>
-              <span>${producto.precio}</span>
-            </div>
-          ))}
+          {loading ? (
+            <p>Cargando productos...</p>
+          ) : error ? (
+            <p style={{ color: "red" }}>{error}</p>
+          ) : productos.length === 0 ? (
+            <p>No hay llaveros disponibles.</p>
+          ) : (
+            productos.map((producto) => (
+              <div className="producto" key={producto.ID_producto}>
+                <img
+                  src={
+                    producto.imagen
+                      ? Array.isArray(producto.imagen)
+                        ? producto.imagen[0]
+                        : producto.imagen.split(",")[0]
+                      : "/placeholder.jpg"
+                  }
+                  alt={producto.nombre}
+                  onError={(e) => {
+                    e.target.src = "/placeholder.jpg";
+                  }}
+                />
+                <p>{producto.nombre}</p>
+                <span>${producto.precio}</span>
+              </div>
+            ))
+          )}
         </section>
       </div>
 
