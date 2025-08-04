@@ -176,17 +176,20 @@ app.post("/api/login", (req, res) => {
     const token = jwt.sign(
       { id: user.ID_usuario, rol: user.id_rol },
       process.env.JWT_SECRET,
-      { expiresIn: "2h" }
+      { expiresIn: "24h" } // Extender la duración del token
     );
 
-    // ✅ Enviar token al frontend
+    // ✅ Enviar token al frontend con todos los datos del usuario
     res.status(200).json({
       message: "Inicio de sesión exitoso.",
       token,
       usuario: {
         id: user.ID_usuario,
         nombre: user.nombre,
+        primer_apellido: user.primer_apellido,
+        segundo_apellido: user.segundo_apellido,
         email: user.email,
+        telefono: user.telefono,
         rol: user.id_rol
       }
     });
@@ -334,4 +337,328 @@ app.post("/api/setup-categories", (req, res) => {
       console.error("Error al configurar categorías:", err);
       res.status(500).json({ error: "Error al configurar categorías" });
     });
+});
+
+// Endpoint para actualizar datos personales
+app.put("/api/actualizar-datos-personales", verifyToken, (req, res) => {
+  const userId = req.user.id;
+  const { nombre, primer_apellido, segundo_apellido } = req.body;
+
+  if (!nombre || !primer_apellido) {
+    return res.status(400).json({ error: "Nombre y primer apellido son requeridos." });
+  }
+
+  const query = `
+    UPDATE usuarios 
+    SET nombre = ?, primer_apellido = ?, segundo_apellido = ?
+    WHERE ID_usuario = ?
+  `;
+
+  db.query(query, [nombre, primer_apellido, segundo_apellido, userId], (err, result) => {
+    if (err) {
+      console.error("❌ Error al actualizar datos personales:", err);
+      return res.status(500).json({ error: "Error al actualizar datos personales." });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+
+    res.json({ message: "Datos personales actualizados correctamente." });
+  });
+});
+
+// Endpoint para actualizar email
+app.put("/api/actualizar-email", verifyToken, (req, res) => {
+  const userId = req.user.id;
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: "Email es requerido." });
+  }
+
+  // Verificar que el email no esté siendo usado por otro usuario
+  const checkQuery = "SELECT ID_usuario FROM usuarios WHERE email = ? AND ID_usuario != ?";
+  
+  db.query(checkQuery, [email, userId], (err, results) => {
+    if (err) {
+      console.error("❌ Error al verificar email:", err);
+      return res.status(500).json({ error: "Error interno del servidor." });
+    }
+
+    if (results.length > 0) {
+      return res.status(400).json({ error: "Este email ya está siendo usado por otro usuario." });
+    }
+
+    const updateQuery = "UPDATE usuarios SET email = ? WHERE ID_usuario = ?";
+    
+    db.query(updateQuery, [email, userId], (err, result) => {
+      if (err) {
+        console.error("❌ Error al actualizar email:", err);
+        return res.status(500).json({ error: "Error al actualizar email." });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: "Usuario no encontrado." });
+      }
+
+      res.json({ message: "Email actualizado correctamente." });
+    });
+  });
+});
+
+// Endpoint para cambiar contraseña
+app.put("/api/cambiar-password", verifyToken, async (req, res) => {
+  const userId = req.user.id;
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "Contraseña actual y nueva son requeridas." });
+  }
+
+  // Verificar contraseña actual
+  const query = "SELECT password FROM usuarios WHERE ID_usuario = ?";
+  
+  db.query(query, [userId], async (err, results) => {
+    if (err) {
+      console.error("❌ Error al verificar contraseña:", err);
+      return res.status(500).json({ error: "Error interno del servidor." });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+
+    const user = results[0];
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ error: "Contraseña actual incorrecta." });
+    }
+
+    // Hashear nueva contraseña
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    const updateQuery = "UPDATE usuarios SET password = ? WHERE ID_usuario = ?";
+    
+    db.query(updateQuery, [hashedNewPassword, userId], (err, result) => {
+      if (err) {
+        console.error("❌ Error al cambiar contraseña:", err);
+        return res.status(500).json({ error: "Error al cambiar contraseña." });
+      }
+
+      res.json({ message: "Contraseña cambiada correctamente." });
+    });
+  });
+});
+
+// Endpoint para actualizar datos de cuenta (email y teléfono)
+app.put("/api/actualizar-cuenta", verifyToken, (req, res) => {
+  const userId = req.user.id;
+  const { email, telefono } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: "Email es requerido." });
+  }
+
+  // Verificar que el email no esté siendo usado por otro usuario
+  const checkQuery = "SELECT ID_usuario FROM usuarios WHERE email = ? AND ID_usuario != ?";
+  
+  db.query(checkQuery, [email, userId], (err, results) => {
+    if (err) {
+      console.error("❌ Error al verificar email:", err);
+      return res.status(500).json({ error: "Error interno del servidor." });
+    }
+
+    if (results.length > 0) {
+      return res.status(400).json({ error: "Este email ya está siendo usado por otro usuario." });
+    }
+
+    const updateQuery = "UPDATE usuarios SET email = ?, telefono = ? WHERE ID_usuario = ?";
+    
+    db.query(updateQuery, [email, telefono, userId], (err, result) => {
+      if (err) {
+        console.error("❌ Error al actualizar datos de cuenta:", err);
+        return res.status(500).json({ error: "Error al actualizar datos de cuenta." });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: "Usuario no encontrado." });
+      }
+
+      res.json({ message: "Datos de cuenta actualizados correctamente." });
+    });
+  });
+});
+
+// Endpoint para obtener direcciones del usuario
+app.get("/api/direcciones", verifyToken, (req, res) => {
+  const userId = req.user.id;
+  
+  const query = `
+    SELECT ID_direccion, alias, calle, numero_exterior, numero_interior, 
+           colonia, ciudad, estado, codigo_postal, pais, predeterminada
+    FROM direcciones 
+    WHERE ID_usuario = ? 
+    ORDER BY predeterminada DESC, alias ASC
+  `;
+  
+  db.query(query, [userId], (err, results) => {
+    if (err) {
+      console.error("❌ Error al obtener direcciones:", err);
+      return res.status(500).json({ error: "Error al obtener direcciones." });
+    }
+    
+    res.json(results);
+  });
+});
+
+// Endpoint para crear nueva dirección
+app.post("/api/direcciones", verifyToken, (req, res) => {
+  const userId = req.user.id;
+  const { 
+    alias, calle, numero_exterior, numero_interior, 
+    colonia, ciudad, estado, codigo_postal, pais, predeterminada 
+  } = req.body;
+
+  if (!alias || !calle || !numero_exterior || !colonia || !ciudad || !estado || !codigo_postal) {
+    return res.status(400).json({ error: "Los campos requeridos no pueden estar vacíos." });
+  }
+
+  // Si es predeterminada, quitar el estado predeterminado de otras direcciones
+  const resetPredeterminadaQuery = predeterminada ? 
+    "UPDATE direcciones SET predeterminada = 0 WHERE ID_usuario = ?" : "";
+
+  const insertQuery = `
+    INSERT INTO direcciones (
+      ID_usuario, alias, calle, numero_exterior, numero_interior,
+      colonia, ciudad, estado, codigo_postal, pais, predeterminada
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  const executeInsert = () => {
+    db.query(insertQuery, [
+      userId, alias, calle, numero_exterior, numero_interior,
+      colonia, ciudad, estado, codigo_postal, pais || 'México', predeterminada ? 1 : 0
+    ], (err, result) => {
+      if (err) {
+        console.error("❌ Error al crear dirección:", err);
+        return res.status(500).json({ error: "Error al crear dirección." });
+      }
+      
+      res.status(201).json({ 
+        message: "Dirección creada correctamente.",
+        ID_direccion: result.insertId 
+      });
+    });
+  };
+
+  if (resetPredeterminadaQuery) {
+    db.query(resetPredeterminadaQuery, [userId], (err) => {
+      if (err) {
+        console.error("❌ Error al resetear direcciones predeterminadas:", err);
+        return res.status(500).json({ error: "Error al procesar dirección predeterminada." });
+      }
+      executeInsert();
+    });
+  } else {
+    executeInsert();
+  }
+});
+
+// Endpoint para actualizar dirección
+app.put("/api/direcciones/:id", verifyToken, (req, res) => {
+  const userId = req.user.id;
+  const direccionId = req.params.id;
+  const { 
+    alias, calle, numero_exterior, numero_interior, 
+    colonia, ciudad, estado, codigo_postal, pais, predeterminada 
+  } = req.body;
+
+  if (!alias || !calle || !numero_exterior || !colonia || !ciudad || !estado || !codigo_postal) {
+    return res.status(400).json({ error: "Los campos requeridos no pueden estar vacíos." });
+  }
+
+  // Verificar que la dirección pertenece al usuario
+  const checkOwnerQuery = "SELECT ID_direccion FROM direcciones WHERE ID_direccion = ? AND ID_usuario = ?";
+  
+  db.query(checkOwnerQuery, [direccionId, userId], (err, results) => {
+    if (err) {
+      console.error("❌ Error al verificar propietario:", err);
+      return res.status(500).json({ error: "Error interno del servidor." });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Dirección no encontrada." });
+    }
+
+    const resetPredeterminadaQuery = predeterminada ? 
+      "UPDATE direcciones SET predeterminada = 0 WHERE ID_usuario = ? AND ID_direccion != ?" : "";
+
+    const updateQuery = `
+      UPDATE direcciones SET 
+        alias = ?, calle = ?, numero_exterior = ?, numero_interior = ?,
+        colonia = ?, ciudad = ?, estado = ?, codigo_postal = ?, 
+        pais = ?, predeterminada = ?
+      WHERE ID_direccion = ? AND ID_usuario = ?
+    `;
+
+    const executeUpdate = () => {
+      db.query(updateQuery, [
+        alias, calle, numero_exterior, numero_interior,
+        colonia, ciudad, estado, codigo_postal, pais || 'México', 
+        predeterminada ? 1 : 0, direccionId, userId
+      ], (err, result) => {
+        if (err) {
+          console.error("❌ Error al actualizar dirección:", err);
+          return res.status(500).json({ error: "Error al actualizar dirección." });
+        }
+        
+        res.json({ message: "Dirección actualizada correctamente." });
+      });
+    };
+
+    if (resetPredeterminadaQuery) {
+      db.query(resetPredeterminadaQuery, [userId, direccionId], (err) => {
+        if (err) {
+          console.error("❌ Error al resetear direcciones predeterminadas:", err);
+          return res.status(500).json({ error: "Error al procesar dirección predeterminada." });
+        }
+        executeUpdate();
+      });
+    } else {
+      executeUpdate();
+    }
+  });
+});
+
+// Endpoint para eliminar dirección
+app.delete("/api/direcciones/:id", verifyToken, (req, res) => {
+  const userId = req.user.id;
+  const direccionId = req.params.id;
+
+  // Verificar que la dirección pertenece al usuario
+  const checkOwnerQuery = "SELECT ID_direccion FROM direcciones WHERE ID_direccion = ? AND ID_usuario = ?";
+  
+  db.query(checkOwnerQuery, [direccionId, userId], (err, results) => {
+    if (err) {
+      console.error("❌ Error al verificar propietario:", err);
+      return res.status(500).json({ error: "Error interno del servidor." });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Dirección no encontrada." });
+    }
+
+    const deleteQuery = "DELETE FROM direcciones WHERE ID_direccion = ? AND ID_usuario = ?";
+    
+    db.query(deleteQuery, [direccionId, userId], (err, result) => {
+      if (err) {
+        console.error("❌ Error al eliminar dirección:", err);
+        return res.status(500).json({ error: "Error al eliminar dirección." });
+      }
+      
+      res.json({ message: "Dirección eliminada correctamente." });
+    });
+  });
 });

@@ -31,8 +31,10 @@ const Login = () => {
         localStorage.setItem("token", data.token);
         localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
-        // Redirige al perfil del cliente
-        navigate("/perfil");
+        console.log("Login exitoso, redirigiendo a /panel-usuario");
+        
+        // Redirige al panel de usuario
+        navigate("/panel-usuario");
       }else {
         setError(data.error || "Error al iniciar sesión.");
       }

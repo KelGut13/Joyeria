@@ -1,60 +1,118 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { User, ShieldCheck, Smartphone, MapPin, Edit, Lock, Users, Mail } from "lucide-react";
 import "./estilos/PanelUsuario.css";
 import Separar from "../componentes/Separador NavBar/Separador";
 
-const tarjetas = [
-	{
-		icon: <User size={32} />,
-		titulo: "Datos personales",
-		descripcion: "Kelvim Isahi Gutierrez Sandoval",
-		estado: "validado",
-	},
-	{
-		icon: <Mail size={32} />,
-		titulo: "Datos de tu cuenta",
-		descripcion: "Datos que representan tu cuenta.",
-		estado: "validado",
-	},
-	{
-		icon: <ShieldCheck size={32} />,
-		titulo: "Seguridad",
-		descripcion: "Configura la seguridad de tu cuenta.",
-		estado: "validado",
-	},
-	{
-		icon: <Users size={32} />,
-		titulo: "Colaboradores",
-		descripcion: "Personas que operan con tu cuenta.",
-	},
-	{
-		icon: <MapPin size={32} />,
-		titulo: "Direcciones",
-		descripcion: "Direcciones guardadas en tu cuenta.",
-	},
-	{
-		icon: <Lock size={32} />,
-		titulo: "Privacidad",
-		descripcion: "Preferencias y control sobre el uso de tus datos.",
-	},
-];
-
 const PanelUsuario = () => {
+	const [usuario, setUsuario] = useState(null);
+	const [modalActivo, setModalActivo] = useState(null);
+	const navigate = useNavigate();
+
+	useEffect(() => {
+		console.log("PanelUsuario component mounted");
+		
+		// Verificar si hay un usuario logueado
+		const usuarioStorage = localStorage.getItem("usuario");
+		const token = localStorage.getItem("token");
+		
+		console.log("Usuario en localStorage:", usuarioStorage);
+		console.log("Token en localStorage:", token ? "Presente" : "No presente");
+		
+		if (!usuarioStorage || !token) {
+			console.log("No hay usuario o token, redirigiendo a login");
+			navigate("/login");
+			return;
+		}
+		
+		setUsuario(JSON.parse(usuarioStorage));
+	}, [navigate]);
+
+	// Si no hay usuario, mostrar loading
+	if (!usuario) {
+		return <div>Cargando...</div>;
+	}
+
+	// Construir el nombre completo
+	const nombreCompleto = `${usuario.nombre} ${usuario.primer_apellido || ''} ${usuario.segundo_apellido || ''}`.trim();
+	
+	// Obtener las iniciales para el avatar
+	const iniciales = usuario.nombre 
+		? `${usuario.nombre.charAt(0)}${usuario.primer_apellido ? usuario.primer_apellido.charAt(0) : ''}`.toUpperCase()
+		: 'U';
+
+	// Definir las tarjetas con datos dinámicos del usuario
+	const tarjetas = [
+		{
+			id: "datos-personales",
+			icon: <User size={32} />,
+			titulo: "Datos personales",
+			descripcion: nombreCompleto,
+			estado: "validado",
+		},
+		{
+			id: "datos-cuenta",
+			icon: <Mail size={32} />,
+			titulo: "Datos de tu cuenta",
+			descripcion: "Datos que representan tu cuenta.",
+			estado: "validado",
+		},
+		{
+			id: "seguridad",
+			icon: <ShieldCheck size={32} />,
+			titulo: "Seguridad",
+			descripcion: "Configura la seguridad de tu cuenta.",
+			estado: "validado",
+		},
+		{
+			id: "direcciones",
+			icon: <MapPin size={32} />,
+			titulo: "Direcciones",
+			descripcion: "Direcciones guardadas en tu cuenta.",
+		},
+		{
+			id: "cerrar-sesion",
+			icon: <Lock size={32} />,
+			titulo: "Cerrar sesión",
+			descripcion: "Salir de tu cuenta de usuario.",
+		},
+	];
+
+	const abrirModal = (cardId) => {
+		if (cardId === "cerrar-sesion") {
+			handleLogout();
+		} else {
+			setModalActivo(cardId);
+		}
+	};
+
+	const cerrarModal = () => {
+		setModalActivo(null);
+	};
+
+	const handleLogout = () => {
+		if (window.confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+			localStorage.removeItem('token');
+			localStorage.removeItem('usuario');
+			navigate('/');
+		}
+	};
+
 	return (
 		<div className="panel-dashboard-bg">
             <Separar />
 			<div className="panel-dashboard-header">
 				<div className="panel-dashboard-avatar">
-					<span className="avatar-circle">ÁS</span>
+					<span className="avatar-circle">{iniciales}</span>
 					<div>
-						<h2>Acrono Game Studios</h2>
-						<p className="panel-dashboard-email">acronostudios@gmail.com</p>
+						<h2>{nombreCompleto}</h2>
+						<p className="panel-dashboard-email">{usuario.email}</p>
 					</div>
 				</div>
 			</div>
 			<div className="panel-dashboard-grid">
 				{tarjetas.map((card, idx) => (
-					<div className="panel-dashboard-card" key={idx}>
+					<div className={`panel-dashboard-card ${card.id === 'cerrar-sesion' ? 'logout-card' : ''}`} key={idx}>
 						<div className="panel-dashboard-card-icon">{card.icon}</div>
 						<div className="panel-dashboard-card-content">
 							<div className="panel-dashboard-card-title">{card.titulo}</div>
@@ -63,11 +121,702 @@ const PanelUsuario = () => {
 								<span className="panel-dashboard-card-validado">✔ Validado</span>
 							)}
 						</div>
-						<button className="panel-dashboard-card-edit" aria-label="Editar">
+						<button 
+							className="panel-dashboard-card-edit" 
+							aria-label="Editar"
+							onClick={() => abrirModal(card.id)}
+						>
 							<Edit size={20} />
 						</button>
 					</div>
 				))}
+			</div>
+
+			{/* Modal para editar datos personales */}
+			{modalActivo === "datos-personales" && (
+				<ModalDatosPersonales 
+					usuario={usuario} 
+					setUsuario={setUsuario}
+					onClose={cerrarModal} 
+				/>
+			)}
+
+			{/* Modal para editar datos de cuenta */}
+			{modalActivo === "datos-cuenta" && (
+				<ModalDatosCuenta 
+					usuario={usuario} 
+					setUsuario={setUsuario}
+					onClose={cerrarModal} 
+				/>
+			)}
+
+			{/* Modal para seguridad */}
+			{modalActivo === "seguridad" && (
+				<ModalSeguridad 
+					usuario={usuario}
+					onClose={cerrarModal} 
+				/>
+			)}
+
+			{/* Modal para direcciones */}
+			{modalActivo === "direcciones" && (
+				<ModalDirecciones 
+					usuario={usuario}
+					onClose={cerrarModal} 
+				/>
+			)}
+		</div>
+	);
+};
+
+// Componente Modal para Datos Personales
+const ModalDatosPersonales = ({ usuario, setUsuario, onClose }) => {
+	const [form, setForm] = useState({
+		nombre: usuario.nombre || '',
+		primer_apellido: usuario.primer_apellido || '',
+		segundo_apellido: usuario.segundo_apellido || ''
+	});
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState('');
+	const navigate = useNavigate();
+
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+		setLoading(true);
+		setError('');
+
+		try {
+			const token = localStorage.getItem('token');
+			
+			if (!token) {
+				setError('No hay sesión activa');
+				navigate('/login');
+				return;
+			}
+
+			console.log('Enviando datos:', form);
+			console.log('Token:', token ? 'Presente' : 'No presente');
+
+			const response = await fetch('http://localhost:5001/api/actualizar-datos-personales', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify(form)
+			});
+
+			console.log('Response status:', response.status);
+
+			if (response.ok) {
+				// Actualizar el usuario en localStorage
+				const usuarioActualizado = { ...usuario, ...form };
+				localStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
+				setUsuario(usuarioActualizado);
+				alert('Datos actualizados correctamente');
+				onClose();
+			} else {
+				const data = await response.json();
+				console.log('Error response:', data);
+				
+				if (response.status === 401) {
+					// Token expirado o inválido
+					localStorage.removeItem('token');
+					localStorage.removeItem('usuario');
+					setError('Sesión expirada. Por favor, inicia sesión nuevamente.');
+					setTimeout(() => {
+						navigate('/login');
+					}, 2000);
+				} else {
+					setError(data.error || 'Error al actualizar datos');
+				}
+			}
+		} catch (err) {
+			console.error('Error de conexión:', err);
+			setError('Error de conexión con el servidor');
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	return (
+		<div className="modal-overlay" onClick={onClose}>
+			<div className="modal-content" onClick={(e) => e.stopPropagation()}>
+				<div className="modal-header">
+					<h2>Editar Datos Personales</h2>
+					<button onClick={onClose} className="modal-close">✕</button>
+				</div>
+				<form onSubmit={handleSubmit} className="modal-form">
+					<div className="form-group">
+						<label>Nombre</label>
+						<input
+							type="text"
+							value={form.nombre}
+							onChange={(e) => setForm({...form, nombre: e.target.value})}
+							required
+						/>
+					</div>
+					<div className="form-group">
+						<label>Primer apellido</label>
+						<input
+							type="text"
+							value={form.primer_apellido}
+							onChange={(e) => setForm({...form, primer_apellido: e.target.value})}
+							required
+						/>
+					</div>
+					<div className="form-group">
+						<label>Segundo apellido</label>
+						<input
+							type="text"
+							value={form.segundo_apellido}
+							onChange={(e) => setForm({...form, segundo_apellido: e.target.value})}
+						/>
+					</div>
+					{error && <div className="error-message">{error}</div>}
+					<div className="form-buttons">
+						<button type="button" onClick={onClose} disabled={loading}>
+							Cancelar
+						</button>
+						<button type="submit" disabled={loading}>
+							{loading ? 'Guardando...' : 'Guardar cambios'}
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	);
+};
+
+// Componente Modal para Datos de Cuenta
+const ModalDatosCuenta = ({ usuario, setUsuario, onClose }) => {
+	const [form, setForm] = useState({
+		email: usuario.email || '',
+		telefono: usuario.telefono || ''
+	});
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState('');
+
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+		setLoading(true);
+		setError('');
+
+		try {
+			const token = localStorage.getItem('token');
+			const response = await fetch('http://localhost:5001/api/actualizar-cuenta', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify(form)
+			});
+
+			if (response.ok) {
+				const usuarioActualizado = { ...usuario, ...form };
+				localStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
+				setUsuario(usuarioActualizado);
+				alert('Datos de cuenta actualizados correctamente');
+				onClose();
+			} else {
+				const data = await response.json();
+				setError(data.error || 'Error al actualizar datos de cuenta');
+			}
+		} catch (err) {
+			setError('Error de conexión con el servidor');
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	return (
+		<div className="modal-overlay" onClick={onClose}>
+			<div className="modal-content" onClick={(e) => e.stopPropagation()}>
+				<div className="modal-header">
+					<h2>Editar Datos de Cuenta</h2>
+					<button onClick={onClose} className="modal-close">✕</button>
+				</div>
+				<form onSubmit={handleSubmit} className="modal-form">
+					<div className="form-group">
+						<label>Correo electrónico</label>
+						<input
+							type="email"
+							value={form.email}
+							onChange={(e) => setForm({...form, email: e.target.value})}
+							required
+						/>
+					</div>
+					<div className="form-group">
+						<label>Teléfono</label>
+						<input
+							type="tel"
+							value={form.telefono}
+							onChange={(e) => setForm({...form, telefono: e.target.value})}
+							placeholder="Ej: 3114441683"
+						/>
+					</div>
+					{error && <div className="error-message">{error}</div>}
+					<div className="form-buttons">
+						<button type="button" onClick={onClose} disabled={loading}>
+							Cancelar
+						</button>
+						<button type="submit" disabled={loading}>
+							{loading ? 'Guardando...' : 'Guardar cambios'}
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	);
+};
+
+// Componente Modal para Seguridad
+const ModalSeguridad = ({ usuario, onClose }) => {
+	const [form, setForm] = useState({
+		currentPassword: '',
+		newPassword: '',
+		confirmPassword: ''
+	});
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState('');
+
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+		setLoading(true);
+		setError('');
+
+		if (form.newPassword !== form.confirmPassword) {
+			setError('Las contraseñas no coinciden');
+			setLoading(false);
+			return;
+		}
+
+		try {
+			const token = localStorage.getItem('token');
+			const response = await fetch('http://localhost:5001/api/cambiar-password', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify({
+					currentPassword: form.currentPassword,
+					newPassword: form.newPassword
+				})
+			});
+
+			if (response.ok) {
+				alert('Contraseña actualizada correctamente');
+				onClose();
+			} else {
+				const data = await response.json();
+				setError(data.error || 'Error al cambiar contraseña');
+			}
+		} catch (err) {
+			setError('Error de conexión con el servidor');
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	return (
+		<div className="modal-overlay" onClick={onClose}>
+			<div className="modal-content" onClick={(e) => e.stopPropagation()}>
+				<div className="modal-header">
+					<h2>Cambiar Contraseña</h2>
+					<button onClick={onClose} className="modal-close">✕</button>
+				</div>
+				<form onSubmit={handleSubmit} className="modal-form">
+					<div className="form-group">
+						<label>Contraseña actual</label>
+						<input
+							type="password"
+							value={form.currentPassword}
+							onChange={(e) => setForm({...form, currentPassword: e.target.value})}
+							required
+						/>
+					</div>
+					<div className="form-group">
+						<label>Nueva contraseña</label>
+						<input
+							type="password"
+							value={form.newPassword}
+							onChange={(e) => setForm({...form, newPassword: e.target.value})}
+							required
+						/>
+					</div>
+					<div className="form-group">
+						<label>Confirmar nueva contraseña</label>
+						<input
+							type="password"
+							value={form.confirmPassword}
+							onChange={(e) => setForm({...form, confirmPassword: e.target.value})}
+							required
+						/>
+					</div>
+					{error && <div className="error-message">{error}</div>}
+					<div className="form-buttons">
+						<button type="button" onClick={onClose} disabled={loading}>
+							Cancelar
+						</button>
+						<button type="submit" disabled={loading}>
+							{loading ? 'Cambiando...' : 'Cambiar contraseña'}
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	);
+};
+
+// Componente Modal para Direcciones
+const ModalDirecciones = ({ usuario, onClose }) => {
+	const [direcciones, setDirecciones] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState('');
+	const [showForm, setShowForm] = useState(false);
+	const [editingDireccion, setEditingDireccion] = useState(null);
+
+	const [form, setForm] = useState({
+		alias: '',
+		calle: '',
+		numero_exterior: '',
+		numero_interior: '',
+		colonia: '',
+		ciudad: '',
+		estado: '',
+		codigo_postal: '',
+		pais: 'México',
+		predeterminada: false
+	});
+
+	useEffect(() => {
+		cargarDirecciones();
+	}, []);
+
+	const cargarDirecciones = async () => {
+		try {
+			setLoading(true);
+			const token = localStorage.getItem('token');
+			const response = await fetch('http://localhost:5001/api/direcciones', {
+				headers: {
+					'Authorization': `Bearer ${token}`
+				}
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				setDirecciones(data);
+			} else {
+				setError('Error al cargar direcciones');
+			}
+		} catch (err) {
+			setError('Error de conexión');
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const limpiarForm = () => {
+		setForm({
+			alias: '',
+			calle: '',
+			numero_exterior: '',
+			numero_interior: '',
+			colonia: '',
+			ciudad: '',
+			estado: '',
+			codigo_postal: '',
+			pais: 'México',
+			predeterminada: false
+		});
+		setEditingDireccion(null);
+	};
+
+	const handleAgregar = () => {
+		limpiarForm();
+		setShowForm(true);
+	};
+
+	const handleEditar = (direccion) => {
+		setForm({
+			alias: direccion.alias,
+			calle: direccion.calle,
+			numero_exterior: direccion.numero_exterior,
+			numero_interior: direccion.numero_interior || '',
+			colonia: direccion.colonia,
+			ciudad: direccion.ciudad,
+			estado: direccion.estado,
+			codigo_postal: direccion.codigo_postal,
+			pais: direccion.pais || 'México',
+			predeterminada: direccion.predeterminada === 1
+		});
+		setEditingDireccion(direccion);
+		setShowForm(true);
+	};
+
+	const handleEliminar = async (direccionId) => {
+		if (!window.confirm('¿Estás seguro de que deseas eliminar esta dirección?')) {
+			return;
+		}
+
+		try {
+			const token = localStorage.getItem('token');
+			const response = await fetch(`http://localhost:5001/api/direcciones/${direccionId}`, {
+				method: 'DELETE',
+				headers: {
+					'Authorization': `Bearer ${token}`
+				}
+			});
+
+			if (response.ok) {
+				alert('Dirección eliminada correctamente');
+				cargarDirecciones();
+			} else {
+				const data = await response.json();
+				setError(data.error || 'Error al eliminar dirección');
+			}
+		} catch (err) {
+			setError('Error de conexión');
+		}
+	};
+
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+		setLoading(true);
+		setError('');
+
+		try {
+			const token = localStorage.getItem('token');
+			const url = editingDireccion 
+				? `http://localhost:5001/api/direcciones/${editingDireccion.ID_direccion}`
+				: 'http://localhost:5001/api/direcciones';
+			
+			const method = editingDireccion ? 'PUT' : 'POST';
+
+			const response = await fetch(url, {
+				method,
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify(form)
+			});
+
+			if (response.ok) {
+				alert(editingDireccion ? 'Dirección actualizada correctamente' : 'Dirección agregada correctamente');
+				setShowForm(false);
+				limpiarForm();
+				cargarDirecciones();
+			} else {
+				const data = await response.json();
+				setError(data.error || 'Error al guardar dirección');
+			}
+		} catch (err) {
+			setError('Error de conexión');
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleCancelar = () => {
+		setShowForm(false);
+		limpiarForm();
+		setError('');
+	};
+
+	return (
+		<div className="modal-overlay" onClick={onClose}>
+			<div className="modal-content direcciones-modal" onClick={(e) => e.stopPropagation()}>
+				<div className="modal-header">
+					<h2>Mis Direcciones</h2>
+					<button onClick={onClose} className="modal-close">✕</button>
+				</div>
+				
+				<div className="modal-body">
+					{!showForm ? (
+						<div className="direcciones-list-container">
+							<div className="direcciones-header">
+								<button className="btn-agregar" onClick={handleAgregar}>
+									+ Agregar Dirección
+								</button>
+							</div>
+
+							{loading ? (
+								<div className="loading-text">Cargando direcciones...</div>
+							) : error ? (
+								<div className="error-message">{error}</div>
+							) : direcciones.length === 0 ? (
+								<div className="empty-state">
+									<p>No tienes direcciones guardadas</p>
+									<p>Agrega tu primera dirección para realizar pedidos</p>
+								</div>
+							) : (
+								<div className="direcciones-grid">
+									{direcciones.map((direccion) => (
+										<div key={direccion.ID_direccion} className="direccion-card">
+											{direccion.predeterminada === 1 && (
+												<div className="direccion-badge">Predeterminada</div>
+											)}
+											<div className="direccion-info">
+												<h4>{direccion.alias}</h4>
+												<p>
+													{direccion.calle} {direccion.numero_exterior}
+													{direccion.numero_interior && ` Int. ${direccion.numero_interior}`}
+												</p>
+												<p>{direccion.colonia}</p>
+												<p>{direccion.ciudad}, {direccion.estado}</p>
+												<p>CP: {direccion.codigo_postal}</p>
+												<p>{direccion.pais}</p>
+											</div>
+											<div className="direccion-actions">
+												<button 
+													className="btn-editar"
+													onClick={() => handleEditar(direccion)}
+												>
+													Editar
+												</button>
+												<button 
+													className="btn-eliminar"
+													onClick={() => handleEliminar(direccion.ID_direccion)}
+												>
+													Eliminar
+												</button>
+											</div>
+										</div>
+									))}
+								</div>
+							)}
+						</div>
+					) : (
+						<form onSubmit={handleSubmit} className="direccion-form">
+							<h3>{editingDireccion ? 'Editar Dirección' : 'Nueva Dirección'}</h3>
+							
+							<div className="form-row">
+								<div className="form-group">
+									<label>Alias *</label>
+									<input
+										type="text"
+										value={form.alias}
+										onChange={(e) => setForm({...form, alias: e.target.value})}
+										placeholder="Casa, Trabajo, etc."
+										required
+									/>
+								</div>
+								<div className="form-group">
+									<label>Código Postal *</label>
+									<input
+										type="text"
+										value={form.codigo_postal}
+										onChange={(e) => setForm({...form, codigo_postal: e.target.value})}
+										placeholder="63173"
+										required
+									/>
+								</div>
+							</div>
+
+							<div className="form-row">
+								<div className="form-group flex-2">
+									<label>Calle *</label>
+									<input
+										type="text"
+										value={form.calle}
+										onChange={(e) => setForm({...form, calle: e.target.value})}
+										placeholder="Av. Principal"
+										required
+									/>
+								</div>
+								<div className="form-group">
+									<label>Número Exterior *</label>
+									<input
+										type="text"
+										value={form.numero_exterior}
+										onChange={(e) => setForm({...form, numero_exterior: e.target.value})}
+										placeholder="123"
+										required
+									/>
+								</div>
+								<div className="form-group">
+									<label>Número Interior</label>
+									<input
+										type="text"
+										value={form.numero_interior}
+										onChange={(e) => setForm({...form, numero_interior: e.target.value})}
+										placeholder="A"
+									/>
+								</div>
+							</div>
+
+							<div className="form-row">
+								<div className="form-group">
+									<label>Colonia *</label>
+									<input
+										type="text"
+										value={form.colonia}
+										onChange={(e) => setForm({...form, colonia: e.target.value})}
+										placeholder="Centro"
+										required
+									/>
+								</div>
+								<div className="form-group">
+									<label>Ciudad *</label>
+									<input
+										type="text"
+										value={form.ciudad}
+										onChange={(e) => setForm({...form, ciudad: e.target.value})}
+										placeholder="Tepic"
+										required
+									/>
+								</div>
+							</div>
+
+							<div className="form-row">
+								<div className="form-group">
+									<label>Estado *</label>
+									<input
+										type="text"
+										value={form.estado}
+										onChange={(e) => setForm({...form, estado: e.target.value})}
+										placeholder="Nayarit"
+										required
+									/>
+								</div>
+								<div className="form-group">
+									<label>País</label>
+									<input
+										type="text"
+										value={form.pais}
+										onChange={(e) => setForm({...form, pais: e.target.value})}
+										placeholder="México"
+									/>
+								</div>
+							</div>
+
+							<div className="form-group checkbox-group">
+								<label className="checkbox-label">
+									<input
+										type="checkbox"
+										checked={form.predeterminada}
+										onChange={(e) => setForm({...form, predeterminada: e.target.checked})}
+									/>
+									Establecer como dirección predeterminada
+								</label>
+							</div>
+
+							{error && <div className="error-message">{error}</div>}
+
+							<div className="form-buttons">
+								<button type="button" onClick={handleCancelar} disabled={loading}>
+									Cancelar
+								</button>
+								<button type="submit" disabled={loading}>
+									{loading ? 'Guardando...' : (editingDireccion ? 'Actualizar' : 'Guardar')}
+								</button>
+							</div>
+						</form>
+					)}
+				</div>
 			</div>
 		</div>
 	);

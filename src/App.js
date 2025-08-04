@@ -34,6 +34,7 @@ const LanguageWrapper = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/crear-cuenta" element={<CrearCuenta />} />
         <Route path="/perfil" element={<PanelUsuario />} />
+        <Route path="/panel-usuario" element={<PanelUsuario />} />
         <Route path="/aretes" element={<Aretes />} />
         <Route path="/pulseras" element={<Pulsera />} />
         <Route path="/llaveros" element={<Llavero />} />
