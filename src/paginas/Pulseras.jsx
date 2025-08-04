@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./estilos/Productos.css";
 import Separar from "../componentes/Separador NavBar/Separador";
-import { Link } from "react-router-dom";
-import { useCarrito } from '../context/CarritoContext';
 
-const Aretes = () => {
+const Pulseras = () => {
   const [productos, setProductos] = useState([]);
   const [productosFiltrados, setProductosFiltrados] = useState([]);
   const [materiales, setMateriales] = useState([]);
@@ -22,8 +20,6 @@ const Aretes = () => {
     precioMin: '',
     precioMax: ''
   });
-
-  const { agregarProducto, estaEnCarrito, obtenerItemCarrito } = useCarrito();
 
   useEffect(() => {
     // Obtener productos, materiales, géneros y marcas de la base de datos
@@ -66,12 +62,12 @@ const Aretes = () => {
         console.log("✅ Géneros obtenidos:", generosData);
         console.log("✅ Marcas obtenidas:", marcasData);
         
-        // Filtrar solo aretes (categoria ID = 1)
-        const aretes = productosData.filter((producto) => producto.id_categoria === 1);
-        console.log("🔍 Aretes filtrados:", aretes);
+        // Filtrar solo pulseras (categoria ID = 4)
+        const pulseras = productosData.filter((producto) => producto.id_categoria === 4);
+        console.log("🔗 Pulseras encontradas:", pulseras);
         
-        setProductos(aretes);
-        setProductosFiltrados(aretes);
+        setProductos(pulseras);
+        setProductosFiltrados(pulseras);
         setMateriales(materialesData);
         setGeneros(generosData);
         setMarcas(marcasData);
@@ -209,44 +205,18 @@ const Aretes = () => {
     window.location.reload();
   };
 
-  const handleAgregarAlCarrito = (e, producto) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    try {
-      // Verificar que el producto tenga todos los campos necesarios
-      if (!producto.ID_producto || !producto.nombre || !producto.precio || !producto.stock) {
-        throw new Error('Datos de producto incompletos');
-      }
-
-      agregarProducto(producto, 1);
-      
-      // Mostrar confirmación más amigable
-      alert(`✅ ${producto.nombre} agregado al carrito exitosamente`);
-      
-      console.log('Producto agregado al carrito:', producto);
-      console.log('Estado actual del carrito después de agregar:', {
-        estaEnCarrito: estaEnCarrito(producto.ID_producto),
-        itemCarrito: obtenerItemCarrito(producto.ID_producto)
-      });
-      
-    } catch (error) {
-      console.error('Error al agregar al carrito:', error);
-      alert(`❌ Error: ${error.message}`);
-    }
-  };
-
   return (
     <div className="productos-page">
       <Separar />
       
-      <div className="banner-productos aretes-banner">
-        <img src="../9.png" alt="Banner Aretes" />
+      <div className="banner-productos pulseras-banner">
+        <img src="../pulseras-banner.jpg" alt="Banner Pulseras" />
         <div className="banner-overlay">
-          <h2>✨ Aretes únicos que reflejan tu personalidad</h2>
+          <h2>🔗 Pulseras únicas que complementan tu estilo</h2>
         </div>
       </div>
 
+      {/* Botón Filtro solo en móvil */}
       <button
         className="btn-filtro-movil"
         onClick={() => setMostrarFiltros((prev) => !prev)}
@@ -370,18 +340,14 @@ const Aretes = () => {
             </div>
           ) : productosFiltrados.length === 0 ? (
             <div className="empty-container">
-              <p>🔍 No hay aretes disponibles con los filtros seleccionados.</p>
+              <p>🔍 No hay pulseras disponibles con los filtros seleccionados.</p>
               <button onClick={limpiarFiltros} className="retry-btn">
                 Limpiar filtros
               </button>
             </div>
           ) : (
             productosFiltrados.map((producto) => (
-              <Link 
-                to={`/producto/${producto.ID_producto}`}
-                className="producto" 
-                key={producto.ID_producto}
-              >
+              <div className="producto" key={producto.ID_producto}>
                 <div className="producto-badge">Nuevo</div>
                 <img
                   src={
@@ -396,26 +362,20 @@ const Aretes = () => {
                     e.target.src = "/placeholder.jpg";
                   }}
                 />
-                <div className="producto-info">
-                  <p>{producto.nombre}</p>
-                  <span>${producto.precio}</span>
-                  <button 
-                    className="add-to-cart-btn"
-                    onClick={(e) => handleAgregarAlCarrito(e, producto)}
-                  >
-                    {estaEnCarrito(producto.ID_producto) ? 'En el carrito' : 'Agregar al carrito'}
-                  </button>
-                </div>
-              </Link>
+                <p>{producto.nombre}</p>
+                <span>${producto.precio}</span>
+                <button className="add-to-cart-btn">Agregar al carrito</button>
+              </div>
             ))
           )}
-          
-          {!loading && !error && productosFiltrados.length > 0 && (
-            <div className="productos-counter">
-              <span>{productosFiltrados.length} producto(s) encontrado(s)</span>
-            </div>
-          )}
         </section>
+        
+        {/* Mostrar contador fuera de la grid */}
+        {!loading && !error && productosFiltrados.length > 0 && (
+          <div className="productos-counter">
+            <span>{productosFiltrados.length} producto(s) encontrado(s)</span>
+          </div>
+        )}
       </div>
 
       {/* Botón mostrar más */}
@@ -426,7 +386,7 @@ const Aretes = () => {
   );
 };
 
-export default Aretes;
+export default Pulseras;
 
 /* Actualizar el producto "Anillo" para que tenga la categoría correcta
 UPDATE productos SET id_categoria = 2 WHERE ID_producto = 4;

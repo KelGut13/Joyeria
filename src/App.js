@@ -12,10 +12,17 @@ import CrearCuenta from "./paginas/CrearCuenta";
 import PanelUsuario from "./paginas/PanelUsuario";
 import "./paginas/estilos/variables.css";
 import Aretes from "./paginas/Aretes";
+import Anillos from "./paginas/Anillos";
+import Collares from "./paginas/Collares";
 import Pulsera from "./paginas/Pulsera";
 import Llavero from "./paginas/Llavero";
 import Juegos from "./paginas/Juegos";
+import { CarritoProvider } from "./context/CarritoContext";
 import Carrito from "./paginas/Carrito";
+import Checkout from "./paginas/Checkout";
+import PedidoConfirmado from "./paginas/PedidoConfirmado";
+import MisPedidos from "./paginas/MisPedidos";
+import DetalleProducto from "./paginas/DetalleProducto";
 
 const LanguageWrapper = () => {
   const location = useLocation();
@@ -36,10 +43,16 @@ const LanguageWrapper = () => {
         <Route path="/perfil" element={<PanelUsuario />} />
         <Route path="/panel-usuario" element={<PanelUsuario />} />
         <Route path="/aretes" element={<Aretes />} />
+        <Route path="/anillos" element={<Anillos />} />
+        <Route path="/collares" element={<Collares />} />
         <Route path="/pulseras" element={<Pulsera />} />
         <Route path="/llaveros" element={<Llavero />} />
         <Route path="/Juegos" element={<Juegos />} />
         <Route path="/carrito" element={<Carrito />} />
+        <Route path="/mis-pedidos" element={<MisPedidos />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/pedido-confirmado/:pedidoId" element={<PedidoConfirmado />} />
+        <Route path="/producto/:id" element={<DetalleProducto />} />
       </Routes>
       <Footer />
     </>
@@ -48,12 +61,14 @@ const LanguageWrapper = () => {
 
 const App = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/*" element={<LanguageWrapper />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+    <CarritoProvider>
+      <Router>
+        <Routes>
+          <Route path="/*" element={<LanguageWrapper />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </CarritoProvider>
   );
 };
 

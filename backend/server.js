@@ -198,45 +198,265 @@ app.post("/api/login", (req, res) => {
 
 app.post("/api/pedidos", verifyToken, (req, res) => {
   const userId = req.user.id;
-  const { productos, total, direccionEnvio } = req.body;
+  const { productos, total, subtotal, costoEnvio, descuento, direccionEnvio, metodoPago } = req.body;
 
-  if (!productos || productos.length === 0 || !total || !direccionEnvio) {
+  if (!productos || productos.length === 0 || !total || !direccionEnvio || !metodoPago) {
     return res.status(400).json({ error: "Datos incompletos para crear el pedido." });
   }
 
-  const queryPedido = `
-    INSERT INTO pedidos (ID_usuario, fecha, total, estado, ID_direccion)
-    VALUES (?, NOW(), ?, 'pendiente', ?)
-  `;
-
-  db.query(queryPedido, [userId, total, direccionEnvio], (err, result) => {
+  // Iniciar transacción
+  db.beginTransaction((err) => {
     if (err) {
-      console.error("❌ Error al crear pedido:", err);
-      return res.status(500).json({ error: "Error al crear el pedido." });
+      console.error("❌ Error al iniciar transacción:", err);
+      return res.status(500).json({ error: "Error interno del servidor." });
     }
 
-    const pedidoId = result.insertId;
-
-    const queryDetalle = `
-      INSERT INTO detalle_pedido (ID_pedido, ID_producto, cantidad, precio_unitario)
-      VALUES ?
+    // Crear el pedido
+    const queryPedido = `
+      INSERT INTO pedidos (ID_usuario, fecha, total, estado, ID_direccion)
+      VALUES (?, NOW(), ?, 'pendiente', ?)
     `;
 
-    const valoresDetalle = productos.map(prod => [
-      pedidoId,
-      prod.id_producto,
-      prod.cantidad,
-      prod.precio
-    ]);
-
-    db.query(queryDetalle, [valoresDetalle], (err2) => {
-      if (err2) {
-        console.error("❌ Error al guardar detalles del pedido:", err2);
-        return res.status(500).json({ error: "Error al guardar productos del pedido." });
+    db.query(queryPedido, [userId, total, direccionEnvio], (err, result) => {
+      if (err) {
+        return db.rollback(() => {
+          console.error("❌ Error al crear pedido:", err);
+          res.status(500).json({ error: "Error al crear el pedido." });
+        });
       }
 
-      res.status(201).json({ message: "Pedido creado exitosamente", pedidoId });
+      const pedidoId = result.insertId;
+
+      // Insertar detalles del pedido
+      const queryDetalle = `
+        INSERT INTO detalle_pedido (ID_pedido, ID_producto, cantidad, precio_unitario)
+        VALUES ?
+      `;
+
+      const valoresDetalle = productos.map(prod => [
+        pedidoId,
+        prod.id_producto,
+        prod.cantidad,
+        prod.precio
+      ]);
+
+      db.query(queryDetalle, [valoresDetalle], (err2) => {
+        if (err2) {
+          return db.rollback(() => {
+            console.error("❌ Error al guardar detalles del pedido:", err2);
+            res.status(500).json({ error: "Error al guardar productos del pedido." });
+          });
+        }
+
+        // Actualizar stock de productos
+        const updateStockPromises = productos.map(prod => {
+          return new Promise((resolve, reject) => {
+            const updateQuery = `
+              UPDATE productos 
+              SET stock = stock - ? 
+              WHERE ID_producto = ? AND stock >= ?
+            `;
+            db.query(updateQuery, [prod.cantidad, prod.id_producto, prod.cantidad], (err, result) => {
+              if (err) reject(err);
+              else if (result.affectedRows === 0) reject(new Error(`Stock insuficiente para producto ${prod.id_producto}`));
+              else resolve(result);
+            });
+          });
+        });
+
+        Promise.all(updateStockPromises)
+          .then(() => {
+            // Confirmar transacción
+            db.commit(async (err) => {
+              if (err) {
+                return db.rollback(() => {
+                  console.error("❌ Error al confirmar transacción:", err);
+                  res.status(500).json({ error: "Error al procesar el pedido." });
+                });
+              }
+
+              console.log(`✅ Pedido ${pedidoId} creado exitosamente`);
+              
+              // Enviar email de confirmación
+              const usuario = {
+                nombre: req.user.nombre || 'Cliente',
+                email: req.user.email
+              };
+              
+              enviarEmailConfirmacionPedido(pedidoId, usuario, total, productos);
+
+              res.status(201).json({ 
+                message: "Pedido creado exitosamente", 
+                pedidoId,
+                total,
+                metodoPago
+              });
+            });
+          })
+          .catch((error) => {
+            db.rollback(() => {
+              console.error("❌ Error al actualizar stock:", error);
+              res.status(400).json({ error: error.message });
+            });
+          });
+      });
     });
+  });
+});
+
+// Función para enviar email de confirmación de pedido
+const enviarEmailConfirmacionPedido = async (pedidoId, usuario, total, productos) => {
+  try {
+    const transporter = nodemailer.createTransporter({
+      service: "Gmail",
+      auth: {
+        user: process.env.CORREO_ORIGEN,
+        pass: process.env.CORREO_PASSWORD,
+      },
+    });
+
+    const productosHTML = productos.map(prod => `
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #eee;">${prod.nombre}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${prod.cantidad}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${prod.precio}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${(prod.precio * prod.cantidad).toFixed(2)}</td>
+      </tr>
+    `).join('');
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Confirmación de Pedido</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; background: #2d2d2d; color: white; padding: 20px; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0;">✨ Joyería Elegante</h1>
+            <p style="margin: 10px 0 0 0;">Confirmación de Pedido</p>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
+            <h2 style="color: #2d2d2d; margin-top: 0;">¡Gracias por tu pedido!</h2>
+            
+            <p>Hola <strong>${usuario.nombre}</strong>,</p>
+            
+            <p>Tu pedido <strong>#${pedidoId}</strong> ha sido confirmado y está siendo procesado.</p>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin-top: 0;">Detalles del Pedido:</h3>
+              
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #e9ecef;">
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Producto</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Cantidad</th>
+                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid #dee2e6;">Precio</th>
+                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid #dee2e6;">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${productosHTML}
+                </tbody>
+                <tfoot>
+                  <tr style="background: #e9ecef; font-weight: bold;">
+                    <td colspan="3" style="padding: 12px; text-align: right;">Total:</td>
+                    <td style="padding: 12px; text-align: right; font-size: 1.2em;">$${total}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            
+            <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h4 style="margin-top: 0; color: #1976d2;">📦 ¿Qué sigue?</h4>
+              <ul style="margin: 0; padding-left: 20px;">
+                <li>Prepararemos tu pedido (1-2 días hábiles)</li>
+                <li>Te notificaremos cuando esté listo para envío</li>
+                <li>Recibirás tu pedido en 3-5 días hábiles</li>
+                <li>Podrás rastrear tu envío desde tu cuenta</li>
+              </ul>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="http://localhost:3000/panel-usuario" 
+                 style="background: #2d2d2d; color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block;">
+                Ver Mi Cuenta
+              </a>
+            </div>
+            
+            <p style="color: #666; font-size: 0.9em; margin-top: 30px;">
+              Si tienes alguna pregunta, no dudes en contactarnos.<br>
+              Email: ${process.env.CORREO_ORIGEN}<br>
+              Teléfono: +52 311 444 1683
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    await transporter.sendMail({
+      from: `"Joyería Elegante" <${process.env.CORREO_ORIGEN}>`,
+      to: usuario.email,
+      subject: `Confirmación de Pedido #${pedidoId} - Joyería Elegante`,
+      html: htmlContent
+    });
+
+    console.log(`✅ Email de confirmación enviado para pedido ${pedidoId}`);
+  } catch (error) {
+    console.error(`❌ Error enviando email de confirmación:`, error);
+  }
+};
+
+// Endpoint para obtener pedido por ID
+app.get("/api/pedidos/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  const query = `
+    SELECT p.*, d.alias, d.calle, d.numero_exterior, d.colonia, d.ciudad, d.estado
+    FROM pedidos p
+    LEFT JOIN direcciones d ON p.ID_direccion = d.ID_direccion
+    WHERE p.ID_pedido = ? AND p.ID_usuario = ?
+  `;
+
+  db.query(query, [id, userId], (err, results) => {
+    if (err) {
+      console.error("❌ Error al obtener pedido:", err);
+      return res.status(500).json({ error: "Error al obtener pedido." });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Pedido no encontrado." });
+    }
+
+    res.json(results[0]);
+  });
+});
+
+// Endpoint para obtener historial de pedidos del usuario
+app.get("/api/mis-pedidos", verifyToken, (req, res) => {
+  const userId = req.user.id;
+
+  const query = `
+    SELECT p.ID_pedido, p.fecha, p.total, p.estado,
+           COUNT(dp.ID_detalle) as total_productos
+    FROM pedidos p
+    LEFT JOIN detalle_pedido dp ON p.ID_pedido = dp.ID_pedido
+    WHERE p.ID_usuario = ?
+    GROUP BY p.ID_pedido
+    ORDER BY p.fecha DESC
+  `;
+
+  db.query(query, [userId], (err, results) => {
+    if (err) {
+      console.error("❌ Error al obtener historial de pedidos:", err);
+      return res.status(500).json({ error: "Error al obtener historial de pedidos." });
+    }
+
+    res.json(results);
   });
 });
 
@@ -659,6 +879,216 @@ app.delete("/api/direcciones/:id", verifyToken, (req, res) => {
       }
       
       res.json({ message: "Dirección eliminada correctamente." });
+    });
+  });
+});
+
+// Endpoint para obtener carrito del usuario
+app.get("/api/carrito", verifyToken, (req, res) => {
+  const userId = req.user.id;
+  
+  console.log(`🔄 Solicitando carrito para usuario ${userId}`);
+  
+  const query = `
+    SELECT c.ID_carrito, c.cantidad, c.fecha_agregado,
+           p.ID_producto, p.nombre, p.descripcion, p.precio, p.stock, p.imagen,
+           p.id_marca, p.id_material, p.id_genero, p.id_categoria
+    FROM carritos c
+    INNER JOIN productos p ON c.ID_producto = p.ID_producto
+    WHERE c.ID_usuario = ? AND p.activo = 1
+    ORDER BY c.fecha_agregado DESC
+  `;
+  
+  db.query(query, [userId], (err, results) => {
+    if (err) {
+      console.error("❌ Error al obtener carrito:", err);
+      return res.status(500).json({ error: "Error al obtener carrito." });
+    }
+    
+    console.log(`✅ Carrito obtenido para usuario ${userId}:`, results.length, "items");
+    console.log("📦 Items del carrito:", results.map(item => ({
+      id: item.ID_producto,
+      nombre: item.nombre,
+      cantidad: item.cantidad
+    })));
+    
+    res.json(results);
+  });
+});
+
+// Endpoint para agregar producto al carrito
+app.post("/api/carrito", verifyToken, (req, res) => {
+  const userId = req.user.id;
+  const { ID_producto, cantidad = 1 } = req.body;
+
+  console.log(`🛒 Agregando producto ${ID_producto} (cantidad: ${cantidad}) al carrito del usuario ${userId}`);
+
+  if (!ID_producto || cantidad <= 0) {
+    return res.status(400).json({ error: "Datos de producto inválidos." });
+  }
+
+  // Verificar que el producto existe y tiene stock
+  const checkProductQuery = "SELECT stock, nombre FROM productos WHERE ID_producto = ? AND activo = 1";
+  
+  db.query(checkProductQuery, [ID_producto], (err, results) => {
+    if (err) {
+      console.error("❌ Error al verificar producto:", err);
+      return res.status(500).json({ error: "Error interno del servidor." });
+    }
+
+    if (results.length === 0) {
+      console.log(`❌ Producto ${ID_producto} no encontrado`);
+      return res.status(404).json({ error: "Producto no encontrado." });
+    }
+
+    const producto = results[0];
+    if (producto.stock < cantidad) {
+      console.log(`❌ Stock insuficiente para producto ${ID_producto}. Stock disponible: ${producto.stock}, solicitado: ${cantidad}`);
+      return res.status(400).json({ error: "Stock insuficiente." });
+    }
+
+    // Insertar o actualizar en carrito
+    const insertOrUpdateQuery = `
+      INSERT INTO carritos (ID_usuario, ID_producto, cantidad)
+      VALUES (?, ?, ?)
+      ON DUPLICATE KEY UPDATE 
+      cantidad = LEAST(cantidad + VALUES(cantidad), (SELECT stock FROM productos WHERE ID_producto = ?)),
+      fecha_actualizado = current_timestamp()
+    `;
+
+    db.query(insertOrUpdateQuery, [userId, ID_producto, cantidad, ID_producto], (err, result) => {
+      if (err) {
+        console.error("❌ Error al agregar al carrito:", err);
+        return res.status(500).json({ error: "Error al agregar producto al carrito." });
+      }
+
+      console.log(`✅ Producto ${producto.nombre} (ID: ${ID_producto}) agregado al carrito del usuario ${userId}`);
+      res.status(201).json({ message: "Producto agregado al carrito correctamente." });
+    });
+  });
+});
+
+// Endpoint para actualizar cantidad en carrito
+app.put("/api/carrito/:productoId", verifyToken, (req, res) => {
+  const userId = req.user.id;
+  const productoId = req.params.productoId;
+  const { cantidad } = req.body;
+
+  if (!cantidad || cantidad <= 0) {
+    return res.status(400).json({ error: "Cantidad inválida." });
+  }
+
+  // Verificar stock disponible
+  const checkStockQuery = "SELECT stock FROM productos WHERE ID_producto = ? AND activo = 1";
+  
+  db.query(checkStockQuery, [productoId], (err, results) => {
+    if (err) {
+      console.error("❌ Error al verificar stock:", err);
+      return res.status(500).json({ error: "Error interno del servidor." });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Producto no encontrado." });
+    }
+
+    const producto = results[0];
+    const cantidadFinal = Math.min(cantidad, producto.stock);
+
+    const updateQuery = `
+      UPDATE carritos 
+      SET cantidad = ?, fecha_actualizado = current_timestamp()
+      WHERE ID_usuario = ? AND ID_producto = ?
+    `;
+
+    db.query(updateQuery, [cantidadFinal, userId, productoId], (err, result) => {
+      if (err) {
+        console.error("❌ Error al actualizar carrito:", err);
+        return res.status(500).json({ error: "Error al actualizar carrito." });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: "Producto no encontrado en el carrito." });
+      }
+
+      console.log(`✅ Cantidad actualizada para producto ${productoId} del usuario ${userId}`);
+      res.json({ message: "Cantidad actualizada correctamente." });
+    });
+  });
+});
+
+// Endpoint para eliminar producto del carrito
+app.delete("/api/carrito/:productoId", verifyToken, (req, res) => {
+  const userId = req.user.id;
+  const productoId = req.params.productoId;
+
+  const deleteQuery = "DELETE FROM carritos WHERE ID_usuario = ? AND ID_producto = ?";
+  
+  db.query(deleteQuery, [userId, productoId], (err, result) => {
+    if (err) {
+      console.error("❌ Error al eliminar del carrito:", err);
+      return res.status(500).json({ error: "Error al eliminar producto del carrito." });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Producto no encontrado en el carrito." });
+    }
+
+    console.log(`✅ Producto ${productoId} eliminado del carrito del usuario ${userId}`);
+    res.json({ message: "Producto eliminado del carrito correctamente." });
+  });
+});
+
+// Endpoint para limpiar carrito
+app.delete("/api/carrito", verifyToken, (req, res) => {
+  const userId = req.user.id;
+
+  const deleteQuery = "DELETE FROM carritos WHERE ID_usuario = ?";
+  
+  db.query(deleteQuery, [userId], (err, result) => {
+    if (err) {
+      console.error("❌ Error al limpiar carrito:", err);
+      return res.status(500).json({ error: "Error al limpiar carrito." });
+    }
+
+    console.log(`✅ Carrito limpiado para usuario ${userId}`);
+    res.json({ message: "Carrito limpiado correctamente." });
+  });
+});
+
+// Endpoint para sincronizar carrito desde localStorage
+app.post("/api/carrito/sincronizar", verifyToken, (req, res) => {
+  const userId = req.user.id;
+  const { items } = req.body;
+
+  if (!items || !Array.isArray(items)) {
+    return res.status(400).json({ error: "Items de carrito inválidos." });
+  }
+
+  // Limpiar carrito actual del usuario
+  const deleteQuery = "DELETE FROM carritos WHERE ID_usuario = ?";
+  
+  db.query(deleteQuery, [userId], (err) => {
+    if (err) {
+      console.error("❌ Error al limpiar carrito para sincronización:", err);
+      return res.status(500).json({ error: "Error al sincronizar carrito." });
+    }
+
+    if (items.length === 0) {
+      return res.json({ message: "Carrito sincronizado (vacío)." });
+    }
+
+    // Insertar todos los items del localStorage
+    const insertQuery = "INSERT INTO carritos (ID_usuario, ID_producto, cantidad) VALUES ?";
+    const values = items.map(item => [userId, item.ID_producto, item.cantidad]);
+
+    db.query(insertQuery, [values], (err, result) => {
+      if (err) {
+        console.error("❌ Error al insertar items en carrito:", err);
+        return res.status(500).json({ error: "Error al sincronizar carrito." });
+      }
+
+      console.log(`✅ Carrito sincronizado para usuario ${userId} con ${items.length} items`);
+      res.json({ message: "Carrito sincronizado correctamente." });
     });
   });
 });

@@ -4,7 +4,7 @@ import Separar from "../componentes/Separador NavBar/Separador";
 import { Link } from "react-router-dom";
 import { useCarrito } from '../context/CarritoContext';
 
-const Aretes = () => {
+const Collares = () => {
   const [productos, setProductos] = useState([]);
   const [productosFiltrados, setProductosFiltrados] = useState([]);
   const [materiales, setMateriales] = useState([]);
@@ -14,7 +14,6 @@ const Aretes = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Estados para filtros
   const [filtros, setFiltros] = useState({
     materiales: [],
     generos: [],
@@ -26,15 +25,13 @@ const Aretes = () => {
   const { agregarProducto, estaEnCarrito, obtenerItemCarrito } = useCarrito();
 
   useEffect(() => {
-    // Obtener productos, materiales, géneros y marcas de la base de datos
     const obtenerDatos = async (retryCount = 0) => {
       const maxRetries = 3;
       
       try {
         setLoading(true);
-        console.log(`🔄 Intento ${retryCount + 1} de obtener datos...`);
+        console.log(`🔄 Cargando collares - Intento ${retryCount + 1}...`);
         
-        // Fetch productos, materiales, géneros y marcas en paralelo
         const [productosResponse, materialesResponse, generosResponse, marcasResponse] = await Promise.all([
           fetch("http://localhost:5001/api/productos", {
             headers: { 'Content-Type': 'application/json' }
@@ -61,30 +58,22 @@ const Aretes = () => {
           marcasResponse.json()
         ]);
         
-        console.log("✅ Productos obtenidos:", productosData);
-        console.log("✅ Materiales obtenidos:", materialesData);
-        console.log("✅ Géneros obtenidos:", generosData);
-        console.log("✅ Marcas obtenidas:", marcasData);
+        // Filtrar solo collares (categoria ID = 3)
+        const collares = productosData.filter((producto) => producto.id_categoria === 3);
+        console.log("📿 Collares encontrados:", collares);
         
-        // Filtrar solo aretes (categoria ID = 1)
-        const aretes = productosData.filter((producto) => producto.id_categoria === 1);
-        console.log("🔍 Aretes filtrados:", aretes);
-        
-        setProductos(aretes);
-        setProductosFiltrados(aretes);
+        setProductos(collares);
+        setProductosFiltrados(collares);
         setMateriales(materialesData);
         setGeneros(generosData);
         setMarcas(marcasData);
         setError(null);
       } catch (err) {
-        console.error(`❌ Error al cargar datos (intento ${retryCount + 1}):`, err);
+        console.error(`❌ Error al cargar collares (intento ${retryCount + 1}):`, err);
         
         if (err.message.includes('Failed to fetch') || err.name === 'TypeError') {
           if (retryCount < maxRetries) {
-            console.log(`🔄 Reintentando en 3 segundos... (${retryCount + 1}/${maxRetries})`);
-            setTimeout(() => {
-              obtenerDatos(retryCount + 1);
-            }, 3000);
+            setTimeout(() => obtenerDatos(retryCount + 1), 3000);
             return;
           }
           setError("No se pudo conectar con el servidor. Verifique su conexión a internet.");
@@ -214,21 +203,14 @@ const Aretes = () => {
     e.stopPropagation();
     
     try {
-      // Verificar que el producto tenga todos los campos necesarios
       if (!producto.ID_producto || !producto.nombre || !producto.precio || !producto.stock) {
         throw new Error('Datos de producto incompletos');
       }
 
       agregarProducto(producto, 1);
-      
-      // Mostrar confirmación más amigable
       alert(`✅ ${producto.nombre} agregado al carrito exitosamente`);
       
       console.log('Producto agregado al carrito:', producto);
-      console.log('Estado actual del carrito después de agregar:', {
-        estaEnCarrito: estaEnCarrito(producto.ID_producto),
-        itemCarrito: obtenerItemCarrito(producto.ID_producto)
-      });
       
     } catch (error) {
       console.error('Error al agregar al carrito:', error);
@@ -240,13 +222,14 @@ const Aretes = () => {
     <div className="productos-page">
       <Separar />
       
-      <div className="banner-productos aretes-banner">
-        <img src="../9.png" alt="Banner Aretes" />
+      <div className="banner-productos collares-banner">
+        <img src="../9.png" alt="Banner Collares" />
         <div className="banner-overlay">
-          <h2>✨ Aretes únicos que reflejan tu personalidad</h2>
+          <h2>📿 Collares que realzan tu elegancia natural</h2>
         </div>
       </div>
 
+      {/* Botón Filtro solo en móvil */}
       <button
         className="btn-filtro-movil"
         onClick={() => setMostrarFiltros((prev) => !prev)}
@@ -370,7 +353,7 @@ const Aretes = () => {
             </div>
           ) : productosFiltrados.length === 0 ? (
             <div className="empty-container">
-              <p>🔍 No hay aretes disponibles con los filtros seleccionados.</p>
+              <p>🔍 No hay collares disponibles con los filtros seleccionados.</p>
               <button onClick={limpiarFiltros} className="retry-btn">
                 Limpiar filtros
               </button>
@@ -410,9 +393,10 @@ const Aretes = () => {
             ))
           )}
           
+          {/* Mostrar contador fuera de la grid */}
           {!loading && !error && productosFiltrados.length > 0 && (
             <div className="productos-counter">
-              <span>{productosFiltrados.length} producto(s) encontrado(s)</span>
+              <span>{productosFiltrados.length} collar(es) encontrado(s)</span>
             </div>
           )}
         </section>
@@ -426,7 +410,7 @@ const Aretes = () => {
   );
 };
 
-export default Aretes;
+export default Collares;
 
 /* Actualizar el producto "Anillo" para que tenga la categoría correcta
 UPDATE productos SET id_categoria = 2 WHERE ID_producto = 4;

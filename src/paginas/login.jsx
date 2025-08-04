@@ -31,14 +31,29 @@ const Login = () => {
         localStorage.setItem("token", data.token);
         localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
-        console.log("Login exitoso, redirigiendo a /panel-usuario");
+        console.log("✅ Login exitoso, datos guardados:", {
+          token: !!data.token,
+          usuario: data.usuario.nombre,
+          id: data.usuario.id
+        });
         
-        // Redirige al panel de usuario
-        navigate("/panel-usuario");
-      }else {
+        // Forzar actualización del contexto del carrito
+        window.dispatchEvent(new Event('storage'));
+        
+        // Esperar un poco más para que el contexto del carrito detecte el cambio
+        setTimeout(() => {
+          console.log("🔄 Redirigiendo a panel de usuario...");
+          navigate("/panel-usuario");
+          // Forzar recarga de la página para asegurar sincronización
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
+        }, 1000);
+      } else {
         setError(data.error || "Error al iniciar sesión.");
       }
     } catch (err) {
+      console.error("❌ Error en login:", err);
       setError("Error de conexión con el servidor.");
     }
   };
