@@ -3,46 +3,152 @@ import "./estilos/Llavero.css";
 
 const Llavero = () => {
   const [productos, setProductos] = useState([]);
+  const [productosFiltrados, setProductosFiltrados] = useState([]);
+  const [materiales, setMateriales] = useState([]);
+  const [generos, setGeneros] = useState([]);
+  const [marcas, setMarcas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const [filtros, setFiltros] = useState({
+    materiales: [],
+    generos: [],
+    marcas: [],
+    precioMin: '',
+    precioMax: ''
+  });
 
   useEffect(() => {
-    const obtenerProductos = async () => {
+    const obtenerDatos = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:5001/api/productos");
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("✅ Todos los productos:", data);
-
-        // Como no hay categoría específica para "Llaveros", filtrar por nombre que contenga palabras relacionadas
-        const llaveros = data.filter((producto) =>
-          producto.nombre.toLowerCase().includes("llavero") ||
-          producto.nombre.toLowerCase().includes("chaveiro") ||
-          producto.nombre.toLowerCase().includes("keychain")
+        const [productosResponse, materialesResponse, generosResponse, marcasResponse] = await Promise.all([
+          fetch("http://localhost:5001/api/productos"),
+          fetch("http://localhost:5001/api/materiales"),
+          fetch("http://localhost:5001/api/generos"),
+          fetch("http://localhost:5001/api/marcas")
+        ]);
+        
+        const [productosData, materialesData, generosData, marcasData] = await Promise.all([
+          productosResponse.json(),
+          materialesResponse.json(),
+          generosResponse.json(),
+          marcasResponse.json()
+        ]);
+        
+        // Para llaveros, filtrar productos que contengan "llavero" en el nombre
+        // Si no hay productos específicos, mostrar productos de anillos (categoria 2) como accesorios pequeños
+        const llaverosPorNombre = productosData.filter((producto) => 
+          producto.nombre.toLowerCase().includes('llavero') || 
+          producto.nombre.toLowerCase().includes('chaveiro') ||
+          producto.nombre.toLowerCase().includes('keychain') ||
+          producto.nombre.toLowerCase().includes('llave')
         );
-
-        // Si no hay productos específicos de "llaveros", mostrar una selección de productos pequeños/accesorios
-        const productosParaLlaveros = llaveros.length > 0 ? llaveros : data.slice(0, 6);
-
-        console.log("🔍 Productos para llaveros filtrados:", productosParaLlaveros);
-
+        
+        // Si no hay productos específicos de "llaveros", usar productos de anillos como alternativa
+        const productosParaLlaveros = llaverosPorNombre.length > 0 
+          ? llaverosPorNombre 
+          : productosData.filter((producto) => producto.id_categoria === 2);
+        
         setProductos(productosParaLlaveros);
+        setProductosFiltrados(productosParaLlaveros);
+        setMateriales(materialesData);
+        setGeneros(generosData);
+        setMarcas(marcasData);
         setError(null);
       } catch (err) {
-        console.error("❌ Error al cargar productos:", err);
         setError(`Error al cargar productos: ${err.message}`);
       } finally {
         setLoading(false);
       }
     };
 
-    obtenerProductos();
+    obtenerDatos();
   }, []);
+
+  useEffect(() => {
+    aplicarFiltros();
+  }, [filtros, productos]);
+
+  const aplicarFiltros = () => {
+    let productosFiltrados = [...productos];
+
+    if (filtros.materiales.length > 0) {
+      productosFiltrados = productosFiltrados.filter(producto =>
+        filtros.materiales.includes(producto.id_material)
+      );
+    }
+
+    if (filtros.generos.length > 0) {
+      productosFiltrados = productosFiltrados.filter(producto =>
+        filtros.generos.includes(producto.id_genero)
+      );
+    }
+
+    if (filtros.marcas.length > 0) {
+      productosFiltrados = productosFiltrados.filter(producto =>
+        filtros.marcas.includes(producto.id_marca)
+      );
+    }
+
+    if (filtros.precioMin !== '') {
+      productosFiltrados = productosFiltrados.filter(producto =>
+        parseFloat(producto.precio) >= parseFloat(filtros.precioMin)
+      );
+    }
+
+    if (filtros.precioMax !== '') {
+      productosFiltrados = productosFiltrados.filter(producto =>
+        parseFloat(producto.precio) <= parseFloat(filtros.precioMax)
+      );
+    }
+
+    setProductosFiltrados(productosFiltrados);
+  };
+
+  const handleMaterialChange = (materialId) => {
+    setFiltros(prev => ({
+      ...prev,
+      materiales: prev.materiales.includes(materialId)
+        ? prev.materiales.filter(id => id !== materialId)
+        : [...prev.materiales, materialId]
+    }));
+  };
+
+  const handleGeneroChange = (generoId) => {
+    setFiltros(prev => ({
+      ...prev,
+      generos: prev.generos.includes(generoId)
+        ? prev.generos.filter(id => id !== generoId)
+        : [...prev.generos, generoId]
+    }));
+  };
+
+  const handleMarcaChange = (marcaId) => {
+    setFiltros(prev => ({
+      ...prev,
+      marcas: prev.marcas.includes(marcaId)
+        ? prev.marcas.filter(id => id !== marcaId)
+        : [...prev.marcas, marcaId]
+    }));
+  };
+
+  const handlePrecioChange = (tipo, valor) => {
+    setFiltros(prev => ({
+      ...prev,
+      [tipo]: valor
+    }));
+  };
+
+  const limpiarFiltros = () => {
+    setFiltros({
+      materiales: [],
+      generos: [],
+      marcas: [],
+      precioMin: '',
+      precioMax: ''
+    });
+  };
 
   return (
     <div className="llavero-page">
@@ -60,35 +166,110 @@ const Llavero = () => {
           <div className="filtro-categoria">
             <label>Material</label>
             <ul>
-              <li><input type="checkbox" /> Pasta francesa</li>
-              <li><input type="checkbox" /> Resina</li>
-              <li><input type="checkbox" /> Chapa de oro</li>
-              <li><input type="checkbox" /> Acero inoxidable</li>
-              <li><button className="mostrar-mas">Mostrar más</button></li>
+              {materiales.map((material) => (
+                <li key={material.ID_material}>
+                  <input 
+                    type="checkbox" 
+                    id={`material-${material.ID_material}`}
+                    checked={filtros.materiales.includes(material.ID_material)}
+                    onChange={() => handleMaterialChange(material.ID_material)}
+                  />
+                  <label htmlFor={`material-${material.ID_material}`}>
+                    {material.nombre_material}
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="filtro-categoria">
+            <label>Género</label>
+            <ul>
+              {generos.map((genero) => (
+                <li key={genero.ID_genero}>
+                  <input 
+                    type="checkbox" 
+                    id={`genero-${genero.ID_genero}`}
+                    checked={filtros.generos.includes(genero.ID_genero)}
+                    onChange={() => handleGeneroChange(genero.ID_genero)}
+                  />
+                  <label htmlFor={`genero-${genero.ID_genero}`}>
+                    {genero.nombre_genero}
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="filtro-categoria">
+            <label>Marca</label>
+            <ul>
+              {marcas.map((marca) => (
+                <li key={marca.ID_marca}>
+                  <input 
+                    type="checkbox" 
+                    id={`marca-${marca.ID_marca}`}
+                    checked={filtros.marcas.includes(marca.ID_marca)}
+                    onChange={() => handleMarcaChange(marca.ID_marca)}
+                  />
+                  <label htmlFor={`marca-${marca.ID_marca}`}>
+                    {marca.nombre_marca}
+                  </label>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div className="filtro-precio">
             <label>Precio</label>
             <div className="rango-precio">
-              <input type="number" placeholder="Min" />
-              <input type="number" placeholder="Max" />
-              <button className="actualizar-precio">Actualizar</button>
+              <input 
+                type="number" 
+                placeholder="Min" 
+                value={filtros.precioMin}
+                onChange={(e) => handlePrecioChange('precioMin', e.target.value)}
+              />
+              <input 
+                type="number" 
+                placeholder="Max" 
+                value={filtros.precioMax}
+                onChange={(e) => handlePrecioChange('precioMax', e.target.value)}
+              />
+              <button className="actualizar-precio" onClick={aplicarFiltros}>
+                Actualizar
+              </button>
             </div>
+          </div>
+
+          <div className="filtro-acciones">
+            <button className="limpiar-filtros" onClick={limpiarFiltros}>
+              Limpiar filtros
+            </button>
           </div>
         </aside>
 
         {/* Productos */}
         <section className="productos">
           {loading ? (
-            <p>Cargando productos...</p>
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p>Cargando productos...</p>
+            </div>
           ) : error ? (
-            <p style={{ color: "red" }}>{error}</p>
-          ) : productos.length === 0 ? (
-            <p>No hay llaveros disponibles.</p>
+            <div className="error-container">
+              <p style={{ color: "red" }}>⚠️ {error}</p>
+            </div>
+          ) : productosFiltrados.length === 0 ? (
+            <div className="empty-container">
+              <p>🔍 No hay llaveros disponibles con los filtros seleccionados.</p>
+              <button onClick={limpiarFiltros} className="retry-btn">
+                Limpiar filtros
+              </button>
+            </div>
           ) : (
-            productos.map((producto) => (
+            productosFiltrados.map((producto) => (
               <div className="producto" key={producto.ID_producto}>
+                <div className="producto-badge">Nuevo</div>
                 <img
                   src={
                     producto.imagen
@@ -104,10 +285,17 @@ const Llavero = () => {
                 />
                 <p>{producto.nombre}</p>
                 <span>${producto.precio}</span>
+                <button className="add-to-cart-btn">Agregar al carrito</button>
               </div>
             ))
           )}
         </section>
+        
+        {!loading && !error && productosFiltrados.length > 0 && (
+          <div className="productos-counter">
+            <span>{productosFiltrados.length} producto(s) encontrado(s)</span>
+          </div>
+        )}
       </div>
 
       {/* Botón mostrar más */}

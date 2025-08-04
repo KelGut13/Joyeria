@@ -236,3 +236,102 @@ app.post("/api/pedidos", verifyToken, (req, res) => {
     });
   });
 });
+
+// Add materials endpoint
+app.get("/api/materiales", (req, res) => {
+  const query = "SELECT ID_material, nombre_material FROM material ORDER BY nombre_material ASC";
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("❌ Error al obtener materiales:", err);
+      return res.status(500).json({ 
+        error: "Error interno del servidor al obtener materiales",
+        code: "DATABASE_ERROR"
+      });
+    }
+    
+    console.log(`✅ ${results.length} materiales obtenidos correctamente`);
+    res.json(results);
+  });
+});
+
+// Add categories endpoint
+app.get("/api/categorias", (req, res) => {
+  const query = "SELECT ID_categoria, nombre_categoria FROM categorias ORDER BY nombre_categoria ASC";
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("❌ Error al obtener categorías:", err);
+      return res.status(500).json({ 
+        error: "Error interno del servidor al obtener categorías",
+        code: "DATABASE_ERROR"
+      });
+    }
+    
+    console.log(`✅ ${results.length} categorías obtenidas correctamente`);
+    res.json(results);
+  });
+});
+
+// Add genders endpoint
+app.get("/api/generos", (req, res) => {
+  const query = "SELECT ID_genero, nombre_genero FROM genero ORDER BY nombre_genero ASC";
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("❌ Error al obtener géneros:", err);
+      return res.status(500).json({ 
+        error: "Error interno del servidor al obtener géneros",
+        code: "DATABASE_ERROR"
+      });
+    }
+    
+    console.log(`✅ ${results.length} géneros obtenidos correctamente`);
+    res.json(results);
+  });
+});
+
+// Add brands endpoint
+app.get("/api/marcas", (req, res) => {
+  const query = "SELECT ID_marca, nombre_marca FROM marcas ORDER BY nombre_marca ASC";
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("❌ Error al obtener marcas:", err);
+      return res.status(500).json({ 
+        error: "Error interno del servidor al obtener marcas",
+        code: "DATABASE_ERROR"
+      });
+    }
+    
+    console.log(`✅ ${results.length} marcas obtenidas correctamente`);
+    res.json(results);
+  });
+});
+
+// Add endpoint to create missing categories if needed
+app.post("/api/setup-categories", (req, res) => {
+  const categoriasBase = [
+    { id: 1, nombre: 'Aretes' },
+    { id: 2, nombre: 'Anillos' },
+    { id: 3, nombre: 'Collares' },
+    { id: 4, nombre: 'Pulseras' },
+    { id: 5, nombre: 'Llaveros' },
+    { id: 6, nombre: 'Juegos' }
+  ];
+
+  const queries = categoriasBase.map(categoria => {
+    return new Promise((resolve, reject) => {
+      const query = "INSERT IGNORE INTO categorias (ID_categoria, nombre_categoria) VALUES (?, ?)";
+      db.query(query, [categoria.id, categoria.nombre], (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+  });
+
+  Promise.all(queries)
+    .then(() => {
+      res.json({ message: "Categorías base configuradas correctamente" });
+    })
+    .catch(err => {
+      console.error("Error al configurar categorías:", err);
+      res.status(500).json({ error: "Error al configurar categorías" });
+    });
+});
