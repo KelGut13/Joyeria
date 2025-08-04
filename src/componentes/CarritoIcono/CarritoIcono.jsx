@@ -1,13 +1,44 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
 import { useCarrito } from '../../context/CarritoContext';
 import './CarritoIcono.css';
 import { getFirstProductImage } from '../../config/api';
 
 const CarritoIcono = () => {
-  const { items, cantidadItems, subtotal } = useCarrito();
+  const navigate = useNavigate();
+  const { items, cantidadItems, subtotal, eliminarProducto } = useCarrito();
   const [mostrarDropdown, setMostrarDropdown] = useState(false);
+
+  const handleVerCarritoCompleto = () => {
+    setMostrarDropdown(false);
+    navigate('/carrito');
+  };
+
+  const handleCheckoutRapido = () => {
+    setMostrarDropdown(false);
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      if (window.confirm('Debes iniciar sesión para continuar con la compra. ¿Quieres ir al login?')) {
+        navigate('/login');
+      }
+      return;
+    }
+    
+    navigate('/checkout');
+  };
+
+  const handleEliminarDelDropdown = async (e, productoId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      await eliminarProducto(productoId);
+    } catch (error) {
+      console.error('Error al eliminar producto:', error);
+    }
+  };
 
   return (
     <div 
@@ -42,6 +73,13 @@ const CarritoIcono = () => {
                     {item.cantidad} x ${item.precio}
                   </span>
                 </div>
+                <button 
+                  className="btn-eliminar-dropdown"
+                  onClick={(e) => handleEliminarDelDropdown(e, item.ID_producto)}
+                  title="Eliminar del carrito"
+                >
+                  ×
+                </button>
               </div>
             ))}
             
@@ -56,20 +94,18 @@ const CarritoIcono = () => {
             <div className="carrito-total">
               <strong>Subtotal: ${subtotal.toFixed(2)}</strong>
             </div>
-            <Link 
-              to="/carrito" 
+            <button 
               className="btn-ver-carrito"
-              onClick={() => setMostrarDropdown(false)}
+              onClick={handleVerCarritoCompleto}
             >
               Ver carrito completo
-            </Link>
-            <Link 
-              to="/checkout" 
+            </button>
+            <button 
               className="btn-checkout-rapido"
-              onClick={() => setMostrarDropdown(false)}
+              onClick={handleCheckoutRapido}
             >
               Finalizar compra
-            </Link>
+            </button>
           </div>
         </div>
       )}
@@ -79,6 +115,9 @@ const CarritoIcono = () => {
           <div className="carrito-vacio-mensaje">
             <ShoppingBag size={32} strokeWidth={1.5} />
             <p>Tu carrito está vacío</p>
+            <Link to="/" onClick={() => setMostrarDropdown(false)}>
+              Explorar productos
+            </Link>
           </div>
         </div>
       )}

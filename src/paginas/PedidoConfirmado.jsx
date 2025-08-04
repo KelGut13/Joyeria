@@ -1,46 +1,55 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useLocation, Link } from 'react-router-dom';
+import { API_ENDPOINTS } from '../config/api';
 import './estilos/PedidoConfirmado.css';
 import Separar from '../componentes/Separador NavBar/Separador';
 
 const PedidoConfirmado = () => {
   const { pedidoId } = useParams();
+  const location = useLocation();
   const [pedido, setPedido] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Obtener datos del estado si están disponibles
+  const stateData = location.state;
 
   useEffect(() => {
-    const cargarPedido = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`https://api.curiosidadesnancy.shop/api/pedidos/${pedidoId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          const pedidoData = await response.json();
-          setPedido(pedidoData);
-        }
-      } catch (error) {
-        console.error('Error al cargar pedido:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (pedidoId) {
-      cargarPedido();
+      obtenerPedido();
     }
   }, [pedidoId]);
+
+  const obtenerPedido = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(API_ENDPOINTS.PEDIDO_BY_ID(pedidoId), {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const pedidoData = await response.json();
+        setPedido(pedidoData);
+      } else {
+        throw new Error('Error al obtener información del pedido');
+      }
+    } catch (error) {
+      console.error('Error al obtener pedido:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
       <div className="pedido-confirmado-page">
         <Separar />
         <div className="container">
-          <div className="loading">Cargando...</div>
+          <div className="loading">Cargando información del pedido...</div>
         </div>
       </div>
     );
@@ -51,44 +60,81 @@ const PedidoConfirmado = () => {
       <Separar />
       <div className="container">
         <div className="confirmacion-content">
-          <div className="confirmacion-header">
-            <div className="check-icon">✅</div>
-            <h1>¡Pedido Confirmado!</h1>
-            <p>Tu pedido #{pedidoId} ha sido procesado exitosamente</p>
+          <div className="icono-exito">
+            <i className="fas fa-check-circle"></i>
           </div>
+          
+          <h1>¡Pedido Confirmado!</h1>
+          
+          <div className="pedido-info">
+            <h2>Pedido #{pedidoId}</h2>
+            
+            {stateData && (
+              <div className="resumen-rapido">
+                <div className="info-item">
+                  <span className="label">Total:</span>
+                  <span className="value">${stateData.total}</span>
+                </div>
+                <div className="info-item">
+                  <span className="label">Método de Pago:</span>
+                  <span className="value">{stateData.metodoPago}</span>
+                </div>
+              </div>
+            )}
 
-          {pedido && (
-            <div className="pedido-detalles">
-              <h3>Detalles del Pedido</h3>
-              <div className="detalle-info">
-                <p><strong>Número de pedido:</strong> #{pedido.ID_pedido}</p>
-                <p><strong>Fecha:</strong> {new Date(pedido.fecha).toLocaleDateString()}</p>
-                <p><strong>Total:</strong> ${pedido.total}</p>
-                <p><strong>Estado:</strong> {pedido.estado}</p>
+            {pedido && (
+              <div className="detalles-pedido">
+                <div className="info-item">
+                  <span className="label">Fecha:</span>
+                  <span className="value">{new Date(pedido.fecha).toLocaleDateString()}</span>
+                </div>
+                <div className="info-item">
+                  <span className="label">Estado:</span>
+                  <span className="value status-pendiente">{pedido.estado}</span>
+                </div>
                 {pedido.alias && (
-                  <p><strong>Dirección de envío:</strong> {pedido.alias}</p>
+                  <div className="direccion-envio">
+                    <h3>Dirección de Envío:</h3>
+                    <p>{pedido.alias}</p>
+                    <p>{pedido.calle} {pedido.numero_exterior}</p>
+                    <p>{pedido.colonia}, {pedido.ciudad}</p>
+                    <p>{pedido.estado}, {pedido.codigo_postal}</p>
+                  </div>
                 )}
               </div>
-            </div>
-          )}
-
-          <div className="siguientes-pasos">
-            <h3>¿Qué sigue?</h3>
-            <ul>
-              <li>📧 Recibirás un email de confirmación</li>
-              <li>📦 Prepararemos tu pedido (1-2 días hábiles)</li>
-              <li>🚚 Te notificaremos cuando esté en camino</li>
-              <li>🏠 Recibirás tu pedido en 3-5 días hábiles</li>
-            </ul>
+            )}
           </div>
 
-          <div className="acciones-confirmacion">
-            <Link to="/panel-usuario" className="btn-ver-cuenta">
-              Ver Mi Cuenta
+          <div className="mensaje-confirmacion">
+            <h3>¿Qué sigue?</h3>
+            <div className="pasos">
+              <div className="paso">
+                <i className="fas fa-box"></i>
+                <span>Prepararemos tu pedido (1-2 días hábiles)</span>
+              </div>
+              <div className="paso">
+                <i className="fas fa-truck"></i>
+                <span>Te notificaremos cuando esté listo para envío</span>
+              </div>
+              <div className="paso">
+                <i className="fas fa-home"></i>
+                <span>Recibirás tu pedido en 3-5 días hábiles</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="acciones">
+            <Link to="/mis-pedidos" className="btn btn-primary">
+              Ver Mis Pedidos
             </Link>
-            <Link to="/" className="btn-seguir-comprando">
+            <Link to="/" className="btn btn-secondary">
               Seguir Comprando
             </Link>
+          </div>
+
+          <div className="contacto-info">
+            <p>¿Tienes alguna pregunta sobre tu pedido?</p>
+            <p>Contáctanos: <strong>contacto@joyeria.com</strong> | <strong>+52 311 444 1683</strong></p>
           </div>
         </div>
       </div>

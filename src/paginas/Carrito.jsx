@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCarrito } from '../context/CarritoContext';
 import './estilos/Carrito.css';
 import Separar from '../componentes/Separador NavBar/Separador';
-import { getFirstProductImage } from '../config/api';
 
 const Carrito = () => {
   const navigate = useNavigate();
@@ -19,35 +18,46 @@ const Carrito = () => {
     limpiarCarrito
   } = useCarrito();
 
+  const [loading, setLoading] = useState(false);
+
   const handleCantidadChange = async (productoId, nuevaCantidad) => {
     if (nuevaCantidad < 1) return;
     
+    setLoading(true);
     try {
       await actualizarCantidad(productoId, nuevaCantidad);
     } catch (error) {
       console.error('Error al actualizar cantidad:', error);
       alert('Error al actualizar la cantidad');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleEliminar = async (productoId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este producto del carrito?')) {
+      setLoading(true);
       try {
         await eliminarProducto(productoId);
       } catch (error) {
         console.error('Error al eliminar producto:', error);
         alert('Error al eliminar el producto');
+      } finally {
+        setLoading(false);
       }
     }
   };
 
   const handleLimpiarCarrito = async () => {
     if (window.confirm('¿Estás seguro de que quieres vaciar todo el carrito?')) {
+      setLoading(true);
       try {
         await limpiarCarrito();
       } catch (error) {
         console.error('Error al limpiar carrito:', error);
         alert('Error al limpiar el carrito');
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -92,15 +102,27 @@ const Carrito = () => {
           <span className="carrito-contador">{cantidadItems} artículo(s)</span>
         </div>
 
+        {loading && (
+          <div className="loading-overlay">
+            <div className="loading-spinner">Actualizando carrito...</div>
+          </div>
+        )}
+
         <div className="carrito-content">
           <div className="carrito-items">
             {items.map(item => (
               <div key={item.ID_producto} className="carrito-item">
                 <img 
-                  src={getFirstProductImage(item)}
+                  src={
+                    item.imagen
+                      ? Array.isArray(item.imagen)
+                        ? item.imagen[0]
+                        : item.imagen.split(",")[0]
+                      : "/placeholder.jpg"
+                  }
                   alt={item.nombre}
                   onError={(e) => {
-                    e.target.src = "/logo192.png";
+                    e.target.src = "/placeholder.jpg";
                   }}
                 />
                 
@@ -108,20 +130,28 @@ const Carrito = () => {
                   <h3>{item.nombre}</h3>
                   <p className="item-descripcion">{item.descripcion}</p>
                   <span className="item-precio">${item.precio}</span>
+                  <div className="item-stock-info">
+                    {item.stock <= 5 && item.stock > 0 && (
+                      <span className="stock-bajo">Solo {item.stock} disponibles</span>
+                    )}
+                    {item.stock === 0 && (
+                      <span className="sin-stock">Sin stock</span>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="item-controls">
                   <div className="cantidad-control">
                     <button 
                       onClick={() => handleCantidadChange(item.ID_producto, item.cantidad - 1)}
-                      disabled={item.cantidad <= 1}
+                      disabled={item.cantidad <= 1 || loading}
                     >
                       -
                     </button>
                     <span>{item.cantidad}</span>
                     <button 
                       onClick={() => handleCantidadChange(item.ID_producto, item.cantidad + 1)}
-                      disabled={item.cantidad >= item.stock}
+                      disabled={item.cantidad >= item.stock || loading}
                     >
                       +
                     </button>
@@ -134,6 +164,7 @@ const Carrito = () => {
                   <button 
                     className="btn-eliminar"
                     onClick={() => handleEliminar(item.ID_producto)}
+                    disabled={loading}
                   >
                     🗑️
                   </button>
@@ -148,6 +179,7 @@ const Carrito = () => {
               <button 
                 className="btn-limpiar"
                 onClick={handleLimpiarCarrito}
+                disabled={loading}
               >
                 Vaciar Carrito
               </button>
@@ -184,6 +216,7 @@ const Carrito = () => {
             <button 
               className="btn-checkout"
               onClick={handleCheckout}
+              disabled={loading}
             >
               Proceder al Pago
             </button>

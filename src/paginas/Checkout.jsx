@@ -1,27 +1,204 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCarrito } from '../context/CarritoContext';
+import { API_ENDPOINTS, STRIPE_CONFIG } from '../config/api';
 import './estilos/Checkout.css';
 import Separar from '../componentes/Separador NavBar/Separador';
-import { getFirstProductImage } from '../config/api';
+
+// Configurar Stripe con tu clave pública real
+const stripePromise = loadStripe(STRIPE_CONFIG.PUBLISHABLE_KEY);
+
+// Componente de formulario de pago con Stripe
+const PaymentForm = ({ 
+  onPaymentSuccess, 
+  onPaymentError, 
+  total, 
+  productos, 
+  direccionSeleccionada, 
+  metodoPago, 
+  procesandoPedido,
+  setProcesandoPedido 
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [paymentError, setPaymentError] = useState('');
+
+  const handleStripePayment = async () => {
+    if (!stripe || !elements) {
+      setPaymentError('Stripe no está disponible');
+      return;
+    }
+
+    try {
+      setProcesandoPedido(true);
+      setPaymentError('');
+
+      console.log('💳 Iniciando proceso de pago con Stripe...');
+
+      // Crear Payment Intent
+      const token = localStorage.getItem('token');
+      const response = await fetch(API_ENDPOINTS.CREATE_PAYMENT_INTENT, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          total: total,
+          currency: 'mxn',
+          metodoPago: metodoPago,
+          productos: productos
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error creating payment intent');
+      }
+
+      const { clientSecret, paymentIntentId } = await response.json();
+      console.log('✅ Payment Intent creado:', paymentIntentId);
+
+      // Confirmar el pago
+      const cardElement = elements.getElement(CardElement);
+      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: 'Cliente Joyería', // Podrías obtener esto del usuario logueado
+          },
+        }
+      });
+
+      if (error) {
+        console.error('❌ Error en pago:', error);
+        setPaymentError(error.message);
+        onPaymentError(error.message);
+      } else if (paymentIntent.status === 'succeeded') {
+        console.log('✅ Pago exitoso:', paymentIntent.id);
+        onPaymentSuccess(paymentIntent.id);
+      }
+    } catch (error) {
+      console.error('❌ Error procesando pago:', error);
+      setPaymentError(error.message);
+      onPaymentError(error.message);
+    } finally {
+      setProcesandoPedido(false);
+    }
+  };
+
+  return (
+    <div className="payment-form">
+      <div className="stripe-info-header">
+        <p style={{ 
+          background: '#f0f9ff', 
+          padding: '1rem', 
+          borderRadius: '8px', 
+          fontSize: '0.9rem',
+          color: '#0369a1',
+          margin: '0 0 1rem 0'
+        }}>
+          🔒 <strong>Pago seguro procesado por Stripe</strong><br/>
+          Puedes usar la tarjeta de prueba: <code>4242 4242 4242 4242</code>
+        </p>
+      </div>
+      
+      <div className="card-element-container">
+        <CardElement
+          options={{
+            style: {
+              base: {
+                fontSize: '16px',
+                color: '#424770',
+                fontFamily: 'Arial, sans-serif',
+                '::placeholder': {
+                  color: '#aab7c4',
+                },
+              },
+              invalid: {
+                color: '#9e2146',
+              },
+            },
+          }}
+        />
+      </div>
+      
+      {paymentError && (
+        <div className="payment-error" style={{ 
+          color: '#dc2626', 
+          margin: '1rem 0',
+          padding: '0.5rem',
+          background: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: '4px',
+          fontSize: '0.9rem'
+        }}>
+          ❌ {paymentError}
+        </div>
+      )}
+      
+      <button
+        type="button"
+        onClick={handleStripePayment}
+        disabled={!stripe || procesandoPedido}
+        className="btn-pagar-stripe"
+        style={{
+          background: procesandoPedido ? '#94a3b8' : '#635bff',
+          color: 'white',
+          border: 'none',
+          padding: '1rem 2rem',
+          borderRadius: '8px',
+          fontSize: '1.1rem',
+          fontWeight: '600',
+          cursor: procesandoPedido ? 'not-allowed' : 'pointer',
+          width: '100%',
+          marginTop: '1rem',
+          transition: 'background-color 0.2s'
+        }}
+      >
+        {procesandoPedido ? '⏳ Procesando pago...' : `💳 Pagar $${total.toFixed(2)} MXN`}
+      </button>
+      
+      <div style={{ 
+        fontSize: '0.8rem', 
+        color: '#666', 
+        textAlign: 'center',
+        marginTop: '0.5rem'
+      }}>
+        <p>Para pruebas usa: 4242 4242 4242 4242 | MM/AA: cualquier fecha futura | CVC: cualquier 3 dígitos</p>
+      </div>
+    </div>
+  );
+};
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, subtotal, total, limpiarCarrito } = useCarrito();
+  const { items, subtotal, total, costoEnvio, limpiarCarrito } = useCarrito();
   
   const [direcciones, setDirecciones] = useState([]);
   const [direccionSeleccionada, setDireccionSeleccionada] = useState('');
   const [metodoPago, setMetodoPago] = useState('');
-  const [loading, setLoading] = useState(false);
   const [procesandoPedido, setProcesandoPedido] = useState(false);
+  const [mostrarFormDireccion, setMostrarFormDireccion] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Estados para nueva dirección
+  const [nuevaDireccion, setNuevaDireccion] = useState({
+    alias: '',
+    calle: '',
+    numero_exterior: '',
+    numero_interior: '',
+    colonia: '',
+    ciudad: '',
+    estado: '',
+    codigo_postal: '',
+    predeterminada: false
+  });
 
   useEffect(() => {
-    // Verificar si hay items en el carrito
-    if (items.length === 0) {
-      navigate('/carrito');
-      return;
-    }
-
     // Verificar autenticación
     const token = localStorage.getItem('token');
     if (!token) {
@@ -29,13 +206,20 @@ const Checkout = () => {
       return;
     }
 
+    // Verificar que hay items en el carrito
+    if (items.length === 0) {
+      navigate('/carrito');
+      return;
+    }
+
     cargarDirecciones();
-  }, [items, navigate]);
+  }, []);
 
   const cargarDirecciones = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('https://api.curiosidadesnancy.shop/api/direcciones', {
+      const response = await fetch(API_ENDPOINTS.DIRECCIONES, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -51,9 +235,120 @@ const Checkout = () => {
         if (predeterminada) {
           setDireccionSeleccionada(predeterminada.ID_direccion.toString());
         }
+      } else {
+        throw new Error('Error al cargar direcciones');
       }
     } catch (error) {
       console.error('Error al cargar direcciones:', error);
+      setError('Error al cargar direcciones');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNuevaDireccionChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setNuevaDireccion(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleGuardarNuevaDireccion = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(API_ENDPOINTS.DIRECCIONES, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(nuevaDireccion)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        await cargarDirecciones();
+        setDireccionSeleccionada(result.ID_direccion.toString());
+        setMostrarFormDireccion(false);
+        setNuevaDireccion({
+          alias: '', calle: '', numero_exterior: '', numero_interior: '',
+          colonia: '', ciudad: '', estado: '', codigo_postal: '', predeterminada: false
+        });
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Error al guardar dirección');
+      }
+    } catch (error) {
+      console.error('Error al guardar dirección:', error);
+      setError('Error al guardar dirección');
+    }
+  };
+
+  const handlePaymentSuccess = async (paymentIntentId) => {
+    await procesarPedidoFinal(paymentIntentId);
+  };
+
+  const handlePaymentError = (errorMessage) => {
+    setError(`Error en el pago: ${errorMessage}`);
+  };
+
+  const procesarPedidoFinal = async (paymentIntentId = null) => {
+    try {
+      const token = localStorage.getItem('token');
+      const pedidoData = {
+        productos: items.map(item => ({
+          id_producto: item.ID_producto,
+          cantidad: item.cantidad,
+          precio: parseFloat(item.precio),
+          nombre: item.nombre
+        })),
+        total: parseFloat(total),
+        subtotal: parseFloat(subtotal),
+        costoEnvio: parseFloat(costoEnvio || 0),
+        descuento: parseFloat(0),
+        direccionEnvio: parseInt(direccionSeleccionada),
+        metodoPago: metodoPago,
+        paymentIntentId: paymentIntentId // Agregar Payment Intent ID para Stripe
+      };
+
+      console.log('🛒 Enviando pedido final:', pedidoData);
+
+      const response = await fetch(API_ENDPOINTS.PEDIDOS, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(pedidoData)
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        console.log('✅ Pedido creado exitosamente:', result);
+        
+        // Limpiar el carrito
+        await limpiarCarrito();
+        
+        // Redirigir a página de confirmación
+        navigate(`/pedido-confirmado/${result.pedidoId}`, {
+          state: {
+            pedidoId: result.pedidoId,
+            total: result.total,
+            metodoPago: result.metodoPago,
+            paymentIntentId: result.paymentIntentId
+          }
+        });
+      } else {
+        throw new Error(result.error || 'Error al procesar el pedido');
+      }
+    } catch (error) {
+      console.error('❌ Error al crear pedido final:', error);
+      setError(`Error al procesar el pedido: ${error.message}`);
     }
   };
 
@@ -61,61 +356,42 @@ const Checkout = () => {
     e.preventDefault();
     
     if (!direccionSeleccionada) {
-      alert('Por favor selecciona una dirección de envío');
+      setError('Por favor selecciona una dirección de envío');
       return;
     }
     
     if (!metodoPago) {
-      alert('Por favor selecciona un método de pago');
+      setError('Por favor selecciona un método de pago');
       return;
     }
 
+    setError('');
+
+    // Si es pago con tarjeta, el componente PaymentForm manejará el proceso
+    if (metodoPago === 'Tarjeta de Crédito') {
+      // El pago será manejado por el componente PaymentForm
+      return;
+    }
+
+    // Para otros métodos de pago (efectivo, transferencia, etc.)
     setProcesandoPedido(true);
-    
     try {
-      const token = localStorage.getItem('token');
-      const pedidoData = {
-        productos: items.map(item => ({
-          id_producto: item.ID_producto,
-          cantidad: item.cantidad,
-          precio: item.precio,
-          nombre: item.nombre
-        })),
-        total: total,
-        subtotal: subtotal,
-        costoEnvio: 0,
-        descuento: 0,
-        direccionEnvio: parseInt(direccionSeleccionada),
-        metodoPago: metodoPago
-      };
-
-      const response = await fetch('https://api.curiosidadesnancy.shop/api/pedidos', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(pedidoData)
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        // Limpiar el carrito
-        await limpiarCarrito();
-        
-        // Redirigir a página de confirmación
-        navigate(`/pedido-confirmado/${result.pedidoId}`);
-      } else {
-        throw new Error(result.error || 'Error al procesar el pedido');
-      }
-    } catch (error) {
-      console.error('Error al crear pedido:', error);
-      alert(`Error al procesar el pedido: ${error.message}`);
+      await procesarPedidoFinal();
     } finally {
       setProcesandoPedido(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="checkout-page">
+        <Separar />
+        <div className="container">
+          <div className="loading">Cargando información...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="checkout-page">
@@ -123,99 +399,226 @@ const Checkout = () => {
       <div className="container">
         <h1>Finalizar Compra</h1>
         
+        {error && (
+          <div className="error-message" style={{
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#dc2626',
+            padding: '1rem',
+            borderRadius: '8px',
+            marginBottom: '2rem'
+          }}>
+            {error}
+          </div>
+        )}
+
         <div className="checkout-content">
-          <div className="checkout-form">
-            <form onSubmit={handleSubmitPedido}>
-              {/* Dirección de envío */}
-              <div className="checkout-section">
-                <h3>📍 Dirección de Envío</h3>
+          <form className="checkout-form" onSubmit={handleSubmitPedido}>
+            
+            {/* Sección de Dirección */}
+            <div className="checkout-section">
+              <h3>
+                <i className="fas fa-map-marker-alt"></i>
+                Dirección de Envío
+              </h3>
+              
+              {direcciones.length > 0 ? (
                 <div className="direcciones-list">
-                  {direcciones.length === 0 ? (
-                    <div className="no-direcciones">
-                      <p>No tienes direcciones guardadas.</p>
-                      <button 
-                        type="button"
-                        onClick={() => navigate('/panel-usuario')}
-                      >
-                        Agregar Dirección
-                      </button>
+                  {direcciones.map(direccion => (
+                    <div key={direccion.ID_direccion} className="direccion-option">
+                      <input
+                        type="radio"
+                        id={`direccion-${direccion.ID_direccion}`}
+                        name="direccion"
+                        value={direccion.ID_direccion}
+                        checked={direccionSeleccionada === direccion.ID_direccion.toString()}
+                        onChange={(e) => setDireccionSeleccionada(e.target.value)}
+                      />
+                      <div className="direccion-info">
+                        <h4>{direccion.alias}</h4>
+                        <p>{direccion.calle} {direccion.numero_exterior}</p>
+                        <p>{direccion.colonia}, {direccion.ciudad}</p>
+                        <p>{direccion.estado}, {direccion.codigo_postal}</p>
+                        {direccion.predeterminada && <span className="badge-predeterminada">Predeterminada</span>}
+                      </div>
                     </div>
-                  ) : (
-                    direcciones.map(direccion => (
-                      <label key={direccion.ID_direccion} className="direccion-option">
-                        <input
-                          type="radio"
-                          name="direccion"
-                          value={direccion.ID_direccion}
-                          checked={direccionSeleccionada === direccion.ID_direccion.toString()}
-                          onChange={(e) => setDireccionSeleccionada(e.target.value)}
-                        />
-                        <div className="direccion-info">
-                          <h4>{direccion.alias}</h4>
-                          <p>
-                            {direccion.calle} {direccion.numero_exterior}
-                            {direccion.numero_interior && `, Int. ${direccion.numero_interior}`}
-                          </p>
-                          <p>
-                            {direccion.colonia}, {direccion.ciudad}, {direccion.estado} {direccion.codigo_postal}
-                          </p>
-                        </div>
-                      </label>
-                    ))
-                  )}
+                  ))}
+                </div>
+              ) : (
+                <div className="no-direcciones">
+                  <p>No tienes direcciones guardadas</p>
+                </div>
+              )}
+              
+              <button
+                type="button"
+                onClick={() => setMostrarFormDireccion(!mostrarFormDireccion)}
+                className="btn-nueva-direccion"
+              >
+                {mostrarFormDireccion ? 'Cancelar' : 'Agregar Nueva Dirección'}
+              </button>
+
+              {mostrarFormDireccion && (
+                <div className="form-nueva-direccion">
+                  <h4>Nueva Dirección</h4>
+                  <div className="form-grid">
+                    <input
+                      type="text"
+                      name="alias"
+                      placeholder="Alias (ej. Casa, Trabajo)"
+                      value={nuevaDireccion.alias}
+                      onChange={handleNuevaDireccionChange}
+                      required
+                    />
+                    <input
+                      type="text"
+                      name="calle"
+                      placeholder="Calle"
+                      value={nuevaDireccion.calle}
+                      onChange={handleNuevaDireccionChange}
+                      required
+                    />
+                    <input
+                      type="text"
+                      name="numero_exterior"
+                      placeholder="Número Exterior"
+                      value={nuevaDireccion.numero_exterior}
+                      onChange={handleNuevaDireccionChange}
+                      required
+                    />
+                    <input
+                      type="text"
+                      name="numero_interior"
+                      placeholder="Número Interior (Opcional)"
+                      value={nuevaDireccion.numero_interior}
+                      onChange={handleNuevaDireccionChange}
+                    />
+                    <input
+                      type="text"
+                      name="colonia"
+                      placeholder="Colonia"
+                      value={nuevaDireccion.colonia}
+                      onChange={handleNuevaDireccionChange}
+                      required
+                    />
+                    <input
+                      type="text"
+                      name="ciudad"
+                      placeholder="Ciudad"
+                      value={nuevaDireccion.ciudad}
+                      onChange={handleNuevaDireccionChange}
+                      required
+                    />
+                    <input
+                      type="text"
+                      name="estado"
+                      placeholder="Estado"
+                      value={nuevaDireccion.estado}
+                      onChange={handleNuevaDireccionChange}
+                      required
+                    />
+                    <input
+                      type="text"
+                      name="codigo_postal"
+                      placeholder="Código Postal"
+                      value={nuevaDireccion.codigo_postal}
+                      onChange={handleNuevaDireccionChange}
+                      required
+                    />
+                  </div>
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="predeterminada"
+                      checked={nuevaDireccion.predeterminada}
+                      onChange={handleNuevaDireccionChange}
+                    />
+                    Establecer como dirección predeterminada
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleGuardarNuevaDireccion}
+                    className="btn-guardar-direccion"
+                  >
+                    Guardar Dirección
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Sección de Método de Pago */}
+            <div className="checkout-section">
+              <h3>
+                <i className="fas fa-credit-card"></i>
+                Método de Pago
+              </h3>
+              
+              <div className="metodos-pago">
+                <div className="metodo-option">
+                  <input
+                    type="radio"
+                    id="tarjeta"
+                    name="metodoPago"
+                    value="Tarjeta de Crédito"
+                    checked={metodoPago === 'Tarjeta de Crédito'}
+                    onChange={(e) => setMetodoPago(e.target.value)}
+                  />
+                  <label htmlFor="tarjeta">
+                    <i className="fas fa-credit-card" style={{color: '#1e40af'}}></i>
+                    Tarjeta de Crédito/Débito (Stripe)
+                  </label>
+                </div>
+
+                <div className="metodo-option">
+                  <input
+                    type="radio"
+                    id="efectivo"
+                    name="metodoPago"
+                    value="Pago en Efectivo"
+                    checked={metodoPago === 'Pago en Efectivo'}
+                    onChange={(e) => setMetodoPago(e.target.value)}
+                  />
+                  <label htmlFor="efectivo">
+                    <i className="fas fa-money-bill-wave" style={{color: '#16a34a'}}></i>
+                    Pago en Efectivo (Contra entrega)
+                  </label>
+                </div>
+
+                <div className="metodo-option">
+                  <input
+                    type="radio"
+                    id="transferencia"
+                    name="metodoPago"
+                    value="Transferencia Bancaria"
+                    checked={metodoPago === 'Transferencia Bancaria'}
+                    onChange={(e) => setMetodoPago(e.target.value)}
+                  />
+                  <label htmlFor="transferencia">
+                    <i className="fas fa-university" style={{color: '#7c3aed'}}></i>
+                    Transferencia Bancaria
+                  </label>
                 </div>
               </div>
 
-              {/* Método de pago */}
-              <div className="checkout-section">
-                <h3>💳 Método de Pago</h3>
-                <div className="metodos-pago">
-                  <label className="metodo-option">
-                    <input
-                      type="radio"
-                      name="metodoPago"
-                      value="tarjeta"
-                      checked={metodoPago === 'tarjeta'}
-                      onChange={(e) => setMetodoPago(e.target.value)}
-                    />
-                    <span>💳 Tarjeta de Crédito/Débito</span>
-                  </label>
-                  
-                  <label className="metodo-option">
-                    <input
-                      type="radio"
-                      name="metodoPago"
-                      value="paypal"
-                      checked={metodoPago === 'paypal'}
-                      onChange={(e) => setMetodoPago(e.target.value)}
-                    />
-                    <span>🅿️ PayPal</span>
-                  </label>
-                  
-                  <label className="metodo-option">
-                    <input
-                      type="radio"
-                      name="metodoPago"
-                      value="efectivo"
-                      checked={metodoPago === 'efectivo'}
-                      onChange={(e) => setMetodoPago(e.target.value)}
-                    />
-                    <span>💵 Pago en Efectivo (Contra entrega)</span>
-                  </label>
-                  
-                  <label className="metodo-option">
-                    <input
-                      type="radio"
-                      name="metodoPago"
-                      value="transferencia"
-                      checked={metodoPago === 'transferencia'}
-                      onChange={(e) => setMetodoPago(e.target.value)}
-                    />
-                    <span>🏦 Transferencia Bancaria</span>
-                  </label>
-                </div>
-              </div>
+              {/* Mostrar formulario de Stripe solo para pagos con tarjeta */}
+              {metodoPago === 'Tarjeta de Crédito' && (
+                <Elements stripe={stripePromise}>
+                  <PaymentForm
+                    onPaymentSuccess={handlePaymentSuccess}
+                    onPaymentError={handlePaymentError}
+                    total={total}
+                    productos={items}
+                    direccionSeleccionada={direccionSeleccionada}
+                    metodoPago={metodoPago}
+                    procesandoPedido={procesandoPedido}
+                    setProcesandoPedido={setProcesandoPedido}
+                  />
+                </Elements>
+              )}
+            </div>
 
+            {/* Botón para métodos de pago que no requieren Stripe */}
+            {metodoPago !== 'Tarjeta de Crédito' && (
               <button 
                 type="submit" 
                 className="btn-finalizar-compra"
@@ -223,20 +626,26 @@ const Checkout = () => {
               >
                 {procesandoPedido ? 'Procesando...' : `Finalizar Compra - $${total.toFixed(2)}`}
               </button>
-            </form>
-          </div>
+            )}
+          </form>
 
-          {/* Resumen del pedido */}
+          {/* Resumen del Pedido */}
           <div className="pedido-resumen">
-            <h3>📋 Resumen del Pedido</h3>
+            <h3>Resumen del Pedido</h3>
             
             <div className="productos-resumen">
               {items.map(item => (
                 <div key={item.ID_producto} className="producto-resumen">
                   <img 
-                    src={getFirstProductImage(item)}
+                    src={
+                      item.imagen
+                        ? Array.isArray(item.imagen)
+                          ? item.imagen[0]
+                          : item.imagen.split(",")[0]
+                        : "/placeholder.jpg"
+                    }
                     alt={item.nombre}
-                    onError={(e) => { e.target.src = "/logo192.png"; }}
+                    onError={(e) => { e.target.src = "/placeholder.jpg"; }}
                   />
                   <div className="producto-info">
                     <h4>{item.nombre}</h4>
@@ -246,7 +655,7 @@ const Checkout = () => {
                 </div>
               ))}
             </div>
-
+            
             <div className="totales-resumen">
               <div className="linea">
                 <span>Subtotal:</span>
@@ -254,13 +663,21 @@ const Checkout = () => {
               </div>
               <div className="linea">
                 <span>Envío:</span>
-                <span>GRATIS</span>
+                <span>{costoEnvio === 0 ? 'GRATIS' : `$${costoEnvio.toFixed(2)}`}</span>
               </div>
               <div className="linea total">
                 <span>Total:</span>
                 <span>${total.toFixed(2)}</span>
               </div>
             </div>
+
+            {metodoPago === 'Tarjeta de Crédito' && (
+              <div className="stripe-info">
+                <p style={{ fontSize: '0.9rem', color: '#666', textAlign: 'center' }}>
+                  🔒 Pagos seguros procesados por Stripe
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -269,4 +686,3 @@ const Checkout = () => {
 };
 
 export default Checkout;
-                          

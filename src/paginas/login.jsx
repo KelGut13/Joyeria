@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import "./estilos/login.css";
 import chicaImg from "../imagenes/chica.jpg";
 import Separar from "../componentes/Separador NavBar/Separador";
+import { API_ENDPOINTS } from '../config/api';
 
 const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -18,7 +19,7 @@ const Login = () => {
     setError("");
 
     try {
-      const res = await fetch("https://api.curiosidadesnancy.shop/api/login", {
+      const res = await fetch(API_ENDPOINTS.LOGIN, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)

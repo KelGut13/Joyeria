@@ -1,8 +1,8 @@
 /* Pedido Confirmado Styles */
 .pedido-confirmado-page {
   font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   min-height: 100vh;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
   color: #2d2d2d;
 }
 
@@ -22,8 +22,10 @@
 }
 
 .confirmacion-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
   text-align: center;
-  padding: 4rem 0;
   background: white;
   border-radius: 24px;
   margin: 2rem 0;
@@ -33,27 +35,29 @@
 
 .icono-exito {
   font-size: 5rem;
+  color: #16a34a;
   margin-bottom: 2rem;
-  animation: bounce 1s ease-in-out;
+  animation: checkmark 0.6s ease-in-out;
 }
 
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
+@keyframes checkmark {
+  0% {
+    transform: scale(0);
+    opacity: 0;
   }
-  40% {
-    transform: translateY(-10px);
+  50% {
+    transform: scale(1.2);
   }
-  60% {
-    transform: translateY(-5px);
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
 .confirmacion-content h1 {
+  color: #16a34a;
   font-size: 2.5rem;
-  font-weight: 700;
-  color: #10b981;
-  margin: 0 0 1rem 0;
+  margin-bottom: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -66,133 +70,161 @@
 }
 
 .pedido-info {
-  background: #f8fafc;
+  background: white;
   border-radius: 16px;
   padding: 2rem;
-  margin: 2rem auto;
-  max-width: 400px;
-  border: 1px solid #e2e8f0;
+  margin: 2rem 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 
-.pedido-info p {
-  margin: 0.75rem 0;
-  font-size: 1rem;
-  color: #374151;
+.pedido-info h2 {
+  color: #2d2d2d;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+}
+
+.resumen-rapido {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.info-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
 }
 
-.pedido-info strong {
-  color: #111827;
+.info-item .label {
   font-weight: 600;
+  color: #666;
 }
 
-.proximos-pasos {
+.info-item .value {
+  font-weight: bold;
+  color: #2d2d2d;
+  font-size: 1.1rem;
+}
+
+.status-pendiente {
+  color: #f59e0b !important;
+  text-transform: capitalize;
+}
+
+.direccion-envio {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #f0f9ff;
+  border-radius: 8px;
   text-align: left;
-  max-width: 500px;
-  margin: 3rem auto;
-  background: #f0fdf4;
+}
+
+.direccion-envio h3 {
+  margin-bottom: 1rem;
+  color: #2d2d2d;
+}
+
+.direccion-envio p {
+  margin: 0.25rem 0;
+  color: #666;
+}
+
+.mensaje-confirmacion {
+  background: white;
   border-radius: 16px;
   padding: 2rem;
-  border: 1px solid #bbf7d0;
+  margin: 2rem 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 
-.proximos-pasos h3 {
+.mensaje-confirmacion h3 {
+  color: #2d2d2d;
+  margin-bottom: 1.5rem;
+}
+
+.pasos {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.paso {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f0f9ff;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.paso i {
   font-size: 1.5rem;
-  font-weight: 700;
-  color: #059669;
-  margin: 0 0 1.5rem 0;
-  text-align: center;
-}
-
-.proximos-pasos ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.proximos-pasos li {
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #d1fae5;
-  position: relative;
-  padding-left: 2rem;
-  color: #065f46;
-  font-weight: 500;
-}
-
-.proximos-pasos li:last-child {
-  border-bottom: none;
-}
-
-.proximos-pasos li::before {
-  content: "✓";
-  position: absolute;
-  left: 0;
-  top: 0.75rem;
-  color: #10b981;
-  font-weight: 700;
-  font-size: 1.125rem;
+  color: #0ea5e9;
+  width: 2rem;
 }
 
 .acciones {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
   justify-content: center;
-  margin-top: 3rem;
-  flex-wrap: wrap;
+  margin: 2rem 0;
 }
 
-.btn-inicio,
-.btn-pedidos {
+.btn {
   padding: 1rem 2rem;
-  border-radius: 12px;
+  border-radius: 8px;
   text-decoration: none;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   transition: all 0.3s ease;
-  font-size: 0.875rem;
-  min-width: 180px;
-  text-align: center;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
 }
 
-.btn-inicio {
+.btn-primary {
   background: #2d2d2d;
   color: white;
-  border: 2px solid #2d2d2d;
 }
 
-.btn-inicio:hover {
+.btn-primary:hover {
   background: #1f1f1f;
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(45, 45, 45, 0.3);
+  transform: translateY(-2px);
 }
 
-.btn-pedidos {
-  background: transparent;
+.btn-secondary {
+  background: white;
   color: #2d2d2d;
   border: 2px solid #2d2d2d;
 }
 
-.btn-pedidos:hover {
+.btn-secondary:hover {
   background: #2d2d2d;
   color: white;
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(45, 45, 45, 0.3);
+  transform: translateY(-2px);
 }
 
-/* Estados adicionales */
-.estado-badge {
-  display: inline-block;
-  background: #10b981;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.contacto-info {
+  margin-top: 3rem;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  color: #666;
+}
+
+.contacto-info strong {
+  color: #2d2d2d;
+}
+
+.loading {
+  text-align: center;
+  padding: 4rem 2rem;
+  font-size: 1.2rem;
+  color: #666;
 }
 
 /* Responsive */
@@ -237,6 +269,19 @@
   
   .pedido-info {
     padding: 1.5rem;
+  }
+  
+  .resumen-rapido {
+    grid-template-columns: 1fr;
+  }
+  
+  .acciones {
+    flex-direction: column;
+  }
+  
+  .paso {
+    flex-direction: column;
+    text-align: center;
   }
 }
 

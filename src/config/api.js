@@ -1,140 +1,157 @@
-// Configuración de APIs para el ecommerce
-const API_CONFIG = {
-  // API del ecommerce (backend actual)
-  ECOMMERCE_API: 'https://api.curiosidadesnancy.shop/api',
-  
-  // API del admin (donde están las imágenes)  
-  ADMIN_API: 'https://api.curiosidadesnancy.shop',
-  
-  // URL base para las imágenes subidas desde el admin
-  IMAGES_BASE_URL: 'https://api.curiosidadesnancy.shop/uploads/productos',
-  
-  // Modo de desarrollo/fallback
-  USE_MOCK_DATA: false, // Cambiar a true si el backend no está disponible
-};
+// Configuración de la API - FORZAR localhost para desarrollo
+const API_BASE_URL = 'http://localhost:5001';
 
-// URLs específicas para las APIs
 export const API_ENDPOINTS = {
-  // Productos
-  PRODUCTOS: `${API_CONFIG.ECOMMERCE_API}/productos`,
-  PRODUCTO_BY_ID: (id) => `${API_CONFIG.ECOMMERCE_API}/productos/${id}`,
+  // Autenticación
+  LOGIN: `${API_BASE_URL}/api/login`,
+  CREAR_CUENTA: `${API_BASE_URL}/api/crear-cuenta`,
   
-  // Categorías y filtros
-  MATERIALES: `${API_CONFIG.ECOMMERCE_API}/materiales`,
-  GENEROS: `${API_CONFIG.ECOMMERCE_API}/generos`,
-  MARCAS: `${API_CONFIG.ECOMMERCE_API}/marcas`,
-  
-  // Usuarios y autenticación
-  LOGIN: `${API_CONFIG.ECOMMERCE_API}/login`,
-  CREAR_CUENTA: `${API_CONFIG.ECOMMERCE_API}/crear-cuenta`,
-  
-  // Carrito
-  CARRITO: `${API_CONFIG.ECOMMERCE_API}/carrito`,
-  CARRITO_BY_ID: (id) => `${API_CONFIG.ECOMMERCE_API}/carrito/${id}`,
-  
-  // Pedidos
-  PEDIDOS: `${API_CONFIG.ECOMMERCE_API}/pedidos`,
-  PEDIDO_BY_ID: (id) => `${API_CONFIG.ECOMMERCE_API}/pedidos/${id}`,
-  MIS_PEDIDOS: `${API_CONFIG.ECOMMERCE_API}/mis-pedidos`,
+  // Productos y catálogo
+  PRODUCTOS: `${API_BASE_URL}/api/productos`,
+  PRODUCTO_BY_ID: (id) => `${API_BASE_URL}/api/productos/${id}`,
+  MATERIALES: `${API_BASE_URL}/api/materiales`,
+  CATEGORIAS: `${API_BASE_URL}/api/categorias`,
+  GENEROS: `${API_BASE_URL}/api/generos`,
+  MARCAS: `${API_BASE_URL}/api/marcas`,
   
   // Usuario
-  ACTUALIZAR_DATOS: `${API_CONFIG.ECOMMERCE_API}/actualizar-datos-personales`,
-  ACTUALIZAR_CUENTA: `${API_CONFIG.ECOMMERCE_API}/actualizar-cuenta`,
-  CAMBIAR_PASSWORD: `${API_CONFIG.ECOMMERCE_API}/cambiar-password`,
+  ACTUALIZAR_DATOS_PERSONALES: `${API_BASE_URL}/api/actualizar-datos-personales`,
+  ACTUALIZAR_CUENTA: `${API_BASE_URL}/api/actualizar-cuenta`,
+  CAMBIAR_PASSWORD: `${API_BASE_URL}/api/cambiar-password`,
   
   // Direcciones
-  DIRECCIONES: `${API_CONFIG.ECOMMERCE_API}/direcciones`,
-  DIRECCION_BY_ID: (id) => `${API_CONFIG.ECOMMERCE_API}/direcciones/${id}`,
+  DIRECCIONES: `${API_BASE_URL}/api/direcciones`,
+  DIRECCION_BY_ID: (id) => `${API_BASE_URL}/api/direcciones/${id}`,
   
-  // Contacto
-  CONTACTO: `${API_CONFIG.ECOMMERCE_API}/contacto`,
+  // Carrito
+  CARRITO: `${API_BASE_URL}/api/carrito`,
+  CARRITO_PRODUCTO: (id) => `${API_BASE_URL}/api/carrito/${id}`,
+  CARRITO_SINCRONIZAR: `${API_BASE_URL}/api/carrito/sincronizar`,
+  
+  // Pedidos
+  PEDIDOS: `${API_BASE_URL}/api/pedidos`,
+  PEDIDO_BY_ID: (id) => `${API_BASE_URL}/api/pedidos/${id}`,
+  MIS_PEDIDOS: `${API_BASE_URL}/api/mis-pedidos`,
+  
+  // Stripe
+  CREATE_PAYMENT_INTENT: `${API_BASE_URL}/api/create-payment-intent`,
+  STRIPE_WEBHOOK: `${API_BASE_URL}/api/webhook/stripe`,
+  
+  // Otros
+  CONTACTO: `${API_BASE_URL}/api/contacto`,
+  TEST: `${API_BASE_URL}/api/test`,
+  DEBUG_DATABASE: `${API_BASE_URL}/api/debug/database`
 };
 
-// Función para construir URL completa de imagen
-export const getImageUrl = (imagePath) => {
-  if (!imagePath) return '/logo192.png'; // Usar logo como fallback
-  
-  // Si ya es una URL completa con localhost, reemplazar con el dominio correcto
-  if (imagePath.startsWith('http://localhost:3001/')) {
-    return imagePath.replace('http://localhost:3001/', 'https://api.curiosidadesnancy.shop/');
-  }
-  
-  // Si ya es una URL completa correcta, devolverla tal como está
-  if (imagePath.startsWith('https://api.curiosidadesnancy.shop/')) {
-    return imagePath;
-  }
-  
-  // Si es un path relativo, construir la URL completa
-  const cleanPath = imagePath.replace('uploads/productos/', '');
-  return `${API_CONFIG.IMAGES_BASE_URL}/${cleanPath}`;
-};
-
-// Función para obtener múltiples imágenes (si el producto tiene varias)
-export const getProductImages = (producto) => {
-  // Si no hay producto, devolver fallback
-  if (!producto) {
-    console.log('❌ No hay producto');
-    return ['/logo192.png'];
-  }
-  
-  // Si no hay imagen o es null/None, devolver fallback
-  if (!producto.imagen || producto.imagen === null || producto.imagen === 'None' || producto.imagen === '[]') {
-    console.log(`📦 Producto "${producto.nombre}" sin imagen - usando fallback`);
-    return ['/logo192.png'];
-  }
-  
-  let imageData = producto.imagen;
-  console.log(`🖼️ Procesando imagen para "${producto.nombre}":`, imageData);
-  
-  // Si es un string que parece un array JSON, parsearlo
-  if (typeof imageData === 'string' && imageData.startsWith('[')) {
-    try {
-      imageData = JSON.parse(imageData);
-      console.log('✅ JSON parseado:', imageData);
-    } catch (e) {
-      console.warn('❌ Error parseando JSON de imagen:', e);
-      return ['/logo192.png'];
-    }
-  }
-  
-  // Si es un array, procesar cada imagen
-  if (Array.isArray(imageData)) {
-    const processedImages = imageData.map(img => getImageUrl(img));
-    console.log('✅ Array procesado:', processedImages);
-    return processedImages;
-  }
-  
-  // Si es un string con comas (múltiples imágenes), dividir y procesar
-  if (typeof imageData === 'string' && imageData.includes(',')) {
-    const imageArray = imageData.split(',').map(img => getImageUrl(img.trim()));
-    console.log('✅ String con comas procesado:', imageArray);
-    return imageArray;
-  }
-  
-  // Si es una sola imagen
-  const singleImage = [getImageUrl(imageData)];
-  console.log('✅ Imagen única procesada:', singleImage);
-  return singleImage;
+// Stripe configuration con clave pública real
+export const STRIPE_CONFIG = {
+  PUBLISHABLE_KEY: 'pk_test_51RsQ8xABK29IrJxcNKbbGlWYVVWALmR1ZcStCM89eJNWIVGfHEmgBwCi3CGxb0K961OLHibuoDgXrx5ImJSnogRB00xgdZ9umo'
 };
 
 // Función para obtener la primera imagen de un producto
 export const getFirstProductImage = (producto) => {
-  const images = getProductImages(producto);
-  const firstImage = images[0];
-  console.log('🎯 Primera imagen seleccionada:', firstImage);
-  return firstImage;
-};
-
-// Función de prueba para debug
-export const testImageUrl = (producto) => {
-  console.log('🔍 TESTING PRODUCTO:', producto);
-  if (producto && producto.imagen) {
-    console.log('🔍 IMAGEN RAW:', producto.imagen);
-    const processed = getFirstProductImage(producto);
-    console.log('🔍 IMAGEN PROCESADA:', processed);
-    return processed;
+  if (!producto.imagen) return '/logo192.png';
+  
+  // Si es un array JSON string, parsearlo
+  if (producto.imagen.startsWith('[')) {
+    try {
+      const imagenesArray = JSON.parse(producto.imagen);
+      return imagenesArray[0] || '/logo192.png';
+    } catch (error) {
+      console.error('Error parsing product images:', error);
+    }
   }
-  return '/logo192.png';
+  
+  // Si es string separado por comas
+  if (producto.imagen.includes(',')) {
+    return producto.imagen.split(',')[0];
+  }
+  
+  // Si es una sola imagen
+  return producto.imagen;
 };
 
-export default API_CONFIG;
+// Función para obtener todas las imágenes de un producto
+export const getProductImages = (producto) => {
+  if (!producto.imagen) return ['/logo192.png'];
+  
+  // Si es un array JSON string, parsearlo
+  if (producto.imagen.startsWith('[')) {
+    try {
+      const imagenesArray = JSON.parse(producto.imagen);
+      return imagenesArray.length > 0 ? imagenesArray : ['/logo192.png'];
+    } catch (error) {
+      console.error('Error parsing product images:', error);
+      return ['/logo192.png'];
+    }
+  }
+  
+  // Si es string separado por comas
+  if (producto.imagen.includes(',')) {
+    return producto.imagen.split(',').map(img => img.trim());
+  }
+  
+  // Si es una sola imagen
+  return [producto.imagen];
+};
+
+// Función para hacer requests con manejo de errores
+export const apiRequest = async (url, options = {}) => {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      },
+      ...options
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error.message.includes('Failed to fetch')) {
+      throw new Error('No se pudo conectar con el servidor backend. Verifique que esté corriendo en http://localhost:5001');
+    }
+    throw error;
+  }
+};
+
+// Función para verificar la salud del servidor
+export const checkServerHealth = async () => {
+  try {
+    const response = await fetch(API_ENDPOINTS.TEST);
+    if (response.ok) {
+      const data = await response.json();
+      return { status: 'ok', message: data.message };
+    } else {
+      return { status: 'error', message: `HTTP ${response.status}` };
+    }
+  } catch (error) {
+    return { 
+      status: 'error', 
+      message: error.message.includes('Failed to fetch') 
+        ? 'Servidor backend no disponible'
+        : error.message 
+    };
+  }
+};
+
+// Función para verificar la estructura de la base de datos
+export const checkDatabaseStructure = async () => {
+  try {
+    const response = await fetch(API_ENDPOINTS.DEBUG_DATABASE);
+    if (response.ok) {
+      const data = await response.json();
+      return { status: 'ok', data: data.database_info };
+    } else {
+      return { status: 'error', data: null };
+    }
+  } catch (error) {
+    return { status: 'error', data: null };
+  }
+};
+
+export default API_ENDPOINTS;

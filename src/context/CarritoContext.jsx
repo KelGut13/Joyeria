@@ -41,10 +41,51 @@ const obtenerUsuarioActual = () => {
   }
 };
 
-// Función para obtener token
-const obtenerToken = () => {
-  return localStorage.getItem('token');
-};
+  // Función mejorada para verificar si el token es válido
+  const esTokenValido = (token) => {
+    if (!token) return false;
+    
+    try {
+      const tokenParts = token.split('.');
+      if (tokenParts.length !== 3) return false;
+      
+      const payload = JSON.parse(atob(tokenParts[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+      const timeUntilExpiry = payload.exp - currentTime;
+      
+      console.log('🔍 Verificando token:', {
+        exp: new Date(payload.exp * 1000).toISOString(),
+        current: new Date(currentTime * 1000).toISOString(),
+        timeUntilExpiry: `${Math.floor(timeUntilExpiry / 3600)}h ${Math.floor((timeUntilExpiry % 3600) / 60)}m`,
+        isValid: payload.exp > currentTime
+      });
+      
+      return payload.exp > currentTime;
+    } catch (error) {
+      console.error('Error verificando token:', error);
+      return false;
+    }
+  };
+
+  // Función mejorada para obtener token con logging
+  const obtenerToken = () => {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      console.log('🔍 No hay token en localStorage');
+      return null;
+    }
+    
+    if (!esTokenValido(token)) {
+      console.log('⚠️ Token expirado o inválido, limpiando localStorage');
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
+      return null;
+    }
+    
+    console.log('✅ Token válido encontrado');
+    return token;
+  };
 
 // Función para cargar carrito desde localStorage (usuarios no logueados)
 const cargarCarritoDesdeStorage = () => {
@@ -105,23 +146,19 @@ const calcularTotales = (items) => {
 
 // Reducer para manejar las acciones del carrito
 const carritoReducer = (state, action) => {
+  console.log('🔄 Carrito reducer:', action.type, action.payload);
+  
   switch (action.type) {
     case CARRITO_ACTIONS.CARGAR_CARRITO:
-      const carritoData = action.payload || estadoInicial;
-      return {
-        ...state,
-        ...carritoData,
-        ...calcularTotales(carritoData.items || [])
-      };
-
     case CARRITO_ACTIONS.CARGAR_CARRITO_SERVIDOR:
       console.log('🔄 Cargando carrito del servidor:', action.payload);
       return {
-        ...state,
         items: action.payload,
-        sincronizado: true,
-        usuarioLogueado: true,
-        ...calcularTotales(action.payload)
+        cantidadItems: action.payload.reduce((total, item) => total + item.cantidad, 0),
+        subtotal: action.payload.reduce((total, item) => total + (item.precio * item.cantidad), 0),
+        total: action.payload.reduce((total, item) => total + (item.precio * item.cantidad), 0),
+        costoEnvio: 0,
+        descuento: 0
       };
 
     case CARRITO_ACTIONS.AGREGAR_PRODUCTO:
@@ -130,57 +167,93 @@ const carritoReducer = (state, action) => {
       
       let nuevosItems;
       if (itemExistente) {
+        // Actualizar cantidad del item existente
         nuevosItems = state.items.map(item =>
           item.ID_producto === producto.ID_producto
             ? { ...item, cantidad: Math.min(item.cantidad + cantidad, producto.stock) }
             : item
         );
       } else {
-        nuevosItems = [...state.items, {
-          ...producto,
-          cantidad: Math.min(cantidad, producto.stock)
+        // Agregar nuevo item
+        nuevosItems = [...state.items, { 
+          ...producto, 
+          cantidad: Math.min(cantidad, producto.stock) 
         }];
       }
-      
+
+      const nuevoSubtotal = nuevosItems.reduce((total, item) => total + (item.precio * item.cantidad), 0);
+      const nuevaCantidadItems = nuevosItems.reduce((total, item) => total + item.cantidad, 0);
+
+      // Guardar en localStorage si es usuario invitado
+      if (!obtenerUsuarioActual()) {
+        guardarCarritoEnStorage(nuevosItems);
+      }
+
       return {
         ...state,
         items: nuevosItems,
-        ...calcularTotales(nuevosItems)
+        cantidadItems: nuevaCantidadItems,
+        subtotal: nuevoSubtotal,
+        total: nuevoSubtotal
       };
 
     case CARRITO_ACTIONS.ACTUALIZAR_CANTIDAD:
-      const { productoId, nuevaCantidad } = action.payload;
-      const itemsActualizados = state.items.map(item => {
-        if (item.ID_producto === productoId) {
-          const cantidadFinal = Math.max(0, Math.min(nuevaCantidad, item.stock));
-          return {
-            ...item,
-            cantidad: cantidadFinal
-          };
-        }
-        return item;
-      }).filter(item => item.cantidad > 0);
+      const { productoId: idActualizar, cantidad: nuevaCantidad } = action.payload;
+      const itemsActualizados = state.items.map(item =>
+        item.ID_producto === idActualizar
+          ? { ...item, cantidad: Math.min(nuevaCantidad, item.stock) }
+          : item
+      );
+
+      const subtotalActualizado = itemsActualizados.reduce((total, item) => total + (item.precio * item.cantidad), 0);
+      const cantidadActualizada = itemsActualizados.reduce((total, item) => total + item.cantidad, 0);
+
+      // Guardar en localStorage si es usuario invitado
+      if (!obtenerUsuarioActual()) {
+        guardarCarritoEnStorage(itemsActualizados);
+      }
 
       return {
         ...state,
         items: itemsActualizados,
-        ...calcularTotales(itemsActualizados)
+        cantidadItems: cantidadActualizada,
+        subtotal: subtotalActualizado,
+        total: subtotalActualizado
       };
 
     case CARRITO_ACTIONS.ELIMINAR_PRODUCTO:
-      const itemsFiltrados = state.items.filter(item => item.ID_producto !== action.payload);
-      
+      const { productoId: idEliminar } = action.payload;
+      const itemsFiltrados = state.items.filter(item => item.ID_producto !== idEliminar);
+
+      const subtotalFiltrado = itemsFiltrados.reduce((total, item) => total + (item.precio * item.cantidad), 0);
+      const cantidadFiltrada = itemsFiltrados.reduce((total, item) => total + item.cantidad, 0);
+
+      // Guardar en localStorage si es usuario invitado
+      if (!obtenerUsuarioActual()) {
+        guardarCarritoEnStorage(itemsFiltrados);
+      }
+
       return {
         ...state,
         items: itemsFiltrados,
-        ...calcularTotales(itemsFiltrados)
+        cantidadItems: cantidadFiltrada,
+        subtotal: subtotalFiltrado,
+        total: subtotalFiltrado
       };
 
     case CARRITO_ACTIONS.LIMPIAR_CARRITO:
+      // Limpiar localStorage si es usuario invitado
+      if (!obtenerUsuarioActual()) {
+        localStorage.removeItem('joyeria_carrito_invitado');
+      }
+
       return {
-        ...estadoInicial,
-        sincronizado: state.sincronizado,
-        usuarioLogueado: state.usuarioLogueado
+        items: [],
+        cantidadItems: 0,
+        subtotal: 0,
+        total: 0,
+        costoEnvio: 0,
+        descuento: 0
       };
 
     default:
@@ -198,18 +271,34 @@ export const CarritoProvider = ({ children }) => {
     const usuario = obtenerUsuarioActual();
 
     if (!token || !usuario) {
-      console.log('👤 Usuario no logueado, usando carrito local');
+      console.log('👤 Usuario no logueado o token inválido, usando carrito local');
       return;
     }
 
     try {
       console.log('🔄 Cargando carrito del servidor para usuario:', usuario.id);
-      const response = await fetch('https://api.curiosidadesnancy.shop/api/carrito', {
+      const response = await fetch('http://localhost:5001/api/carrito', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
+
+      console.log('📡 Respuesta del servidor carrito:', {
+        status: response.status,
+        statusText: response.statusText
+      });
+
+      if (response.status === 401) {
+        console.log('❌ Token inválido o expirado en servidor, limpiando sesión');
+        localStorage.removeItem('token');
+        localStorage.removeItem('usuario');
+        // Recargar la página para actualizar el estado
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        return;
+      }
 
       if (response.ok) {
         const carritoServidor = await response.json();
@@ -300,7 +389,7 @@ export const CarritoProvider = ({ children }) => {
     if (usuario && token) {
       // Usuario logueado: agregar al servidor
       try {
-        const response = await fetch('https://api.curiosidadesnancy.shop/api/carrito', {
+        const response = await fetch(API_ENDPOINTS.CARRITO_AGREGAR, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -340,12 +429,16 @@ export const CarritoProvider = ({ children }) => {
     const usuario = obtenerUsuarioActual();
     const token = obtenerToken();
 
-    console.log('🔄 Actualizando cantidad:', { productoId, nuevaCantidad, usuario: !!usuario });
+    if (nuevaCantidad <= 0) {
+      throw new Error('La cantidad debe ser mayor a 0');
+    }
+
+    console.log(`🔄 Actualizando cantidad del producto ${productoId} a ${nuevaCantidad}`);
 
     if (usuario && token) {
       // Usuario logueado: actualizar en servidor
       try {
-        const response = await fetch(`https://api.curiosidadesnancy.shop/api/carrito/${productoId}`, {
+        const response = await fetch(`http://localhost:5001/api/carrito/${productoId}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -355,7 +448,9 @@ export const CarritoProvider = ({ children }) => {
         });
 
         if (response.ok) {
+          // Recargar carrito del servidor
           await cargarCarritoDelServidor();
+          console.log(`✅ Cantidad actualizada en servidor para producto ${productoId}`);
         } else {
           const error = await response.json();
           throw new Error(error.error || 'Error al actualizar cantidad');
@@ -365,11 +460,12 @@ export const CarritoProvider = ({ children }) => {
         throw error;
       }
     } else {
-      // Usuario invitado: usar contexto local
+      // Usuario invitado: actualizar en contexto local
       dispatch({
         type: CARRITO_ACTIONS.ACTUALIZAR_CANTIDAD,
-        payload: { productoId, nuevaCantidad }
+        payload: { productoId, cantidad: nuevaCantidad }
       });
+      console.log(`✅ Cantidad actualizada localmente para producto ${productoId}`);
     }
   };
 
@@ -377,12 +473,12 @@ export const CarritoProvider = ({ children }) => {
     const usuario = obtenerUsuarioActual();
     const token = obtenerToken();
 
-    console.log('🗑️ Eliminando producto:', { productoId, usuario: !!usuario });
+    console.log(`🗑️ Eliminando producto ${productoId} del carrito`);
 
     if (usuario && token) {
       // Usuario logueado: eliminar del servidor
       try {
-        const response = await fetch(`https://api.curiosidadesnancy.shop/api/carrito/${productoId}`, {
+        const response = await fetch(`http://localhost:5001/api/carrito/${productoId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -391,21 +487,24 @@ export const CarritoProvider = ({ children }) => {
         });
 
         if (response.ok) {
+          // Recargar carrito del servidor
           await cargarCarritoDelServidor();
+          console.log(`✅ Producto ${productoId} eliminado del servidor`);
         } else {
           const error = await response.json();
           throw new Error(error.error || 'Error al eliminar producto');
         }
       } catch (error) {
-        console.error('❌ Error al eliminar del servidor:', error);
+        console.error('❌ Error al eliminar producto del servidor:', error);
         throw error;
       }
     } else {
-      // Usuario invitado: usar contexto local
+      // Usuario invitado: eliminar del contexto local
       dispatch({
         type: CARRITO_ACTIONS.ELIMINAR_PRODUCTO,
-        payload: productoId
+        payload: { productoId }
       });
+      console.log(`✅ Producto ${productoId} eliminado localmente`);
     }
   };
 
@@ -413,12 +512,12 @@ export const CarritoProvider = ({ children }) => {
     const usuario = obtenerUsuarioActual();
     const token = obtenerToken();
 
-    console.log('🧹 Limpiando carrito:', { usuario: !!usuario });
+    console.log('🧹 Limpiando carrito completo');
 
     if (usuario && token) {
-      // Usuario logueado: limpiar del servidor
+      // Usuario logueado: limpiar en servidor
       try {
-        const response = await fetch('https://api.curiosidadesnancy.shop/api/carrito', {
+        const response = await fetch('http://localhost:5001/api/carrito', {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -427,15 +526,23 @@ export const CarritoProvider = ({ children }) => {
         });
 
         if (response.ok) {
-          dispatch({ type: CARRITO_ACTIONS.LIMPIAR_CARRITO });
+          // Recargar carrito del servidor (debería estar vacío)
+          await cargarCarritoDelServidor();
+          console.log('✅ Carrito limpiado en servidor');
+        } else {
+          const error = await response.json();
+          throw new Error(error.error || 'Error al limpiar carrito');
         }
       } catch (error) {
-        console.error('❌ Error al limpiar carrito del servidor:', error);
+        console.error('❌ Error al limpiar carrito en servidor:', error);
+        throw error;
       }
     } else {
-      // Usuario invitado: limpiar local
-      localStorage.removeItem('joyeria_carrito_invitado');
-      dispatch({ type: CARRITO_ACTIONS.LIMPIAR_CARRITO });
+      // Usuario invitado: limpiar contexto local
+      dispatch({
+        type: CARRITO_ACTIONS.LIMPIAR_CARRITO
+      });
+      console.log('✅ Carrito limpiado localmente');
     }
   };
 

@@ -5,22 +5,50 @@ import dotenv from "dotenv";
 import mysql from "mysql2";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import Stripe from "stripe";
 import { verifyToken } from "./middlewares/verifyToken.js";
+
 dotenv.config();
 
+// Verificar que las claves de Stripe están configuradas
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error("❌ STRIPE_SECRET_KEY no está configurada en .env");
+  process.exit(1);
+}
+
+// Inicializar Stripe
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
 console.log("🚀 Ejecutando server.js correcto...");
+console.log("💳 Stripe inicializado correctamente");
+console.log("🔑 Clave Stripe (últimos 4 chars):", process.env.STRIPE_SECRET_KEY.slice(-4));
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Middleware CORS
+// Middleware CORS actualizado - MÁS PERMISIVO para desarrollo
 const corsOptions = {
-  origin: "http://localhost:3000",
+  origin: true, // Permitir cualquier origen en desarrollo
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  credentials: true,
+  optionsSuccessStatus: 200
 };
+
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // Para preflight
+
+// Middleware adicional para manejar preflight
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 app.use(express.json());
 
@@ -42,16 +70,37 @@ db.query("SELECT 1", (err) => {
   }
 });
 
+// Agregar logs más detallados para debugging
+app.use((req, res, next) => {
+  console.log(`📡 ${req.method} ${req.path} - ${new Date().toISOString()}`);
+  next();
+});
+
 // Rutas
 app.get("/api/productos", (req, res) => {
+  console.log("🔍 Solicitando productos...");
   const query = "SELECT ID_producto, nombre, descripcion, precio, stock, imagen, id_marca, id_material, id_genero, id_categoria FROM productos WHERE activo = 1";
+  
   db.query(query, (err, results) => {
     if (err) {
       console.error("❌ Error al obtener productos:", err);
-      res.status(500).json({ error: "Error al obtener productos" });
-    } else {
-      res.json(results);
+      return res.status(500).json({ 
+        error: "Error al obtener productos",
+        details: err.message,
+        sql_state: err.sqlState,
+        errno: err.errno
+      });
     }
+    
+    console.log(`✅ ${results.length} productos obtenidos correctamente`);
+    console.log("📊 Productos por categoría:", 
+      results.reduce((acc, prod) => {
+        acc[prod.id_categoria] = (acc[prod.id_categoria] || 0) + 1;
+        return acc;
+      }, {})
+    );
+    
+    res.json(results);
   });
 });
 
@@ -142,10 +191,6 @@ app.get("/", (req, res) => {
   res.send("API Joyeria backend corriendo");
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-});
-
 app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
 
@@ -172,12 +217,26 @@ app.post("/api/login", (req, res) => {
       return res.status(401).json({ error: "Correo o contraseña incorrectos." });
     }
 
-    // 🔐 GENERAR JWT
+    console.log("🔐 Generando JWT para usuario:", user.ID_usuario);
+    console.log("🔑 JWT_SECRET disponible:", !!process.env.JWT_SECRET);
+
+    // 🔐 GENERAR JWT con mayor duración
     const token = jwt.sign(
-      { id: user.ID_usuario, rol: user.id_rol },
+      { 
+        id: user.ID_usuario, 
+        rol: user.id_rol,
+        email: user.email,
+        iat: Math.floor(Date.now() / 1000)
+      },
       process.env.JWT_SECRET,
-      { expiresIn: "24h" } // Extender la duración del token
+      { expiresIn: "7d" } // Cambiar a 7 días para mayor persistencia
     );
+
+    console.log("✅ Token generado exitosamente:", {
+      tokenLength: token.length,
+      userId: user.ID_usuario,
+      expiresIn: "7d"
+    });
 
     // ✅ Enviar token al frontend con todos los datos del usuario
     res.status(200).json({
@@ -196,20 +255,165 @@ app.post("/api/login", (req, res) => {
   });
 });
 
-app.post("/api/pedidos", verifyToken, (req, res) => {
-  const userId = req.user.id;
-  const { productos, total, subtotal, costoEnvio, descuento, direccionEnvio, metodoPago } = req.body;
+// Nuevo endpoint para crear Payment Intent de Stripe
+app.post("/api/create-payment-intent", verifyToken, async (req, res) => {
+  try {
+    const { total, currency = 'mxn', metodoPago, productos } = req.body;
+    const userId = req.user.id;
 
-  if (!productos || productos.length === 0 || !total || !direccionEnvio || !metodoPago) {
-    return res.status(400).json({ error: "Datos incompletos para crear el pedido." });
+    console.log('💳 Creando Payment Intent:', {
+      total,
+      currency,
+      metodoPago,
+      userId,
+      productosCount: productos?.length
+    });
+
+    // Validaciones
+    if (!total || total <= 0) {
+      return res.status(400).json({ error: "Total inválido" });
+    }
+
+    if (metodoPago !== 'Tarjeta de Crédito') {
+      return res.status(400).json({ error: "Este endpoint es solo para pagos con tarjeta" });
+    }
+
+    // Obtener información del usuario
+    const getUserQuery = "SELECT nombre, primer_apellido, email FROM usuarios WHERE ID_usuario = ?";
+    const userResults = await new Promise((resolve, reject) => {
+      db.query(getUserQuery, [userId], (err, results) => {
+        if (err) reject(err);
+        else resolve(results);
+      });
+    });
+
+    if (userResults.length === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    const usuario = userResults[0];
+
+    // Crear Payment Intent
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(total * 100), // Stripe usa centavos
+      currency: currency,
+      metadata: {
+        userId: userId.toString(),
+        userEmail: usuario.email,
+        userName: `${usuario.nombre} ${usuario.primer_apellido}`,
+        productos: JSON.stringify(productos?.map(p => ({
+          id: p.id_producto,
+          nombre: p.nombre,
+          cantidad: p.cantidad,
+          precio: p.precio
+        })) || [])
+      },
+      receipt_email: usuario.email,
+      description: `Pedido para ${usuario.nombre} ${usuario.primer_apellido}`
+    });
+
+    console.log('✅ Payment Intent creado:', paymentIntent.id);
+
+    res.json({
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id
+    });
+
+  } catch (error) {
+    console.error('❌ Error creando Payment Intent:', error);
+    res.status(500).json({
+      error: "Error al crear el intent de pago",
+      details: error.message
+    });
+  }
+});
+
+// Endpoint modificado para procesar pedidos
+app.post("/api/pedidos", verifyToken, async (req, res) => {
+  console.log("🛒 Recibiendo solicitud de pedido...");
+  console.log("👤 Usuario autenticado:", req.user);
+  console.log("📦 Datos del pedido:", req.body);
+  
+  const userId = req.user.id;
+  const { 
+    productos, 
+    total, 
+    subtotal, 
+    costoEnvio, 
+    descuento, 
+    direccionEnvio, 
+    metodoPago,
+    paymentIntentId // Nuevo campo para Stripe
+  } = req.body;
+
+  // Validación de datos
+  if (!productos || productos.length === 0) {
+    console.log("❌ No hay productos en el pedido");
+    return res.status(400).json({ error: "No hay productos en el pedido" });
   }
 
-  // Iniciar transacción
-  db.beginTransaction((err) => {
-    if (err) {
-      console.error("❌ Error al iniciar transacción:", err);
-      return res.status(500).json({ error: "Error interno del servidor." });
+  if (!total || total <= 0) {
+    console.log("❌ Total inválido:", total);
+    return res.status(400).json({ error: "Total del pedido inválido" });
+  }
+
+  if (!direccionEnvio) {
+    console.log("❌ Dirección de envío no especificada");
+    return res.status(400).json({ error: "Dirección de envío requerida" });
+  }
+
+  if (!metodoPago) {
+    console.log("❌ Método de pago no especificado");
+    return res.status(400).json({ error: "Método de pago requerido" });
+  }
+
+  // Validar payment intent para pagos con tarjeta
+  if (metodoPago === 'Tarjeta de Crédito' && !paymentIntentId) {
+    console.log("❌ Payment Intent requerido para pagos con tarjeta");
+    return res.status(400).json({ error: "Payment Intent requerido para pagos con tarjeta" });
+  }
+
+  console.log("✅ Validaciones pasadas, creando pedido...");
+
+  // Verificar Payment Intent si es pago con tarjeta
+  if (metodoPago === 'Tarjeta de Crédito' && paymentIntentId) {
+    try {
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      if (paymentIntent.status !== 'succeeded') {
+        console.log("❌ Payment Intent no confirmado:", paymentIntent.status);
+        return res.status(400).json({ 
+          error: "El pago no ha sido confirmado",
+          paymentStatus: paymentIntent.status
+        });
+      }
+
+      console.log("✅ Payment Intent confirmado:", paymentIntentId);
+    } catch (stripeError) {
+      console.error("❌ Error verificando Payment Intent:", stripeError);
+      return res.status(400).json({ error: "Error verificando el pago" });
     }
+  }
+
+  // Obtener información del usuario para el email
+  const getUserQuery = "SELECT nombre, primer_apellido, email FROM usuarios WHERE ID_usuario = ?";
+  
+  db.query(getUserQuery, [userId], (userErr, userResults) => {
+    if (userErr) {
+      console.error("❌ Error al obtener usuario:", userErr);
+      return res.status(500).json({ error: "Error interno del servidor" });
+    }
+
+    if (userResults.length === 0) {
+      console.error("❌ Usuario no encontrado:", userId);
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    const usuario = userResults[0];
+    console.log("👤 Usuario encontrado:", usuario.nombre, usuario.email);
+
+    // Sin transacciones por ahora (versión simplificada)
+    console.log("🔄 Creando pedido sin transacciones");
 
     // Crear el pedido
     const queryPedido = `
@@ -219,13 +423,12 @@ app.post("/api/pedidos", verifyToken, (req, res) => {
 
     db.query(queryPedido, [userId, total, direccionEnvio], (err, result) => {
       if (err) {
-        return db.rollback(() => {
-          console.error("❌ Error al crear pedido:", err);
-          res.status(500).json({ error: "Error al crear el pedido." });
-        });
+        console.error("❌ Error al crear pedido:", err);
+        return res.status(500).json({ error: "Error al crear el pedido" });
       }
 
       const pedidoId = result.insertId;
+      console.log("✅ Pedido creado con ID:", pedidoId);
 
       // Insertar detalles del pedido
       const queryDetalle = `
@@ -237,76 +440,79 @@ app.post("/api/pedidos", verifyToken, (req, res) => {
         pedidoId,
         prod.id_producto,
         prod.cantidad,
-        prod.precio
+        parseFloat(prod.precio)
       ]);
+
+      console.log("📋 Insertando detalles:", valoresDetalle);
 
       db.query(queryDetalle, [valoresDetalle], (err2) => {
         if (err2) {
-          return db.rollback(() => {
-            console.error("❌ Error al guardar detalles del pedido:", err2);
-            res.status(500).json({ error: "Error al guardar productos del pedido." });
-          });
+          console.error("❌ Error al guardar detalles del pedido:", err2);
+          return res.status(500).json({ error: "Error al guardar productos del pedido" });
         }
 
-        // Actualizar stock de productos
-        const updateStockPromises = productos.map(prod => {
-          return new Promise((resolve, reject) => {
-            const updateQuery = `
-              UPDATE productos 
-              SET stock = stock - ? 
-              WHERE ID_producto = ? AND stock >= ?
-            `;
-            db.query(updateQuery, [prod.cantidad, prod.id_producto, prod.cantidad], (err, result) => {
-              if (err) reject(err);
-              else if (result.affectedRows === 0) reject(new Error(`Stock insuficiente para producto ${prod.id_producto}`));
-              else resolve(result);
-            });
-          });
-        });
+        console.log("✅ Detalles del pedido guardados");
 
-        Promise.all(updateStockPromises)
-          .then(() => {
-            // Confirmar transacción
-            db.commit(async (err) => {
-              if (err) {
-                return db.rollback(() => {
-                  console.error("❌ Error al confirmar transacción:", err);
-                  res.status(500).json({ error: "Error al procesar el pedido." });
-                });
-              }
-
-              console.log(`✅ Pedido ${pedidoId} creado exitosamente`);
+        // Crear registro de pago
+        if (metodoPago === 'Tarjeta de Crédito' && paymentIntentId) {
+          const queryPago = `
+            INSERT INTO pagos (ID_pedido, ID_usuario, monto, moneda, estado_pago, id_stripe_pago)
+            VALUES (?, ?, ?, 'MXN', 'completado', ?)
+          `;
+          
+          db.query(queryPago, [pedidoId, userId, total, paymentIntentId], (err, result) => {
+            if (err) {
+              console.error("❌ Error al registrar pago:", err);
+              return res.status(500).json({ error: "Error al registrar el pago" });
+            } else {
+              console.log("✅ Pago registrado con ID:", result.insertId);
               
-              // Enviar email de confirmación
-              const usuario = {
-                nombre: req.user.nombre || 'Cliente',
-                email: req.user.email
-              };
-              
-              enviarEmailConfirmacionPedido(pedidoId, usuario, total, productos);
-
+              // Respuesta exitosa
               res.status(201).json({ 
                 message: "Pedido creado exitosamente", 
-                pedidoId,
-                total,
-                metodoPago
+                pedidoId: pedidoId,
+                total: total,
+                metodoPago: metodoPago,
+                paymentIntentId: paymentIntentId,
+                success: true
               });
-            });
-          })
-          .catch((error) => {
-            db.rollback(() => {
-              console.error("❌ Error al actualizar stock:", error);
-              res.status(400).json({ error: error.message });
-            });
+            }
           });
+        } else {
+          // Para otros métodos de pago
+          const queryPago = `
+            INSERT INTO pagos (ID_pedido, ID_usuario, monto, moneda, estado_pago)
+            VALUES (?, ?, ?, 'MXN', 'pendiente')
+          `;
+          
+          db.query(queryPago, [pedidoId, userId, total], (err, result) => {
+            if (err) {
+              console.error("❌ Error al registrar pago:", err);
+              return res.status(500).json({ error: "Error al registrar el pago" });
+            } else {
+              console.log("✅ Pago pendiente registrado con ID:", result.insertId);
+              
+              // Respuesta exitosa
+              res.status(201).json({ 
+                message: "Pedido creado exitosamente", 
+                pedidoId: pedidoId,
+                total: total,
+                metodoPago: metodoPago,
+                success: true
+              });
+            }
+          });
+        }
       });
     });
   });
 });
 
-// Función para enviar email de confirmación de pedido
-const enviarEmailConfirmacionPedido = async (pedidoId, usuario, total, productos) => {
+// Función mejorada para enviar email de confirmación
+const enviarEmailConfirmacionPedido = async (pedidoId, usuario, total, productos, metodoPago, paymentIntentId = null) => {
   try {
+    console.log(`📧 Enviando email de confirmación para pedido ${pedidoId} a ${usuario.email}`);
+    
     const transporter = nodemailer.createTransporter({
       service: "Gmail",
       auth: {
@@ -319,10 +525,29 @@ const enviarEmailConfirmacionPedido = async (pedidoId, usuario, total, productos
       <tr>
         <td style="padding: 10px; border-bottom: 1px solid #eee;">${prod.nombre}</td>
         <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${prod.cantidad}</td>
-        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${prod.precio}</td>
-        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${(prod.precio * prod.cantidad).toFixed(2)}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${parseFloat(prod.precio).toFixed(2)}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">$${(parseFloat(prod.precio) * prod.cantidad).toFixed(2)}</td>
       </tr>
     `).join('');
+
+    // Información de pago según el método
+    const infoPagoHTML = metodoPago === 'Tarjeta de Crédito' && paymentIntentId 
+      ? `
+        <div style="background: #d4edda; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h4 style="margin-top: 0; color: #155724;">✅ Pago Procesado</h4>
+          <p style="margin: 5px 0;"><strong>Método:</strong> ${metodoPago}</p>
+          <p style="margin: 5px 0;"><strong>ID de Transacción:</strong> ${paymentIntentId}</p>
+          <p style="margin: 5px 0;"><strong>Estado:</strong> Pago Confirmado</p>
+        </div>
+      `
+      : `
+        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h4 style="margin-top: 0; color: #856404;">⏳ Pago Pendiente</h4>
+          <p style="margin: 5px 0;"><strong>Método:</strong> ${metodoPago}</p>
+          <p style="margin: 5px 0;"><strong>Estado:</strong> Pendiente de confirmación</p>
+          ${metodoPago === 'Transferencia Bancaria' ? '<p style="margin: 5px 0;"><strong>Instrucciones:</strong> Recibirás los datos bancarios por separado</p>' : ''}
+        </div>
+      `;
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -343,7 +568,9 @@ const enviarEmailConfirmacionPedido = async (pedidoId, usuario, total, productos
             
             <p>Hola <strong>${usuario.nombre}</strong>,</p>
             
-            <p>Tu pedido <strong>#${pedidoId}</strong> ha sido confirmado y está siendo procesado.</p>
+            <p>Tu pedido <strong>#${pedidoId}</strong> ha sido confirmado.</p>
+            
+            ${infoPagoHTML}
             
             <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="margin-top: 0;">Detalles del Pedido:</h3>
@@ -363,7 +590,7 @@ const enviarEmailConfirmacionPedido = async (pedidoId, usuario, total, productos
                 <tfoot>
                   <tr style="background: #e9ecef; font-weight: bold;">
                     <td colspan="3" style="padding: 12px; text-align: right;">Total:</td>
-                    <td style="padding: 12px; text-align: right; font-size: 1.2em;">$${total}</td>
+                    <td style="padding: 12px; text-align: right; font-size: 1.2em;">$${parseFloat(total).toFixed(2)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -372,18 +599,11 @@ const enviarEmailConfirmacionPedido = async (pedidoId, usuario, total, productos
             <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h4 style="margin-top: 0; color: #1976d2;">📦 ¿Qué sigue?</h4>
               <ul style="margin: 0; padding-left: 20px;">
-                <li>Prepararemos tu pedido (1-2 días hábiles)</li>
+                <li>Procesaremos tu pedido (1-2 días hábiles)</li>
                 <li>Te notificaremos cuando esté listo para envío</li>
                 <li>Recibirás tu pedido en 3-5 días hábiles</li>
                 <li>Podrás rastrear tu envío desde tu cuenta</li>
               </ul>
-            </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="http://localhost:3000/panel-usuario" 
-                 style="background: #2d2d2d; color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block;">
-                Ver Mi Cuenta
-              </a>
             </div>
             
             <p style="color: #666; font-size: 0.9em; margin-top: 30px;">
@@ -397,18 +617,63 @@ const enviarEmailConfirmacionPedido = async (pedidoId, usuario, total, productos
       </html>
     `;
 
-    await transporter.sendMail({
+    const mailOptions = {
       from: `"Joyería Elegante" <${process.env.CORREO_ORIGEN}>`,
       to: usuario.email,
       subject: `Confirmación de Pedido #${pedidoId} - Joyería Elegante`,
       html: htmlContent
-    });
+    };
 
+    await transporter.sendMail(mailOptions);
     console.log(`✅ Email de confirmación enviado para pedido ${pedidoId}`);
+    
   } catch (error) {
-    console.error(`❌ Error enviando email de confirmación:`, error);
+    console.error(`❌ Error enviando email de confirmación para pedido ${pedidoId}:`, error);
   }
 };
+
+// Webhook de Stripe para manejar eventos - AHORA HABILITADO
+app.post('/api/webhook/stripe', express.raw({type: 'application/json'}), (req, res) => {
+  const sig = req.headers['stripe-signature'];
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    console.log('✅ Webhook signature verification successful');
+  } catch (err) {
+    console.error('❌ Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  console.log('🔔 Stripe webhook received:', event.type);
+
+  // Manejar el evento
+  switch (event.type) {
+    case 'payment_intent.succeeded':
+      const paymentIntent = event.data.object;
+      console.log('✅ PaymentIntent was successful!', paymentIntent.id);
+      
+      // Aquí podrías actualizar el estado del pedido si es necesario
+      // updatePaymentStatus(paymentIntent.id, 'completed');
+      break;
+    case 'payment_intent.payment_failed':
+      const failedPayment = event.data.object;
+      console.log('❌ PaymentIntent failed:', failedPayment.id);
+      
+      // Manejar pago fallido
+      // updatePaymentStatus(failedPayment.id, 'failed');
+      break;
+    case 'payment_intent.canceled':
+      const canceledPayment = event.data.object;
+      console.log('🚫 PaymentIntent canceled:', canceledPayment.id);
+      break;
+    default:
+      console.log(`🔔 Unhandled event type ${event.type}`);
+  }
+
+  res.json({received: true});
+});
 
 // Endpoint para obtener pedido por ID
 app.get("/api/pedidos/:id", verifyToken, (req, res) => {
@@ -1091,4 +1356,43 @@ app.post("/api/carrito/sincronizar", verifyToken, (req, res) => {
       res.json({ message: "Carrito sincronizado correctamente." });
     });
   });
+});
+
+// Agregar endpoint específico para verificar estructura de base de datos
+app.get("/api/debug/database", (req, res) => {
+  const queries = [
+    "SELECT COUNT(*) as count, 'categorias' as tabla FROM categorias",
+    "SELECT COUNT(*) as count, 'productos' as tabla FROM productos WHERE activo = 1", 
+    "SELECT COUNT(*) as count, 'materiales' as tabla FROM material",
+    "SELECT COUNT(*) as count, 'generos' as tabla FROM genero",
+    "SELECT COUNT(*) as count, 'marcas' as tabla FROM marcas"
+  ];
+  
+  const results = {};
+  let completed = 0;
+  
+  queries.forEach((query, index) => {
+    db.query(query, (err, result) => {
+      if (err) {
+        console.error(`❌ Error en query ${index}:`, err);
+        results[`query_${index}`] = { error: err.message };
+      } else {
+        results[result[0].tabla] = result[0].count;
+      }
+      
+      completed++;
+      if (completed === queries.length) {
+        res.json({
+          status: 'ok',
+          database_info: results,
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
+  });
+});
+
+// Iniciar servidor
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
 });

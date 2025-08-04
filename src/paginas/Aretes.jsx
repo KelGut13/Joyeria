@@ -3,7 +3,7 @@ import "./estilos/Productos.css";
 import Separar from "../componentes/Separador NavBar/Separador";
 import { Link } from "react-router-dom";
 import { useCarrito } from '../context/CarritoContext';
-import { getFirstProductImage, API_ENDPOINTS } from '../config/api';
+import { getFirstProductImage, API_ENDPOINTS, apiRequest, checkServerHealth, checkDatabaseStructure } from '../config/api';
 
 const Aretes = () => {
   const [productos, setProductos] = useState([]);
@@ -14,6 +14,8 @@ const Aretes = () => {
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [serverStatus, setServerStatus] = useState('checking');
+  const [debugInfo, setDebugInfo] = useState(null);
   
   // Estados para filtros
   const [filtros, setFiltros] = useState({
@@ -27,62 +29,76 @@ const Aretes = () => {
   const { agregarProducto, estaEnCarrito, obtenerItemCarrito } = useCarrito();
 
   useEffect(() => {
+    // Verificar conectividad del servidor al montar el componente
+    const checkServer = async () => {
+      console.log('🏥 Verificando estado del servidor...');
+      const health = await checkServerHealth();
+      setServerStatus(health.status);
+      console.log('🏥 Estado del servidor:', health);
+      
+      if (health.status === 'ok') {
+        // Si el servidor está ok, verificar también la base de datos
+        console.log('🗄️ Verificando estructura de base de datos...');
+        const dbCheck = await checkDatabaseStructure();
+        setDebugInfo(dbCheck.data);
+        console.log('🗄️ Estado de la base de datos:', dbCheck);
+      } else {
+        console.error('❌ Servidor no disponible:', health.message);
+      }
+    };
+    
+    checkServer();
+  }, []);
+
+  useEffect(() => {
+    // Solo intentar obtener datos si no hay error de servidor
+    if (serverStatus === 'checking') {
+      console.log('⏳ Esperando verificación del servidor...');
+      return;
+    }
+    
     // Obtener productos, materiales, géneros y marcas de la base de datos
     const obtenerDatos = async (retryCount = 0) => {
-      const maxRetries = 3;
+      const maxRetries = 2; // Reducir reintentos
+      
+      if (serverStatus === 'error' && retryCount === 0) {
+        setError("El servidor backend no está disponible o hay un problema de conexión.\n\nEl endpoint /api/test funciona, pero hay un problema específico con los endpoints de datos.\n\nVerifique:\n1. Que el servidor backend esté corriendo completamente\n2. Que no haya errores en la consola del servidor\n3. Que la base de datos esté conectada");
+        setLoading(false);
+        return;
+      }
       
       try {
         setLoading(true);
         console.log(`🔄 Intento ${retryCount + 1} de obtener datos...`);
         
-        // Fetch productos, materiales, géneros y marcas en paralelo
-        const [productosResponse, materialesResponse, generosResponse, marcasResponse] = await Promise.all([
-          fetch(API_ENDPOINTS.PRODUCTOS, {
-            headers: { 'Content-Type': 'application/json' }
-          }),
-          fetch(API_ENDPOINTS.MATERIALES, {
-            headers: { 'Content-Type': 'application/json' }
-          }),
-          fetch(API_ENDPOINTS.GENEROS, {
-            headers: { 'Content-Type': 'application/json' }
-          }),
-          fetch(API_ENDPOINTS.MARCAS, {
-            headers: { 'Content-Type': 'application/json' }
-          })
-        ]);
+        // Probar cada endpoint individualmente para identificar el problema
+        console.log('🧪 Probando endpoint de productos...');
+        const productosData = await apiRequest(API_ENDPOINTS.PRODUCTOS);
+        console.log('✅ Productos OK');
         
-        if (!productosResponse.ok || !materialesResponse.ok || !generosResponse.ok || !marcasResponse.ok) {
-          // Verificar si el servidor está devolviendo HTML en lugar de JSON
-          const errorText = await productosResponse.text();
-          if (errorText.includes('<!DOCTYPE html>')) {
-            throw new Error(`La API no está configurada correctamente. El servidor está devolviendo HTML en lugar de JSON. URL: ${productosResponse.url}`);
-          }
-          throw new Error(`HTTP error! status: ${productosResponse.status} - ${errorText}`);
-        }
-
-        // Verificar el content-type antes de hacer .json()
-        const productosContentType = productosResponse.headers.get("content-type");
-        if (!productosContentType || !productosContentType.includes("application/json")) {
-          const responseText = await productosResponse.text();
-          console.error("❌ Respuesta no es JSON:", responseText.substring(0, 200));
-          throw new Error(`La API está devolviendo ${productosContentType || 'contenido desconocido'} en lugar de JSON`);
-        }
-
-        const [productosData, materialesData, generosData, marcasData] = await Promise.all([
-          productosResponse.json(),
-          materialesResponse.json(),
-          generosResponse.json(),
-          marcasResponse.json()
-        ]);
+        console.log('🧪 Probando endpoint de materiales...');
+        const materialesData = await apiRequest(API_ENDPOINTS.MATERIALES);
+        console.log('✅ Materiales OK');
         
-        console.log("✅ Productos obtenidos:", productosData);
-        console.log("✅ Materiales obtenidos:", materialesData);
-        console.log("✅ Géneros obtenidos:", generosData);
-        console.log("✅ Marcas obtenidas:", marcasData);
+        console.log('🧪 Probando endpoint de géneros...');
+        const generosData = await apiRequest(API_ENDPOINTS.GENEROS);
+        console.log('✅ Géneros OK');
+        
+        console.log('🧪 Probando endpoint de marcas...');
+        const marcasData = await apiRequest(API_ENDPOINTS.MARCAS);
+        console.log('✅ Marcas OK');
+        
+        console.log("✅ Todos los datos obtenidos correctamente");
+        console.log("📊 Resumen:", {
+          productos: productosData.length,
+          materiales: materialesData.length,
+          generos: generosData.length,
+          marcas: marcasData.length
+        });
         
         // Filtrar solo aretes (categoria ID = 1)
         const aretes = productosData.filter((producto) => producto.id_categoria === 1);
-        console.log("🔍 Aretes filtrados:", aretes);
+        console.log("🔍 Aretes filtrados:", aretes.length, "de", productosData.length, "productos totales");
         
         setProductos(aretes);
         setProductosFiltrados(aretes);
@@ -90,21 +106,29 @@ const Aretes = () => {
         setGeneros(generosData);
         setMarcas(marcasData);
         setError(null);
+        setServerStatus('ok');
       } catch (err) {
         console.error(`❌ Error al cargar datos (intento ${retryCount + 1}):`, err);
         
-        if (err.message.includes('Failed to fetch') || err.name === 'TypeError') {
-          if (retryCount < maxRetries) {
-            console.log(`🔄 Reintentando en 3 segundos... (${retryCount + 1}/${maxRetries})`);
-            setTimeout(() => {
-              obtenerDatos(retryCount + 1);
-            }, 3000);
-            return;
-          }
-          setError("No se pudo conectar con el servidor. Verifique su conexión a internet.");
-        } else {
-          setError(`Error al cargar datos: ${err.message}`);
+        if (retryCount < maxRetries) {
+          console.log(`🔄 Reintentando en 2 segundos... (${retryCount + 1}/${maxRetries})`);
+          setTimeout(() => {
+            obtenerDatos(retryCount + 1);
+          }, 2000);
+          return;
         }
+        
+        // Determinar el tipo de error más específicamente
+        let errorMessage = `ERROR: ${err.message}`;
+        
+        if (err.message.includes('No se pudo conectar con el servidor backend')) {
+          errorMessage = `PROBLEMA DE CONECTIVIDAD:\n\n${err.message}\n\nSi /api/test funciona pero esto no, puede ser:\n1. Un endpoint específico no está configurado\n2. Problema con la base de datos\n3. Error en el código del servidor\n\nRevise la consola del servidor backend para más detalles.`;
+        } else if (err.message.includes('Error HTTP')) {
+          errorMessage = `ERROR DEL SERVIDOR:\n\n${err.message}\n\nEl servidor está funcionando pero devolvió un error.\nRevise los logs del servidor backend.`;
+        }
+        
+        setError(errorMessage);
+        setServerStatus('error');
       } finally {
         if (retryCount === 0 || retryCount >= maxRetries) {
           setLoading(false);
@@ -113,7 +137,7 @@ const Aretes = () => {
     };
 
     obtenerDatos();
-  }, []);
+  }, [serverStatus]);
 
   // Aplicar filtros cuando cambien
   useEffect(() => {
@@ -217,10 +241,23 @@ const Aretes = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     setError(null);
     setLoading(true);
-    window.location.reload();
+    setServerStatus('checking');
+    
+    // Verificar servidor primero
+    const health = await checkServerHealth();
+    setServerStatus(health.status);
+    
+    if (health.status === 'ok') {
+      // Verificar base de datos también
+      const dbCheck = await checkDatabaseStructure();
+      setDebugInfo(dbCheck.data);
+      
+      // Si el servidor está ok, recargar la página
+      window.location.reload();
+    }
   };
 
   const handleAgregarAlCarrito = (e, producto) => {
@@ -236,7 +273,7 @@ const Aretes = () => {
       agregarProducto(producto, 1);
       
       // Mostrar confirmación más amigable
-      alert(`✅ ${producto.nombre} agregado al carrito exitosamente`);
+      alert(`${producto.nombre} agregado al carrito exitosamente`);
       
       console.log('Producto agregado al carrito:', producto);
       console.log('Estado actual del carrito después de agregar:', {
@@ -246,7 +283,7 @@ const Aretes = () => {
       
     } catch (error) {
       console.error('Error al agregar al carrito:', error);
-      alert(`❌ Error: ${error.message}`);
+      alert(`Error: ${error.message}`);
     }
   };
 
@@ -368,23 +405,102 @@ const Aretes = () => {
             <div className="loading-container">
               <div className="loading-spinner"></div>
               <p>Cargando productos...</p>
+              {serverStatus === 'checking' && (
+                <p style={{ fontSize: '0.9rem', color: '#666' }}>
+                  Verificando conexión con el servidor...
+                </p>
+              )}
             </div>
           ) : error ? (
             <div className="error-container">
-              <p style={{ color: "red" }}>
-                ⚠️ {error}
-                <br />
-                <button 
-                  onClick={handleRetry} 
-                  className="retry-btn"
-                >
-                  Intentar de nuevo
-                </button>
-              </p>
+              <div style={{ 
+                background: '#fef2f2', 
+                border: '1px solid #fecaca', 
+                borderRadius: '8px', 
+                padding: '1.5rem',
+                maxWidth: '600px',
+                textAlign: 'left'
+              }}>
+                <h3 style={{ color: '#dc2626', margin: '0 0 1rem 0' }}>
+                  Error de Conexión
+                </h3>
+                <pre style={{ 
+                  color: '#7f1d1d', 
+                  fontSize: '0.9rem',
+                  whiteSpace: 'pre-wrap',
+                  fontFamily: 'inherit',
+                  margin: '0 0 1rem 0'
+                }}>
+                  {error}
+                </pre>
+                
+                {debugInfo && (
+                  <div style={{ 
+                    background: '#e0f2fe', 
+                    padding: '1rem', 
+                    borderRadius: '6px',
+                    margin: '1rem 0',
+                    fontSize: '0.8rem'
+                  }}>
+                    <strong>Info de la Base de Datos:</strong>
+                    <pre style={{ margin: '0.5rem 0 0 0', color: '#01579b' }}>
+                      {JSON.stringify(debugInfo, null, 2)}
+                    </pre>
+                  </div>
+                )}
+                
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button 
+                    onClick={handleRetry} 
+                    className="retry-btn"
+                    style={{
+                      background: '#dc2626',
+                      color: 'white',
+                      border: 'none',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Reintentar
+                  </button>
+                  <a 
+                    href="http://localhost:5001/api/test" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{
+                      background: '#059669',
+                      color: 'white',
+                      textDecoration: 'none',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '6px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Probar API
+                  </a>
+                  <a 
+                    href="http://localhost:5001/api/debug/database" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{
+                      background: '#7c3aed',
+                      color: 'white',
+                      textDecoration: 'none',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '6px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Ver DB Debug
+                  </a>
+                </div>
+              </div>
             </div>
           ) : productosFiltrados.length === 0 ? (
             <div className="empty-container">
-              <p>🔍 No hay aretes disponibles con los filtros seleccionados.</p>
+              <p>No hay aretes disponibles con los filtros seleccionados.</p>
               <button onClick={limpiarFiltros} className="retry-btn">
                 Limpiar filtros
               </button>
