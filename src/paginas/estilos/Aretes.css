@@ -12,9 +12,8 @@
 .banner-aretes {
   position: relative;
   text-align: center;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  padding: 4rem 2rem;
-  margin-bottom: 2rem;
+  padding: 4rem 0rem;
+  margin-top: 2%;
 }
 
 .banner-aretes img {
@@ -22,25 +21,10 @@
   height: 300px;
   object-fit: cover;
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  height: 420px;
 }
 
-.banner-aretes h2 {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  padding: 1.5rem 3rem;
-  border-radius: 8px;
-  font-size: 2rem;
-  font-weight: 300;
-  color: #2d2d2d;
-  letter-spacing: 0.5px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
+
 
 /* Filter Toggle Button */
 .btn-filtro-movil {
@@ -190,6 +174,23 @@
   letter-spacing: 0.5px;
 }
 
+.add-to-cart-btn {
+  width: 100%;
+  background: transparent;
+  color: #000000;
+  border: 1px solid #2d2d2d;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
 .actualizar-precio {
   background: #2d2d2d;
   color: white;
@@ -224,6 +225,7 @@
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 2rem;
   padding-bottom: 4rem;
+  
 }
 
 /* Product Counter */
@@ -308,22 +310,7 @@
   margin-bottom: 1rem;
 }
 
-.add-to-cart-btn {
-  width: 100%;
-  background: transparent;
-  color: #2d2d2d;
-  border: 1px solid #2d2d2d;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  opacity: 0;
-  transform: translateY(10px);
-}
+
 
 .producto:hover .add-to-cart-btn {
   opacity: 1;

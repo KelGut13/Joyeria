@@ -154,8 +154,7 @@ const Juegos = () => {
     <div className="juegos-page">
       {/* Banner principal */}
       <div className="banner-juegos">
-        <img src="/fondoJuegos.jpg" alt="Banner Juegos" />
-        <h2>"Accesorios hechos a mano, con alma y corazón."</h2>
+        <img src="../7.png" alt="Banner Juegos" />
       </div>
 
       <div className="contenido-juegos">

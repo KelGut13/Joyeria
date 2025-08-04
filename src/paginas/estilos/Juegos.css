@@ -1,20 +1,25 @@
-/* Estilos generales */
+/* Modern Professional Jewelry E-commerce Design - Juegos */
 .juegos-page {
   padding: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #fafafa;
+  min-height: 100vh;
+  color: #2d2d2d;
+  line-height: 1.6;
 }
 
 .banner-juegos {
   position: relative;
   text-align: center;
-  color: black;
+  padding: 4rem 0rem;
+  margin-top: 2%;
 }
 
 .banner-juegos img {
   width: 100%;
-  height: auto;
-  max-height: 350px;
+  height: 420px;
   object-fit: cover;
+  border-radius: 12px;
 }
 
 .banner-juegos h2 {
@@ -22,60 +27,156 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-size: 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 1.5rem 3rem;
+  border-radius: 8px;
+  font-size: 2rem;
+  font-weight: 300;
+  color: #2d2d2d;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .contenido-juegos {
-  display: flex;
-  flex-wrap: wrap;
-  padding: 2rem;
-  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 3rem;
+  align-items: start;
 }
 
 .filtros {
-  flex: 1 1 200px;
-  max-width: 250px;
-  background: #f8f8f8;
-  padding: 1rem;
-  border-radius: 10px;
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
 }
 
 .filtros h3 {
-  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 2rem 0;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f3f4f6;
+  letter-spacing: 0.025em;
 }
 
-.filtro-categoria ul,
-.filtro-precio .rango-precio {
+.filtro-categoria,
+.filtro-precio {
+  margin-bottom: 2.5rem;
+}
+
+.filtro-categoria > label,
+.filtro-precio > label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filtro-categoria ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.filtro-categoria li,
-.filtro-precio input {
-  margin: 0.5rem 0;
+.filtro-categoria li {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f9fafb;
+  transition: all 0.2s ease;
+}
+
+.filtro-categoria li:hover {
+  background-color: #f9fafb;
+  margin: 0 -1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border-bottom: 1px solid transparent;
+}
+
+.filtro-categoria input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin-right: 0.75rem;
+  accent-color: #2d2d2d;
+  cursor: pointer;
+}
+
+.filtro-categoria li label {
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 400;
+  margin: 0;
+  flex: 1;
+  color: #6b7280;
+  transition: color 0.2s ease;
+}
+
+.filtro-categoria input[type="checkbox"]:checked + label {
+  color: #2d2d2d;
+  font-weight: 500;
+}
+
+.rango-precio {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .rango-precio input {
-  width: 45%;
-  padding: 0.4rem;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: #fafafa;
+  transition: all 0.2s ease;
+}
+
+.rango-precio input:focus {
+  outline: none;
+  border-color: #2d2d2d;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(45, 45, 45, 0.1);
 }
 
 .actualizar-precio,
 .mostrar-mas {
-  background-color: #f2c8e6;
+  width: 100%;
+  padding: 0.75rem 1rem;
   border: none;
-  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  border-radius: 5px;
-  margin-top: 0.5rem;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: #2d2d2d;
+  color: white;
+}
+
+.actualizar-precio:hover,
+.mostrar-mas:hover {
+  background-color: #1f1f1f;
+  transform: translateY(-1px);
 }
 
 .productos {
-  flex: 3;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 1.5rem;
@@ -85,9 +186,10 @@
   background: white;
   padding: 1rem;
   text-align: center;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  border: 1px solid #f3f4f6;
+  border-radius: 12px;
   transition: box-shadow 0.3s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .producto img {
@@ -99,12 +201,15 @@
 }
 
 .producto p {
-  font-weight: bold;
+  font-weight: 600;
   margin: 0.5rem 0 0;
+  color: #111827;
 }
 
 .producto span {
   color: #444;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 .mostrar-mas-contenedor {
@@ -113,38 +218,93 @@
 }
 
 .mostrar-mas-btn {
-  background-color: #dac0de;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  border-radius: 8px;
+  background: transparent;
+  color: #2d2d2d;
+  border: 1px solid #2d2d2d;
+  padding: 1rem 2rem;
+  font-size: 0.875rem;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
 }
 
 .mostrar-mas-btn:hover {
-  background-color: #c2a7c9;
+  background: #2d2d2d;
+  color: white;
+  transform: translateY(-2px);
 }
 
-/* Responsive */
 @media screen and (max-width: 768px) {
   .contenido-juegos {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 0 1rem;
   }
 
   .filtros {
-    width: 100%;
-    max-width: 100%;
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: white;
+    z-index: 1001;
+    border-radius: 0;
+    padding: 2rem 1.5rem;
+    overflow-y: auto;
+    box-shadow: none;
+    border: none;
+  }
+
+  .filtros.filtros-movil-activo {
+    display: block;
   }
 
   .productos {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
+
+  .banner-juegos {
+    padding: 2rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .banner-juegos h2 {
+    font-size: 1.5rem;
+    padding: 1rem 2rem;
+  }
+
+  .banner-juegos img {
+    height: 200px;
+  }
 }
 
 @media screen and (max-width: 480px) {
   .banner-juegos h2 {
-    font-size: 1.2rem;
-    padding: 6px 12px;
+    font-size: 1.25rem;
+    padding: 0.75rem 1.5rem;
   }
+
+  .contenido-juegos {
+    padding: 0 0.5rem;
+  }
+} 
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.filtros.filtros-movil-activo {
+  animation: slideIn 0.3s ease;
 }

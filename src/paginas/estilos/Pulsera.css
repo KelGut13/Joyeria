@@ -12,9 +12,8 @@
 .banner-pulsera {
   position: relative;
   text-align: center;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  padding: 4rem 2rem;
-  margin-bottom: 2rem;
+  padding: 4rem 0rem;
+  margin-top: 2%;
 }
 
 .banner-pulsera img {
@@ -22,7 +21,7 @@
   height: 300px;
   object-fit: cover;
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  height: 420px;
 }
 
 .banner-pulsera h2 {
@@ -482,6 +481,7 @@
   .banner-pulsera h2 {
     font-size: 1.3rem;
     padding: 15px 20px;
+    margin-top: 50%;
   }
 }
 

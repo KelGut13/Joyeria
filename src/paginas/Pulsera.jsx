@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./estilos/Pulsera.css";
+import Separar from "../componentes/Separador NavBar/Separador";
 
 const Pulsera = () => {
   const [productos, setProductos] = useState([]);
@@ -150,10 +151,10 @@ const Pulsera = () => {
 
   return (
     <div className="pulsera-page">
+
       {/* Banner principal */}
       <div className="banner-pulsera">
-        <img src="/fondoPulseras.jpg" alt="Banner Pulseras" />
-        <h2>"Pulseras hechas para brillar contigo."</h2>
+        <img src="../8.png" alt="Banner Aretes" />
       </div>
 
       <div className="contenido-pulsera">

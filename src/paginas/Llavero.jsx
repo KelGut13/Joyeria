@@ -154,8 +154,8 @@ const Llavero = () => {
     <div className="llavero-page">
       {/* Banner principal */}
       <div className="banner-llavero">
-        <img src="/fondoLlaveros.jpg" alt="Banner Llaveros" />
-        <h2>"Llaveros que hablan por ti"</h2>
+        <img src="../6.png" alt="Banner Llaveros" />
+        
       </div>
 
       <div className="contenido-llavero">

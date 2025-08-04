@@ -207,11 +207,10 @@ const Aretes = () => {
 
   return (
     <div className="aretes-page">
-      <Separar />
+      
       {/* Banner principal */}
       <div className="banner-aretes">
-        <img src="/fondoAretes.jpg" alt="Banner Aretes" />
-        <h2>¡Demuestra tu autenticidad con nuestros aretes!</h2>
+        <img src="../9.png" alt="Banner Aretes" />
       </div>
 
       {/* Botón Filtro solo en móvil */}
