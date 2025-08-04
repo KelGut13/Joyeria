@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { API_ENDPOINTS } from '../config/api';
 
 // Crear el contexto
 const CarritoContext = createContext();
@@ -203,7 +204,7 @@ export const CarritoProvider = ({ children }) => {
 
     try {
       console.log('🔄 Cargando carrito del servidor para usuario:', usuario.id);
-      const response = await fetch('http://localhost:5001/api/carrito', {
+      const response = await fetch('https://api.curiosidadesnancy.shop/api/carrito', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -299,7 +300,7 @@ export const CarritoProvider = ({ children }) => {
     if (usuario && token) {
       // Usuario logueado: agregar al servidor
       try {
-        const response = await fetch('http://localhost:5001/api/carrito', {
+        const response = await fetch('https://api.curiosidadesnancy.shop/api/carrito', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -344,7 +345,7 @@ export const CarritoProvider = ({ children }) => {
     if (usuario && token) {
       // Usuario logueado: actualizar en servidor
       try {
-        const response = await fetch(`http://localhost:5001/api/carrito/${productoId}`, {
+        const response = await fetch(`https://api.curiosidadesnancy.shop/api/carrito/${productoId}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -381,7 +382,7 @@ export const CarritoProvider = ({ children }) => {
     if (usuario && token) {
       // Usuario logueado: eliminar del servidor
       try {
-        const response = await fetch(`http://localhost:5001/api/carrito/${productoId}`, {
+        const response = await fetch(`https://api.curiosidadesnancy.shop/api/carrito/${productoId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -417,7 +418,7 @@ export const CarritoProvider = ({ children }) => {
     if (usuario && token) {
       // Usuario logueado: limpiar del servidor
       try {
-        const response = await fetch('http://localhost:5001/api/carrito', {
+        const response = await fetch('https://api.curiosidadesnancy.shop/api/carrito', {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,

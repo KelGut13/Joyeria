@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./estilos/Juegos.css";
+import { getFirstProductImage, API_ENDPOINTS } from '../config/api';
 
 const Juegos = () => {
   const [productos, setProductos] = useState([]);
@@ -19,16 +20,33 @@ const Juegos = () => {
   });
 
   useEffect(() => {
-    const obtenerDatos = async () => {
+    // Obtener productos, materiales, géneros y marcas de la base de datos
+    const obtenerDatos = async (retryCount = 0) => {
+      const maxRetries = 3;
+      
       try {
         setLoading(true);
+        console.log(`🔄 Intento ${retryCount + 1} de obtener datos...`);
+        
         const [productosResponse, materialesResponse, generosResponse, marcasResponse] = await Promise.all([
-          fetch("http://localhost:5001/api/productos"),
-          fetch("http://localhost:5001/api/materiales"),
-          fetch("http://localhost:5001/api/generos"),
-          fetch("http://localhost:5001/api/marcas")
+          fetch(API_ENDPOINTS.PRODUCTOS, {
+            headers: { 'Content-Type': 'application/json' }
+          }),
+          fetch(API_ENDPOINTS.MATERIALES, {
+            headers: { 'Content-Type': 'application/json' }
+          }),
+          fetch(API_ENDPOINTS.GENEROS, {
+            headers: { 'Content-Type': 'application/json' }
+          }),
+          fetch(API_ENDPOINTS.MARCAS, {
+            headers: { 'Content-Type': 'application/json' }
+          })
         ]);
         
+        if (!productosResponse.ok || !materialesResponse.ok || !generosResponse.ok || !marcasResponse.ok) {
+          throw new Error(`HTTP error! status: ${productosResponse.status}`);
+        }
+
         const [productosData, materialesData, generosData, marcasData] = await Promise.all([
           productosResponse.json(),
           materialesResponse.json(),
@@ -36,6 +54,11 @@ const Juegos = () => {
           marcasResponse.json()
         ]);
         
+        console.log("✅ Productos obtenidos:", productosData);
+        console.log("✅ Materiales obtenidos:", materialesData);
+        console.log("✅ Géneros obtenidos:", generosData);
+        console.log("✅ Marcas obtenidas:", marcasData);
+
         // Para juegos, filtrar productos que contengan "juego", "set" o "colección" en el nombre
         // Si no hay productos específicos, mostrar productos de collares (categoria 3) como sets
         const juegosPorNombre = productosData.filter((producto) => 
@@ -50,6 +73,8 @@ const Juegos = () => {
           ? juegosPorNombre 
           : productosData.filter((producto) => producto.id_categoria === 3);
         
+        console.log("🔍 Juegos filtrados:", productosParaJuegos);
+        
         setProductos(productosParaJuegos);
         setProductosFiltrados(productosParaJuegos);
         setMateriales(materialesData);
@@ -57,9 +82,24 @@ const Juegos = () => {
         setMarcas(marcasData);
         setError(null);
       } catch (err) {
-        setError(`Error al cargar productos: ${err.message}`);
+        console.error(`❌ Error al cargar datos (intento ${retryCount + 1}):`, err);
+        
+        if (err.message.includes('Failed to fetch') || err.name === 'TypeError') {
+          if (retryCount < maxRetries) {
+            console.log(`🔄 Reintentando en 3 segundos... (${retryCount + 1}/${maxRetries})`);
+            setTimeout(() => {
+              obtenerDatos(retryCount + 1);
+            }, 3000);
+            return;
+          }
+          setError("No se pudo conectar con el servidor. Verifique su conexión a internet.");
+        } else {
+          setError(`Error al cargar datos: ${err.message}`);
+        }
       } finally {
-        setLoading(false);
+        if (retryCount === 0 || retryCount >= maxRetries) {
+          setLoading(false);
+        }
       }
     };
 
@@ -270,16 +310,10 @@ const Juegos = () => {
               <div className="producto" key={producto.ID_producto}>
                 <div className="producto-badge">Nuevo</div>
                 <img
-                  src={
-                    producto.imagen
-                      ? Array.isArray(producto.imagen)
-                        ? producto.imagen[0]
-                        : producto.imagen.split(",")[0]
-                      : "/placeholder.jpg"
-                  }
+                  src={getFirstProductImage(producto)}
                   alt={producto.nombre}
                   onError={(e) => {
-                    e.target.src = "/placeholder.jpg";
+                    e.target.src = "/logo192.png";
                   }}
                 />
                 <p>{producto.nombre}</p>

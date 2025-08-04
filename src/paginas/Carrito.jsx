@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCarrito } from '../context/CarritoContext';
 import './estilos/Carrito.css';
 import Separar from '../componentes/Separador NavBar/Separador';
+import { getFirstProductImage } from '../config/api';
 
 const Carrito = () => {
   const navigate = useNavigate();
@@ -96,16 +97,10 @@ const Carrito = () => {
             {items.map(item => (
               <div key={item.ID_producto} className="carrito-item">
                 <img 
-                  src={
-                    item.imagen
-                      ? Array.isArray(item.imagen)
-                        ? item.imagen[0]
-                        : item.imagen.split(",")[0]
-                      : "/placeholder.jpg"
-                  }
+                  src={getFirstProductImage(item)}
                   alt={item.nombre}
                   onError={(e) => {
-                    e.target.src = "/placeholder.jpg";
+                    e.target.src = "/logo192.png";
                   }}
                 />
                 

@@ -12,7 +12,7 @@ const PedidoConfirmado = () => {
     const cargarPedido = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5001/api/pedidos/${pedidoId}`, {
+        const response = await fetch(`https://api.curiosidadesnancy.shop/api/pedidos/${pedidoId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

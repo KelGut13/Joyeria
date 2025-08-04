@@ -3,6 +3,7 @@ import "./estilos/Productos.css";
 import Separar from "../componentes/Separador NavBar/Separador";
 import { Link } from "react-router-dom";
 import { useCarrito } from '../context/CarritoContext';
+import { getFirstProductImage, API_ENDPOINTS } from '../config/api';
 
 const Collares = () => {
   const [productos, setProductos] = useState([]);
@@ -33,16 +34,16 @@ const Collares = () => {
         console.log(`🔄 Cargando collares - Intento ${retryCount + 1}...`);
         
         const [productosResponse, materialesResponse, generosResponse, marcasResponse] = await Promise.all([
-          fetch("http://localhost:5001/api/productos", {
+          fetch(API_ENDPOINTS.PRODUCTOS, {
             headers: { 'Content-Type': 'application/json' }
           }),
-          fetch("http://localhost:5001/api/materiales", {
+          fetch(API_ENDPOINTS.MATERIALES, {
             headers: { 'Content-Type': 'application/json' }
           }),
-          fetch("http://localhost:5001/api/generos", {
+          fetch(API_ENDPOINTS.GENEROS, {
             headers: { 'Content-Type': 'application/json' }
           }),
-          fetch("http://localhost:5001/api/marcas", {
+          fetch(API_ENDPOINTS.MARCAS, {
             headers: { 'Content-Type': 'application/json' }
           })
         ]);
@@ -367,16 +368,10 @@ const Collares = () => {
               >
                 <div className="producto-badge">Nuevo</div>
                 <img
-                  src={
-                    producto.imagen
-                      ? Array.isArray(producto.imagen)
-                        ? producto.imagen[0]
-                        : producto.imagen.split(",")[0]
-                      : "/placeholder.jpg"
-                  }
+                  src={getFirstProductImage(producto)}
                   alt={producto.nombre}
                   onError={(e) => {
-                    e.target.src = "/placeholder.jpg";
+                    e.target.src = "/logo192.png";
                   }}
                 />
                 <div className="producto-info">

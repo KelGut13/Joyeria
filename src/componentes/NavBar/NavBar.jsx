@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Search } from "lucide-react";
+import { Search, User, UserCheck, Settings, Package, LogOut, Sun, Moon } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../imagenes/logo.svg";
 import "../NavBar/NavBar.css";
@@ -145,20 +145,12 @@ const Navbar = () => {
             className="search-input"
           />
           <button type="submit" className="search-btn" aria-label="Buscar">
-            <Search size={20} />
+            <Search size={20} strokeWidth={1.8} />
           </button>
         </form>
 
         {/* USAR SOLO NAVBAR-ICONS */}
         <div className="navbar-icons">
-          <button
-            className="minimal-search-btn"
-            aria-label="Buscar"
-            onClick={() => setShowMobileSearch(!showMobileSearch)}
-          >
-            <Search size={20} />
-          </button>
-          
           {/* Carrito de compras */}
           <CarritoIcono />
           
@@ -166,28 +158,27 @@ const Navbar = () => {
           {token ? (
             <div className="user-dropdown">
               <button className="user-btn">
-                <i className="fas fa-user"></i>
+                <UserCheck size={20} strokeWidth={1.8} />
                 <span className="user-name">{usuario?.nombre}</span>
               </button>
               <div className="dropdown-menu">
                 <Link to="/panel-usuario">
-                  <i className="fas fa-user-cog"></i>
+                  <Settings size={18} strokeWidth={1.8} />
                   Mi cuenta
                 </Link>
                 <Link to="/mis-pedidos">
-                  <i className="fas fa-box"></i>
+                  <Package size={18} strokeWidth={1.8} />
                   Mis pedidos
                 </Link>
                 <button onClick={handleLogout}>
-                  <i className="fas fa-sign-out-alt"></i>
+                  <LogOut size={18} strokeWidth={1.8} />
                   Cerrar sesión
                 </button>
               </div>
             </div>
           ) : (
             <Link to="/login" className="login-btn">
-              <i className="fas fa-user"></i>
-              <span>Iniciar sesión</span>
+              <User size={20} strokeWidth={1.8} />
             </Link>
           )}
           
@@ -196,7 +187,62 @@ const Navbar = () => {
             onClick={toggleTheme}
             aria-label="Cambiar tema"
           >
-            {theme === "light" ? "🌙" : "☀️"}
+            {theme === "light" ? 
+              <Moon size={20} strokeWidth={1.8} /> : 
+              <Sun size={20} strokeWidth={1.8} />
+            }
+          </button>
+        </div>
+
+        {/* Iconos móviles - solo visibles en móvil */}
+        <div className="navbar-mobile-icons">
+          <button
+            className="minimal-search-btn"
+            aria-label="Buscar"
+            onClick={() => setShowMobileSearch(!showMobileSearch)}
+          >
+            <Search size={20} strokeWidth={1.8} />
+          </button>
+          
+          {/* Carrito de compras */}
+          <CarritoIcono />
+          
+          {/* Usuario/Login móvil */}
+          {token ? (
+            <div className="user-dropdown">
+              <button className="user-btn">
+                <UserCheck size={20} strokeWidth={1.8} />
+              </button>
+              <div className="dropdown-menu">
+                <Link to="/panel-usuario">
+                  <Settings size={18} strokeWidth={1.8} />
+                  Mi cuenta
+                </Link>
+                <Link to="/mis-pedidos">
+                  <Package size={18} strokeWidth={1.8} />
+                  Mis pedidos
+                </Link>
+                <button onClick={handleLogout}>
+                  <LogOut size={18} strokeWidth={1.8} />
+                  Cerrar sesión
+                </button>
+              </div>
+            </div>
+          ) : (
+            <Link to="/login" className="login-btn">
+              <User size={20} strokeWidth={1.8} />
+            </Link>
+          )}
+          
+          <button
+            className="theme-toggle-switch"
+            onClick={toggleTheme}
+            aria-label="Cambiar tema"
+          >
+            {theme === "light" ? 
+              <Moon size={20} strokeWidth={1.8} /> : 
+              <Sun size={20} strokeWidth={1.8} />
+            }
           </button>
         </div>
       </div>
@@ -213,7 +259,7 @@ const Navbar = () => {
             autoFocus
           />
           <button type="submit" className="search-btn" aria-label="Buscar">
-            <Search size={20} />
+            <Search size={20} strokeWidth={1.8} />
           </button>
         </form>
       </div>

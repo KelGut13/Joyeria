@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useCarrito } from '../context/CarritoContext';
 import './estilos/DetalleProducto.css';
 import Separar from '../componentes/Separador NavBar/Separador';
+import { getProductImages } from '../config/api';
 
 const DetalleProducto = () => {
   const { id } = useParams();
@@ -19,7 +20,7 @@ const DetalleProducto = () => {
     const obtenerProducto = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:5001/api/productos/${id}`);
+        const response = await fetch(`https://api.curiosidadesnancy.shop/api/productos/${id}`);
         
         if (!response.ok) {
           throw new Error('Producto no encontrado');
@@ -93,11 +94,7 @@ const DetalleProducto = () => {
     );
   }
 
-  const imagenes = producto.imagen 
-    ? (Array.isArray(producto.imagen) 
-        ? producto.imagen 
-        : producto.imagen.split(','))
-    : ['/placeholder.jpg'];
+  const imagenes = getProductImages(producto);
 
   return (
     <div className="detalle-producto-page">
@@ -113,7 +110,7 @@ const DetalleProducto = () => {
               <img 
                 src={imagenes[imagenActual]} 
                 alt={producto.nombre}
-                onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                onError={(e) => { e.target.src = '/logo192.png'; }}
               />
             </div>
             
@@ -126,7 +123,7 @@ const DetalleProducto = () => {
                     alt={`${producto.nombre} ${index + 1}`}
                     className={index === imagenActual ? 'activa' : ''}
                     onClick={() => setImagenActual(index)}
-                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                    onError={(e) => { e.target.src = '/logo192.png'; }}
                   />
                 ))}
               </div>

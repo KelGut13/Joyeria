@@ -197,7 +197,7 @@ const ModalDatosPersonales = ({ usuario, setUsuario, onClose }) => {
 			console.log('Enviando datos:', form);
 			console.log('Token:', token ? 'Presente' : 'No presente');
 
-			const response = await fetch('http://localhost:5001/api/actualizar-datos-personales', {
+			const response = await fetch('https://api.curiosidadesnancy.shop/api/actualizar-datos-personales', {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
@@ -304,7 +304,7 @@ const ModalDatosCuenta = ({ usuario, setUsuario, onClose }) => {
 
 		try {
 			const token = localStorage.getItem('token');
-			const response = await fetch('http://localhost:5001/api/actualizar-cuenta', {
+			const response = await fetch('https://api.curiosidadesnancy.shop/api/actualizar-cuenta', {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
@@ -394,7 +394,7 @@ const ModalSeguridad = ({ usuario, onClose }) => {
 
 		try {
 			const token = localStorage.getItem('token');
-			const response = await fetch('http://localhost:5001/api/cambiar-password', {
+			const response = await fetch('https://api.curiosidadesnancy.shop/api/cambiar-password', {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
@@ -499,7 +499,7 @@ const ModalDirecciones = ({ usuario, onClose }) => {
 		try {
 			setLoading(true);
 			const token = localStorage.getItem('token');
-			const response = await fetch('http://localhost:5001/api/direcciones', {
+			const response = await fetch('https://api.curiosidadesnancy.shop/api/direcciones', {
 				headers: {
 					'Authorization': `Bearer ${token}`
 				}
@@ -563,7 +563,7 @@ const ModalDirecciones = ({ usuario, onClose }) => {
 
 		try {
 			const token = localStorage.getItem('token');
-			const response = await fetch(`http://localhost:5001/api/direcciones/${direccionId}`, {
+			const response = await fetch(`https://api.curiosidadesnancy.shop/api/direcciones/${direccionId}`, {
 				method: 'DELETE',
 				headers: {
 					'Authorization': `Bearer ${token}`
@@ -590,8 +590,8 @@ const ModalDirecciones = ({ usuario, onClose }) => {
 		try {
 			const token = localStorage.getItem('token');
 			const url = editingDireccion 
-				? `http://localhost:5001/api/direcciones/${editingDireccion.ID_direccion}`
-				: 'http://localhost:5001/api/direcciones';
+				? `https://api.curiosidadesnancy.shop/api/direcciones/${editingDireccion.ID_direccion}`
+				: 'https://api.curiosidadesnancy.shop/api/direcciones';
 			
 			const method = editingDireccion ? 'PUT' : 'POST';
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./estilos/Pulsera.css";
 import Separar from "../componentes/Separador NavBar/Separador";
+import { getFirstProductImage } from '../config/api';
 
 const Pulsera = () => {
   const [productos, setProductos] = useState([]);
@@ -30,10 +31,10 @@ const Pulsera = () => {
           generosResponse,
           marcasResponse,
         ] = await Promise.all([
-          fetch("http://localhost:5001/api/productos"),
-          fetch("http://localhost:5001/api/materiales"),
-          fetch("http://localhost:5001/api/generos"),
-          fetch("http://localhost:5001/api/marcas"),
+          fetch("https://api.curiosidadesnancy.shop/api/productos"),
+          fetch("https://api.curiosidadesnancy.shop/api/materiales"),
+          fetch("https://api.curiosidadesnancy.shop/api/generos"),
+          fetch("https://api.curiosidadesnancy.shop/api/marcas"),
         ]);
 
         const [productosData, materialesData, generosData, marcasData] =
@@ -274,16 +275,10 @@ const Pulsera = () => {
               <div className="producto" key={producto.ID_producto}>
                 <div className="producto-badge">Nuevo</div>
                 <img
-                  src={
-                    producto.imagen
-                      ? Array.isArray(producto.imagen)
-                        ? producto.imagen[0]
-                        : producto.imagen.split(",")[0]
-                      : "/placeholder.jpg"
-                  }
+                  src={getFirstProductImage(producto)}
                   alt={producto.nombre}
                   onError={(e) => {
-                    e.target.src = "/placeholder.jpg";
+                    e.target.src = "/logo192.png";
                   }}
                 />
                 <p>{producto.nombre}</p>

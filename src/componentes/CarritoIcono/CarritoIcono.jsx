@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ShoppingBag } from 'lucide-react';
 import { useCarrito } from '../../context/CarritoContext';
 import './CarritoIcono.css';
+import { getFirstProductImage } from '../../config/api';
 
 const CarritoIcono = () => {
   const { items, cantidadItems, subtotal } = useCarrito();
@@ -14,7 +16,7 @@ const CarritoIcono = () => {
       onMouseLeave={() => setMostrarDropdown(false)}
     >
       <Link to="/carrito" className="carrito-icono">
-        <i className="fas fa-shopping-cart"></i>
+        <ShoppingBag size={20} strokeWidth={1.8} />
         {cantidadItems > 0 && (
           <span className="carrito-badge">{cantidadItems}</span>
         )}
@@ -30,15 +32,9 @@ const CarritoIcono = () => {
             {items.slice(0, 3).map(item => (
               <div key={item.ID_producto} className="carrito-dropdown-item">
                 <img 
-                  src={
-                    item.imagen
-                      ? Array.isArray(item.imagen)
-                        ? item.imagen[0]
-                        : item.imagen.split(",")[0]
-                      : "/placeholder.jpg"
-                  }
+                  src={getFirstProductImage(item)}
                   alt={item.nombre}
-                  onError={(e) => { e.target.src = "/placeholder.jpg"; }}
+                  onError={(e) => { e.target.src = "/logo192.png"; }}
                 />
                 <div className="item-info">
                   <span className="item-nombre">{item.nombre}</span>
@@ -81,7 +77,7 @@ const CarritoIcono = () => {
       {mostrarDropdown && items.length === 0 && (
         <div className="carrito-dropdown carrito-vacio">
           <div className="carrito-vacio-mensaje">
-            <i className="fas fa-shopping-cart"></i>
+            <ShoppingBag size={32} strokeWidth={1.5} />
             <p>Tu carrito está vacío</p>
           </div>
         </div>

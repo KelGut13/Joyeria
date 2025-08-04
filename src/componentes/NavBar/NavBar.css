@@ -69,22 +69,37 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0 8px;
-  font-size: 1.2rem;
+  padding: 0.5rem;
   color: #009ca6;
   border-radius: 50%;
-  transition: background 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .search-btn:hover {
-  background: #e6f2f0;
+  background: rgba(0, 156, 166, 0.1);
+  transform: scale(1.05);
+}
+
+.search-btn svg {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-btn:hover svg {
+  transform: scale(1.1);
 }
 
 /* Iconos de la navbar */
 .navbar-icons {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  width: 148px;
+  height: 100%;
+  padding-right: 1rem; /* Añade espacio desde el borde derecho */
 }
 
 .navbar-icons button,
@@ -92,31 +107,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 40px;
-  width: 40px;
-  padding: 0;
+  height: 44px;
+  min-width: 44px;
+  padding: 0 0.5rem;
   margin: 0;
   background: none;
   border: none;
   cursor: pointer;
   color: var(--navbar-icon);
-  transition: color 0.2s;
+  transition: color 0.3s ease;
+  border-radius: 12px;
+  text-decoration: none;
+  position: relative;
 }
 
 .navbar-icons svg {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   vertical-align: middle;
   stroke-width: 1.8;
   color: inherit !important;
-  transition: color 0.2s;
+  transition: color 0.3s ease;
 }
 
 /* Fuerza el color en los SVG hijos de los iconos */
 .navbar-icons a svg,
 .navbar-icons button svg {
   color: inherit !important;
-  transition: color 0.2s;
+  transition: color 0.3s ease;
 }
 
 .navbar-icons a:hover,
@@ -124,18 +142,40 @@
   color: var(--navbar-icon-hover);
 }
 
-/* Botón de cambio de tema */
+.navbar-icons a:hover svg,
+.navbar-icons button:hover svg {
+  color: var(--navbar-icon-hover);
+}
+
+/* Botón de cambio de tema mejorado */
 .theme-toggle-switch {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1.5rem;
-  color: #222;
-  transition: color 0.2s;
+  color: var(--navbar-icon);
+  transition: color 0.3s ease;
+  border-radius: 12px;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .theme-toggle-switch:hover {
-  color: #009ca6;
+  color: var(--navbar-icon-hover);
+}
+
+.theme-toggle-switch svg {
+  transition: color 0.3s ease;
+}
+
+.theme-toggle-switch:hover svg {
+  color: var(--navbar-icon-hover);
+}
+
+/* Iconos móviles - ocultos por defecto */
+.navbar-mobile-icons {
+  display: none;
 }
 
 .minimal-search-btn {
@@ -182,43 +222,43 @@
 .login-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   background: transparent;
-  color: #2d2d2d;
+  color: var(--navbar-icon);
   text-decoration: none;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
+  padding: 0.5rem;
+  border-radius: 12px;
   font-weight: 500;
   font-size: 0.875rem;
-  transition: all 0.2s ease;
-  border: 1px solid #e5e7eb;
+  transition: color 0.3s ease;
+  border: 1.5px solid rgba(0, 156, 166, 0.2);
   white-space: nowrap;
+  min-width: 44px;
+  height: 44px;
 }
 
 .login-btn:hover {
-  background: #f8f9fa;
-  border-color: #2d2d2d;
-  transform: translateY(-1px);
+  color: var(--navbar-icon-hover);
 }
 
 .user-btn {
-  background: #2d2d2d;
-  color: white;
+  background: transparent;
+  color: var(--navbar-icon);
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 0.75rem 1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.3s ease;
   font-weight: 500;
   font-size: 0.875rem;
 }
 
 .user-btn:hover {
-  background: #1f1f1f;
-  transform: translateY(-1px);
+  color: var(--navbar-icon-hover);
 }
 
 .user-name {
@@ -233,23 +273,27 @@
   top: 100%;
   right: 0;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  border: 1px solid #e5e7eb;
-  min-width: 200px;
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 156, 166, 0.05);
+  border: 1px solid rgba(0, 156, 166, 0.1);
+  min-width: 220px;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
+  transform: translateY(-10px) scale(0.95);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   overflow: hidden;
+  backdrop-filter: blur(10px);
 }
 
 .user-dropdown:hover .dropdown-menu {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
 .dropdown-menu a,
@@ -258,7 +302,7 @@
   align-items: center;
   gap: 0.75rem;
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   text-decoration: none;
   color: #374151;
   background: none;
@@ -266,77 +310,191 @@
   text-align: left;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: color 0.3s ease;
   font-weight: 500;
 }
 
 .dropdown-menu a:hover,
 .dropdown-menu button:hover {
-  background: #f8f9fa;
+  color: #009ca6;
+}
+
+.dropdown-menu a:hover svg,
+.dropdown-menu button:hover svg {
+  color: #009ca6;
 }
 
 .dropdown-menu button:last-child {
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid rgba(0, 156, 166, 0.1);
   color: #dc2626;
+  margin-top: 0.25rem;
 }
 
 .dropdown-menu button:last-child:hover {
-  background: #fef2f2;
+  color: #dc2626;
+}
+
+.dropdown-menu button:last-child:hover svg {
+  color: #dc2626;
 }
 
 /* Responsive */
 @media (max-width: 900px) {
   .navbar-content {
     height: 56px;
-    padding: 0 8px;
+    padding: 0 4px; /* Reducir padding lateral */
     gap: 0;
     justify-content: center;
     position: relative;
+    max-width: 100%; /* Asegurar que no haga overflow */
+    overflow: hidden; /* Prevenir overflow */
   }
 
-  /* Se posiciona el logo al lado derecho del menu de hamburguesa */
+  /* Se posiciona el logo al centro con mejor cálculo */
   .navbar-logo-link {
     position: absolute;
-    left: 13%;
-    /*transform: translateX(-50%);*/
+    left: 8%; /* Mover más a la izquierda para dar espacio a los iconos */
     z-index: 2;
   }
 
   .logo {
     height: 32px;
-    max-width: 80px;
+    max-width: 120px; /* Aumentar un poco el tamaño máximo */
   }
 
   /* Solo muestra la lupa, oculta la barra de búsqueda */
   .navbar-search {
     display: none;
   }
-  .minimal-search-btn {
-    display: flex !important;
-    align-items: center;
-    font-size: 1.7rem;
-    color: #009ca6;
-    background: none;
-    border: none;
-    cursor: pointer;
-    margin-left: 8px;
-  }
 
   /* Ajusta los iconos a la derecha */
   .navbar-icons {
+    display: none; /* Ocultar en móvil */
+  }
+
+  /* Mostrar iconos móviles */
+  .navbar-mobile-icons {
+    display: flex;
+    align-items: center;
+    gap: 2px; /* Gap mínimo para máximo espacio */
     position: absolute;
-    right: 8px;
+    right: 0px; /* Pegar completamente al borde */
     top: 50%;
     transform: translateY(-50%);
-    gap: 10px;
     z-index: 2;
+    padding-right: 0;
+    width: auto; /* Eliminar restricción de ancho */
+    overflow: visible; /* Asegurar que nada se corte */
+    white-space: nowrap; /* Evitar que se envuelvan los iconos */
+    background: var(--navbar-bg); /* Fondo para que se vean bien */
+    border-radius: 8px; /* Esquinas redondeadas */
+    padding: 2px; /* Padding mínimo alrededor */
+  }
+
+  .navbar-mobile-icons button,
+  .navbar-mobile-icons a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--navbar-icon);
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 0.15rem; /* Padding muy reducido */
+    transition: color 0.3s ease;
+    min-width: 28px; /* Tamaño muy compacto */
+    height: 28px;
+    flex-shrink: 0; /* Evitar que se compriman */
+    position: relative;
+    text-decoration: none;
+  }
+
+  /* Estilos específicos para el botón del tema en móvil */
+  .navbar-mobile-icons .theme-toggle-switch {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--navbar-icon) !important;
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    border-radius: 8px !important;
+    padding: 0.15rem !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    order: 4; /* Forzar que aparezca al final */
+  }
+
+  .navbar-mobile-icons button:hover,
+  .navbar-mobile-icons a:hover {
+    color: var(--navbar-icon-hover);
+  }
+
+  .navbar-mobile-icons svg {
+    width: 16px !important; /* Tamaño compacto para que quepan todos */
+    height: 16px !important;
+    transition: color 0.3s ease;
+    flex-shrink: 0;
+    display: block !important;
+  }
+
+  /* Estilos específicos para el dropdown de usuario en móvil */
+  .navbar-mobile-icons .user-dropdown {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    min-width: 28px;
+    order: 3; /* Orden específico */
+  }
+
+  .navbar-mobile-icons .user-dropdown .user-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--navbar-icon) !important;
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    border-radius: 8px !important;
+    padding: 0.15rem !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    margin: 0 !important;
+  }
+
+  /* Asegurar que el tema toggle funcione correctamente */
+  .navbar-mobile-icons .theme-toggle-switch svg {
+    width: 16px !important;
+    height: 16px !important;
+    color: var(--navbar-icon) !important;
+    display: block !important;
+  }
+
+  /* Órdenes específicos para cada icono */
+  .navbar-mobile-icons .minimal-search-btn {
+    order: 1;
+  }
+
+  .navbar-mobile-icons .carrito-contenedor {
+    order: 2;
+  }
+
+  .navbar-mobile-icons button:hover svg,
+  .navbar-mobile-icons a:hover svg {
+    color: var(--navbar-icon-hover);
+  }
+
+  .minimal-search-btn {
+    display: flex !important;
   }
 
   /* Muestra el menú hamburguesa a la izquierda */
   .hamburger-btn {
     display: flex;
     position: absolute;
-    left: 8px;
+    left: 4px; /* Menos espacio desde el borde */
     top: 50%;
     transform: translateY(-50%);
     z-index: 2;
@@ -470,9 +628,10 @@
   .hamburger-btn {
     display: flex;
     position: absolute;
-    left: 8px;
+    left: 4px;
     top: 50%;
     transform: translateY(-50%);
+    z-index: 10; /* Aumentar z-index para asegurar visibilidad */
   }
 }
 
@@ -481,14 +640,43 @@
   to { opacity: 1; }
 }
 
-/* Responsive */
+/* Responsive - Tablet */
+@media screen and (max-width: 1024px) {
+  .user-name {
+    display: none; /* Ocultar nombre en tablets para ahorrar espacio */
+  }
+  
+  .user-btn {
+    padding: 0.5rem;
+    min-width: 44px;
+    justify-content: center;
+  }
+}
+
+/* Responsive - Móvil */
 @media screen and (max-width: 768px) {
   .navbar {
-    padding: 1rem;
+    padding: 0; /* Quitar padding extra en móvil */
+  }
+
+  .navbar-content {
+    padding: 0 2px !important; /* Padding mínimo */
+    overflow: visible !important; /* Permitir que los iconos sean visibles */
+  }
+
+  /* Ajustar posición del logo en pantallas muy pequeñas */
+  .navbar-logo-link {
+    left: 6% !important; /* Mover aún más a la izquierda */
+  }
+
+  .logo {
+    height: 26px !important; /* Logo más pequeño */
+    max-width: 90px !important;
   }
 
   .navbar-icons {
-    gap: 0.5rem;
+    gap: 0.25rem; /* Reducir gap en móvil */
+    padding-right: 0.5rem; /* Menos padding en móvil */
   }
   
   .login-btn span,
@@ -497,13 +685,13 @@
   }
   
   .login-btn {
-    padding: 0.75rem;
+    padding: 0.5rem;
     min-width: 40px;
     justify-content: center;
   }
   
   .user-btn {
-    padding: 0.75rem;
+    padding: 0.5rem;
     min-width: 40px;
     justify-content: center;
   }
@@ -514,5 +702,57 @@
 
   .mobile-menu-toggle {
     display: block;
+  }
+  
+  /* Iconos móviles más compactos en pantallas muy pequeñas */
+  .navbar-mobile-icons {
+    gap: 3px !important; /* Gap aún más reducido */
+    right: 2px !important; /* Pegar más al borde */
+    padding-right: 0.125rem !important; /* Padding mínimo */
+  }
+
+  .navbar-mobile-icons button,
+  .navbar-mobile-icons a {
+    padding: 0.2rem !important; /* Padding mínimo */
+    min-width: 30px !important; /* Tamaño muy reducido */
+    height: 30px !important;
+  }
+
+  .navbar-mobile-icons svg {
+    width: 16px !important; /* Iconos más pequeños en móvil */
+    height: 16px !important;
+  }
+
+  /* Asegurar que el botón del tema sea visible */
+  .navbar-mobile-icons .theme-toggle-switch {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0.2rem !important;
+    min-width: 30px !important;
+    height: 30px !important;
+  }
+
+  .navbar-mobile-icons .theme-toggle-switch svg {
+    width: 16px !important;
+    height: 16px !important;
+    color: var(--navbar-icon) !important;
+  }
+
+  .navbar-mobile-icons .user-dropdown {
+    height: 30px !important;
+    min-width: 30px !important;
+  }
+
+  .navbar-mobile-icons .user-dropdown .user-btn {
+    padding: 0.2rem !important;
+    min-width: 30px !important;
+    height: 30px !important;
+  }
+
+  /* Ajustar dropdown en móvil */
+  .navbar-mobile-icons .dropdown-menu {
+    right: -8px; /* Ajustar posición para que no se corte */
+    min-width: 180px; /* Reducir ancho mínimo */
   }
 }

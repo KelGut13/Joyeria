@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCarrito } from '../context/CarritoContext';
 import './estilos/Checkout.css';
 import Separar from '../componentes/Separador NavBar/Separador';
+import { getFirstProductImage } from '../config/api';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ const Checkout = () => {
   const cargarDirecciones = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/direcciones', {
+      const response = await fetch('https://api.curiosidadesnancy.shop/api/direcciones', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -88,7 +89,7 @@ const Checkout = () => {
         metodoPago: metodoPago
       };
 
-      const response = await fetch('http://localhost:5001/api/pedidos', {
+      const response = await fetch('https://api.curiosidadesnancy.shop/api/pedidos', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -233,15 +234,9 @@ const Checkout = () => {
               {items.map(item => (
                 <div key={item.ID_producto} className="producto-resumen">
                   <img 
-                    src={
-                      item.imagen
-                        ? Array.isArray(item.imagen)
-                          ? item.imagen[0]
-                          : item.imagen.split(",")[0]
-                        : "/placeholder.jpg"
-                    }
+                    src={getFirstProductImage(item)}
                     alt={item.nombre}
-                    onError={(e) => { e.target.src = "/placeholder.jpg"; }}
+                    onError={(e) => { e.target.src = "/logo192.png"; }}
                   />
                   <div className="producto-info">
                     <h4>{item.nombre}</h4>

@@ -3,6 +3,7 @@ import "./estilos/Productos.css";
 import Separar from "../componentes/Separador NavBar/Separador";
 import { Link } from "react-router-dom";
 import { useCarrito } from '../context/CarritoContext';
+import { getFirstProductImage } from '../config/api';
 
 const Anillos = () => {
   const [productos, setProductos] = useState([]);
@@ -15,7 +16,7 @@ const Anillos = () => {
   useEffect(() => {
     const obtenerAnillos = async () => {
       try {
-        const response = await fetch("http://localhost:5001/api/productos");
+        const response = await fetch("https://api.curiosidadesnancy.shop/api/productos");
         if (!response.ok) throw new Error('Error al cargar productos');
         
         const productos = await response.json();
@@ -72,15 +73,9 @@ const Anillos = () => {
               >
                 <div className="producto-badge">Nuevo</div>
                 <img
-                  src={
-                    producto.imagen
-                      ? Array.isArray(producto.imagen)
-                        ? producto.imagen[0]
-                        : producto.imagen.split(",")[0]
-                      : "/placeholder.jpg"
-                  }
+                  src={getFirstProductImage(producto)}
                   alt={producto.nombre}
-                  onError={(e) => { e.target.src = "/placeholder.jpg"; }}
+                  onError={(e) => { e.target.src = "/logo192.png"; }}
                 />
                 <div className="producto-info">
                   <p>{producto.nombre}</p>

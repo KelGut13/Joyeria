@@ -25,7 +25,7 @@ function Contactanos() {
     setEstado("Enviando...");
 
     try {
-      const response = await fetch("http://localhost:5001/api/contacto", {
+      const response = await fetch("https://api.curiosidadesnancy.shop/api/contacto", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

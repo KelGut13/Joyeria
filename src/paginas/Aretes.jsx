@@ -3,6 +3,7 @@ import "./estilos/Productos.css";
 import Separar from "../componentes/Separador NavBar/Separador";
 import { Link } from "react-router-dom";
 import { useCarrito } from '../context/CarritoContext';
+import { getFirstProductImage, API_ENDPOINTS } from '../config/api';
 
 const Aretes = () => {
   const [productos, setProductos] = useState([]);
@@ -36,24 +37,37 @@ const Aretes = () => {
         
         // Fetch productos, materiales, géneros y marcas en paralelo
         const [productosResponse, materialesResponse, generosResponse, marcasResponse] = await Promise.all([
-          fetch("http://localhost:5001/api/productos", {
+          fetch(API_ENDPOINTS.PRODUCTOS, {
             headers: { 'Content-Type': 'application/json' }
           }),
-          fetch("http://localhost:5001/api/materiales", {
+          fetch(API_ENDPOINTS.MATERIALES, {
             headers: { 'Content-Type': 'application/json' }
           }),
-          fetch("http://localhost:5001/api/generos", {
+          fetch(API_ENDPOINTS.GENEROS, {
             headers: { 'Content-Type': 'application/json' }
           }),
-          fetch("http://localhost:5001/api/marcas", {
+          fetch(API_ENDPOINTS.MARCAS, {
             headers: { 'Content-Type': 'application/json' }
           })
         ]);
         
         if (!productosResponse.ok || !materialesResponse.ok || !generosResponse.ok || !marcasResponse.ok) {
-          throw new Error(`HTTP error! status: ${productosResponse.status}`);
+          // Verificar si el servidor está devolviendo HTML en lugar de JSON
+          const errorText = await productosResponse.text();
+          if (errorText.includes('<!DOCTYPE html>')) {
+            throw new Error(`La API no está configurada correctamente. El servidor está devolviendo HTML en lugar de JSON. URL: ${productosResponse.url}`);
+          }
+          throw new Error(`HTTP error! status: ${productosResponse.status} - ${errorText}`);
         }
-        
+
+        // Verificar el content-type antes de hacer .json()
+        const productosContentType = productosResponse.headers.get("content-type");
+        if (!productosContentType || !productosContentType.includes("application/json")) {
+          const responseText = await productosResponse.text();
+          console.error("❌ Respuesta no es JSON:", responseText.substring(0, 200));
+          throw new Error(`La API está devolviendo ${productosContentType || 'contenido desconocido'} en lugar de JSON`);
+        }
+
         const [productosData, materialesData, generosData, marcasData] = await Promise.all([
           productosResponse.json(),
           materialesResponse.json(),
@@ -384,16 +398,10 @@ const Aretes = () => {
               >
                 <div className="producto-badge">Nuevo</div>
                 <img
-                  src={
-                    producto.imagen
-                      ? Array.isArray(producto.imagen)
-                        ? producto.imagen[0]
-                        : producto.imagen.split(",")[0]
-                      : "/placeholder.jpg"
-                  }
+                  src={getFirstProductImage(producto)}
                   alt={producto.nombre}
                   onError={(e) => {
-                    e.target.src = "/placeholder.jpg";
+                    e.target.src = "/logo192.png";
                   }}
                 />
                 <div className="producto-info">

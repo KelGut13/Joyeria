@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { ChevronLeft, Heart, Share2, ShoppingCart, Star, Truck, Shield, RotateCcw } from "lucide-react";
 import "./estilos/ProductoDetalle.css";
 import Separar from "../componentes/Separador NavBar/Separador";
+import { getFirstProductImage, getProductImages } from '../config/api';
 
 const ProductoDetalle = () => {
   const { id } = useParams();
@@ -21,7 +22,7 @@ const ProductoDetalle = () => {
         setLoading(true);
         console.log(`🔍 Obteniendo producto con ID: ${id}`);
 
-        const response = await fetch(`http://localhost:5001/api/productos/${id}`);
+        const response = await fetch(`https://api.curiosidadesnancy.shop/api/productos/${id}`);
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -55,7 +56,7 @@ const ProductoDetalle = () => {
 
   const obtenerProductosRelacionados = async (categoriaId, productoId) => {
     try {
-      const response = await fetch("http://localhost:5001/api/productos");
+      const response = await fetch("https://api.curiosidadesnancy.shop/api/productos");
       if (response.ok) {
         const productos = await response.json();
         const relacionados = productos
@@ -109,17 +110,7 @@ const ProductoDetalle = () => {
   };
 
   const obtenerImagenes = () => {
-    if (!producto?.imagen) return ["/placeholder.jpg"];
-    
-    if (Array.isArray(producto.imagen)) {
-      return producto.imagen;
-    }
-    
-    if (typeof producto.imagen === 'string') {
-      return producto.imagen.split(',');
-    }
-    
-    return ["/placeholder.jpg"];
+    return getProductImages(producto);
   };
 
   const obtenerNombreCategoria = (categoriaId) => {
@@ -204,7 +195,7 @@ const ProductoDetalle = () => {
                   src={imagenes[imagenSeleccionada]}
                   alt={producto.nombre}
                   onError={(e) => {
-                    e.target.src = "/placeholder.jpg";
+                    e.target.src = "/logo192.png";
                   }}
                 />
                 <button 
@@ -227,7 +218,7 @@ const ProductoDetalle = () => {
                         src={img}
                         alt={`${producto.nombre} ${index + 1}`}
                         onError={(e) => {
-                          e.target.src = "/placeholder.jpg";
+                          e.target.src = "/logo192.png";
                         }}
                       />
                     </button>
@@ -356,16 +347,10 @@ const ProductoDetalle = () => {
                   className="producto-card"
                 >
                   <img
-                    src={
-                      prod.imagen
-                        ? Array.isArray(prod.imagen)
-                          ? prod.imagen[0]
-                          : prod.imagen.split(",")[0]
-                        : "/placeholder.jpg"
-                    }
+                    src={getFirstProductImage(prod)}
                     alt={prod.nombre}
                     onError={(e) => {
-                      e.target.src = "/placeholder.jpg";
+                      e.target.src = "/logo192.png";
                     }}
                   />
                   <div className="producto-card-info">

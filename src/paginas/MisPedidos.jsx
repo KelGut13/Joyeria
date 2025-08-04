@@ -21,7 +21,7 @@ const MisPedidos = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5001/api/mis-pedidos', {
+      const response = await fetch('https://api.curiosidadesnancy.shop/api/mis-pedidos', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
