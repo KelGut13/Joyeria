@@ -54,10 +54,10 @@ app.use(express.json());
 
 // MySQL Pool
 const db = mysql.createPool({
-  host: 'srv1009.hstgr.io',
-  user: "u465901502_admin",
-  password: "@UTequipo2",
-  database: "u465901502_joyeria",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   port: 3306,
   connectionLimit: 10
 });
@@ -154,11 +154,55 @@ app.post("/api/contacto", (req, res) => {
 app.post("/api/crear-cuenta", async (req, res) => {
   const { nombre, primer_apellido, segundo_apellido, email, password, telefono } = req.body;
 
+  // Validaciones básicas
   if (!nombre || !primer_apellido || !email || !password || !telefono) {
     return res.status(400).json({ error: "Todos los campos son requeridos." });
   }
 
+  // Validación de formato de email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: "El formato del correo electrónico no es válido." });
+  }
+
+  // Validación de formato de teléfono (solo números, 10 dígitos)
+  const telefonoRegex = /^\d{10}$/;
+  if (!telefonoRegex.test(telefono)) {
+    return res.status(400).json({ error: "El teléfono debe tener 10 dígitos numéricos." });
+  }
+
+  // Validación de contraseña (mínimo 6 caracteres)
+  if (password.length < 6) {
+    return res.status(400).json({ error: "La contraseña debe tener al menos 6 caracteres." });
+  }
+
   try {
+    // Verificar si ya existe un usuario con el mismo email
+    const checkEmailQuery = "SELECT ID_usuario FROM usuarios WHERE email = ?";
+    const emailExists = await new Promise((resolve, reject) => {
+      db.query(checkEmailQuery, [email], (err, results) => {
+        if (err) reject(err);
+        else resolve(results.length > 0);
+      });
+    });
+
+    if (emailExists) {
+      return res.status(400).json({ error: "Ya existe una cuenta con este correo electrónico." });
+    }
+
+    // Verificar si ya existe un usuario con el mismo teléfono
+    const checkTelefonoQuery = "SELECT ID_usuario FROM usuarios WHERE telefono = ?";
+    const telefonoExists = await new Promise((resolve, reject) => {
+      db.query(checkTelefonoQuery, [telefono], (err, results) => {
+        if (err) reject(err);
+        else resolve(results.length > 0);
+      });
+    });
+
+    if (telefonoExists) {
+      return res.status(400).json({ error: "Ya existe una cuenta con este número de teléfono." });
+    }
+
     // Hashear la contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -174,6 +218,7 @@ app.post("/api/crear-cuenta", async (req, res) => {
           console.error("❌ Error al crear usuario:", err);
           return res.status(500).json({ error: "Error al crear usuario." });
         }
+        console.log("✅ Usuario creado exitosamente:", { id: result.insertId, email, nombre });
         res.status(201).json({ message: "Usuario creado correctamente." });
       }
     );
@@ -704,24 +749,95 @@ app.get("/api/pedidos/:id", verifyToken, (req, res) => {
 // Endpoint para obtener historial de pedidos del usuario
 app.get("/api/mis-pedidos", verifyToken, (req, res) => {
   const userId = req.user.id;
+  console.log(`📋 Solicitando pedidos para usuario ${userId}`);
 
-  const query = `
-    SELECT p.ID_pedido, p.fecha, p.total, p.estado,
-           COUNT(dp.ID_detalle) as total_productos
-    FROM pedidos p
-    LEFT JOIN detalle_pedido dp ON p.ID_pedido = dp.ID_pedido
-    WHERE p.ID_usuario = ?
-    GROUP BY p.ID_pedido
-    ORDER BY p.fecha DESC
+  // Primero verificar si las tablas existen
+  const checkTablesQuery = `
+    SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES 
+    WHERE TABLE_SCHEMA = ? AND TABLE_NAME IN ('pedidos', 'detalle_pedido')
   `;
 
-  db.query(query, [userId], (err, results) => {
+  db.query(checkTablesQuery, [process.env.DB_NAME || 'u465901502_joyeria'], (err, tableResults) => {
     if (err) {
-      console.error("❌ Error al obtener historial de pedidos:", err);
-      return res.status(500).json({ error: "Error al obtener historial de pedidos." });
+      console.error("❌ Error al verificar tablas:", err);
+      return res.status(500).json({ error: "Error interno del servidor." });
     }
 
-    res.json(results);
+    const existingTables = tableResults.map(row => row.TABLE_NAME);
+    console.log("📊 Tablas encontradas:", existingTables);
+
+    if (!existingTables.includes('pedidos') || !existingTables.includes('detalle_pedido')) {
+      console.log("❌ Las tablas de pedidos no existen. Creándolas...");
+      
+      // Crear tabla pedidos
+      const createPedidosQuery = `
+        CREATE TABLE IF NOT EXISTS pedidos (
+          ID_pedido INT AUTO_INCREMENT PRIMARY KEY,
+          ID_usuario INT NOT NULL,
+          fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+          total DECIMAL(10,2) NOT NULL,
+          estado VARCHAR(50) DEFAULT 'pendiente',
+          metodo_pago VARCHAR(50),
+          direccion_envio TEXT,
+          FOREIGN KEY (ID_usuario) REFERENCES usuarios(ID_usuario)
+        )
+      `;
+
+      // Crear tabla detalle_pedido
+      const createDetallePedidoQuery = `
+        CREATE TABLE IF NOT EXISTS detalle_pedido (
+          ID_detalle INT AUTO_INCREMENT PRIMARY KEY,
+          ID_pedido INT NOT NULL,
+          ID_producto INT NOT NULL,
+          cantidad INT NOT NULL,
+          precio_unitario DECIMAL(10,2) NOT NULL,
+          FOREIGN KEY (ID_pedido) REFERENCES pedidos(ID_pedido),
+          FOREIGN KEY (ID_producto) REFERENCES productos(ID_producto)
+        )
+      `;
+
+      db.query(createPedidosQuery, (err) => {
+        if (err) {
+          console.error("❌ Error al crear tabla pedidos:", err);
+          return res.status(500).json({ error: "Error al crear tabla pedidos." });
+        }
+
+        db.query(createDetallePedidoQuery, (err) => {
+          if (err) {
+            console.error("❌ Error al crear tabla detalle_pedido:", err);
+            return res.status(500).json({ error: "Error al crear tabla detalle_pedido." });
+          }
+
+          console.log("✅ Tablas de pedidos creadas correctamente");
+          // Como no hay pedidos aún, devolver array vacío
+          res.json([]);
+        });
+      });
+
+      return;
+    }
+
+    // Las tablas existen, hacer la consulta normal
+    const query = `
+      SELECT p.ID_pedido, p.fecha, p.total, p.estado,
+             COUNT(dp.ID_detalle) as total_productos
+      FROM pedidos p
+      LEFT JOIN detalle_pedido dp ON p.ID_pedido = dp.ID_pedido
+      WHERE p.ID_usuario = ?
+      GROUP BY p.ID_pedido
+      ORDER BY p.fecha DESC
+    `;
+
+    db.query(query, [userId], (err, results) => {
+      if (err) {
+        console.error("❌ Error al obtener historial de pedidos:", err);
+        return res.status(500).json({ error: "Error al obtener historial de pedidos." });
+      }
+
+      console.log(`✅ Pedidos obtenidos para usuario ${userId}:`, results.length, "pedidos");
+      console.log("📋 Pedidos:", results);
+      res.json(results);
+    });
   });
 });
 
@@ -829,8 +945,36 @@ app.put("/api/actualizar-datos-personales", verifyToken, (req, res) => {
   const userId = req.user.id;
   const { nombre, primer_apellido, segundo_apellido } = req.body;
 
+  // Validaciones
   if (!nombre || !primer_apellido) {
     return res.status(400).json({ error: "Nombre y primer apellido son requeridos." });
+  }
+
+  // Validar longitud de campos
+  if (nombre.trim().length < 2 || nombre.trim().length > 50) {
+    return res.status(400).json({ error: "El nombre debe tener entre 2 y 50 caracteres." });
+  }
+
+  if (primer_apellido.trim().length < 2 || primer_apellido.trim().length > 50) {
+    return res.status(400).json({ error: "El primer apellido debe tener entre 2 y 50 caracteres." });
+  }
+
+  if (segundo_apellido && (segundo_apellido.trim().length < 2 || segundo_apellido.trim().length > 50)) {
+    return res.status(400).json({ error: "El segundo apellido debe tener entre 2 y 50 caracteres." });
+  }
+
+  // Validar caracteres (solo letras, espacios y acentos)
+  const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/;
+  if (!nameRegex.test(nombre.trim())) {
+    return res.status(400).json({ error: "El nombre solo puede contener letras y espacios." });
+  }
+
+  if (!nameRegex.test(primer_apellido.trim())) {
+    return res.status(400).json({ error: "El primer apellido solo puede contener letras y espacios." });
+  }
+
+  if (segundo_apellido && !nameRegex.test(segundo_apellido.trim())) {
+    return res.status(400).json({ error: "El segundo apellido solo puede contener letras y espacios." });
   }
 
   const query = `
@@ -839,7 +983,7 @@ app.put("/api/actualizar-datos-personales", verifyToken, (req, res) => {
     WHERE ID_usuario = ?
   `;
 
-  db.query(query, [nombre, primer_apellido, segundo_apellido, userId], (err, result) => {
+  db.query(query, [nombre.trim(), primer_apellido.trim(), segundo_apellido?.trim() || null, userId], (err, result) => {
     if (err) {
       console.error("❌ Error al actualizar datos personales:", err);
       return res.status(500).json({ error: "Error al actualizar datos personales." });
@@ -897,8 +1041,31 @@ app.put("/api/cambiar-password", verifyToken, async (req, res) => {
   const userId = req.user.id;
   const { currentPassword, newPassword } = req.body;
 
+  // Validaciones
   if (!currentPassword || !newPassword) {
     return res.status(400).json({ error: "Contraseña actual y nueva son requeridas." });
+  }
+
+  if (currentPassword.trim().length === 0 || newPassword.trim().length === 0) {
+    return res.status(400).json({ error: "Las contraseñas no pueden estar vacías." });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: "La nueva contraseña debe tener al menos 6 caracteres." });
+  }
+
+  if (newPassword.length > 100) {
+    return res.status(400).json({ error: "La nueva contraseña no puede tener más de 100 caracteres." });
+  }
+
+  // Validación de contraseña segura (opcional: mayúscula, minúscula, número)
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{6,}$/;
+  if (!passwordRegex.test(newPassword)) {
+    return res.status(400).json({ error: "La nueva contraseña debe contener al menos una mayúscula, una minúscula y un número." });
+  }
+
+  if (currentPassword === newPassword) {
+    return res.status(400).json({ error: "La nueva contraseña debe ser diferente a la actual." });
   }
 
   // Verificar contraseña actual
@@ -918,7 +1085,7 @@ app.put("/api/cambiar-password", verifyToken, async (req, res) => {
     const isMatch = await bcrypt.compare(currentPassword, user.password);
 
     if (!isMatch) {
-      return res.status(400).json({ error: "Contraseña actual incorrecta." });
+      return res.status(401).json({ error: "Contraseña actual incorrecta." });
     }
 
     // Hashear nueva contraseña
@@ -938,30 +1105,57 @@ app.put("/api/cambiar-password", verifyToken, async (req, res) => {
 });
 
 // Endpoint para actualizar datos de cuenta (email y teléfono)
-app.put("/api/actualizar-cuenta", verifyToken, (req, res) => {
+app.put("/api/actualizar-cuenta", verifyToken, async (req, res) => {
   const userId = req.user.id;
   const { email, telefono } = req.body;
 
-  if (!email) {
-    return res.status(400).json({ error: "Email es requerido." });
+  // Validaciones
+  if (!email || !telefono) {
+    return res.status(400).json({ error: "Email y teléfono son requeridos." });
   }
 
-  // Verificar que el email no esté siendo usado por otro usuario
-  const checkQuery = "SELECT ID_usuario FROM usuarios WHERE email = ? AND ID_usuario != ?";
-  
-  db.query(checkQuery, [email, userId], (err, results) => {
-    if (err) {
-      console.error("❌ Error al verificar email:", err);
-      return res.status(500).json({ error: "Error interno del servidor." });
+  // Validar formato de email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email.trim())) {
+    return res.status(400).json({ error: "El formato del email no es válido." });
+  }
+
+  // Validar formato de teléfono (10 dígitos)
+  const telefonoRegex = /^\d{10}$/;
+  if (!telefonoRegex.test(telefono.trim())) {
+    return res.status(400).json({ error: "El teléfono debe tener exactamente 10 dígitos." });
+  }
+
+  try {
+    // Verificar que el email no esté siendo usado por otro usuario
+    const checkEmailQuery = "SELECT ID_usuario FROM usuarios WHERE email = ? AND ID_usuario != ?";
+    const emailExists = await new Promise((resolve, reject) => {
+      db.query(checkEmailQuery, [email.trim(), userId], (err, results) => {
+        if (err) reject(err);
+        else resolve(results.length > 0);
+      });
+    });
+
+    if (emailExists) {
+      return res.status(400).json({ error: "Este email ya está siendo usado por otro usuario." });
     }
 
-    if (results.length > 0) {
-      return res.status(400).json({ error: "Este email ya está siendo usado por otro usuario." });
+    // Verificar que el teléfono no esté siendo usado por otro usuario
+    const checkTelefonoQuery = "SELECT ID_usuario FROM usuarios WHERE telefono = ? AND ID_usuario != ?";
+    const telefonoExists = await new Promise((resolve, reject) => {
+      db.query(checkTelefonoQuery, [telefono.trim(), userId], (err, results) => {
+        if (err) reject(err);
+        else resolve(results.length > 0);
+      });
+    });
+
+    if (telefonoExists) {
+      return res.status(400).json({ error: "Este teléfono ya está siendo usado por otro usuario." });
     }
 
     const updateQuery = "UPDATE usuarios SET email = ?, telefono = ? WHERE ID_usuario = ?";
     
-    db.query(updateQuery, [email, telefono, userId], (err, result) => {
+    db.query(updateQuery, [email.trim(), telefono.trim(), userId], (err, result) => {
       if (err) {
         console.error("❌ Error al actualizar datos de cuenta:", err);
         return res.status(500).json({ error: "Error al actualizar datos de cuenta." });
@@ -973,7 +1167,10 @@ app.put("/api/actualizar-cuenta", verifyToken, (req, res) => {
 
       res.json({ message: "Datos de cuenta actualizados correctamente." });
     });
-  });
+  } catch (error) {
+    console.error("❌ Error al verificar datos:", error);
+    return res.status(500).json({ error: "Error interno del servidor." });
+  }
 });
 
 // Endpoint para obtener direcciones del usuario
@@ -1006,8 +1203,69 @@ app.post("/api/direcciones", verifyToken, (req, res) => {
     colonia, ciudad, estado, codigo_postal, pais, predeterminada 
   } = req.body;
 
+  // Validaciones básicas
   if (!alias || !calle || !numero_exterior || !colonia || !ciudad || !estado || !codigo_postal) {
     return res.status(400).json({ error: "Los campos requeridos no pueden estar vacíos." });
+  }
+
+  // Validaciones de longitud
+  if (alias.trim().length < 2) {
+    return res.status(400).json({ error: "El alias debe tener al menos 2 caracteres." });
+  }
+
+  if (calle.trim().length < 3) {
+    return res.status(400).json({ error: "La calle debe tener al menos 3 caracteres." });
+  }
+
+  if (colonia.trim().length < 2) {
+    return res.status(400).json({ error: "La colonia debe tener al menos 2 caracteres." });
+  }
+
+  if (ciudad.trim().length < 2) {
+    return res.status(400).json({ error: "La ciudad debe tener al menos 2 caracteres." });
+  }
+
+  if (estado.trim().length < 2) {
+    return res.status(400).json({ error: "El estado debe tener al menos 2 caracteres." });
+  }
+
+  // Validación de formato de código postal (5 dígitos)
+  const codigoPostalRegex = /^\d{5}$/;
+  if (!codigoPostalRegex.test(codigo_postal.trim())) {
+    return res.status(400).json({ error: "El código postal debe tener exactamente 5 dígitos." });
+  }
+
+  // Validación de formato de número exterior
+  const numeroExteriorRegex = /^[a-zA-Z0-9\s\-#]+$/;
+  if (!numeroExteriorRegex.test(numero_exterior.trim())) {
+    return res.status(400).json({ error: "El número exterior contiene caracteres no válidos." });
+  }
+
+  // Validación de formato de número interior (opcional)
+  if (numero_interior && numero_interior.trim()) {
+    const numeroInteriorRegex = /^[a-zA-Z0-9\s\-#]+$/;
+    if (!numeroInteriorRegex.test(numero_interior.trim())) {
+      return res.status(400).json({ error: "El número interior contiene caracteres no válidos." });
+    }
+  }
+
+  // Validación de ciudad y estado (solo letras, espacios, acentos)
+  const nombreRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-\.]+$/;
+  if (!nombreRegex.test(ciudad.trim())) {
+    return res.status(400).json({ error: "La ciudad solo puede contener letras, espacios y acentos." });
+  }
+
+  if (!nombreRegex.test(estado.trim())) {
+    return res.status(400).json({ error: "El estado solo puede contener letras, espacios y acentos." });
+  }
+
+  // Validar longitudes máximas
+  if (alias.trim().length > 50) {
+    return res.status(400).json({ error: "El alias no puede tener más de 50 caracteres." });
+  }
+
+  if (calle.trim().length > 100) {
+    return res.status(400).json({ error: "La calle no puede tener más de 100 caracteres." });
   }
 
   // Si es predeterminada, quitar el estado predeterminado de otras direcciones
@@ -1023,13 +1281,28 @@ app.post("/api/direcciones", verifyToken, (req, res) => {
 
   const executeInsert = () => {
     db.query(insertQuery, [
-      userId, alias, calle, numero_exterior, numero_interior,
-      colonia, ciudad, estado, codigo_postal, pais || 'México', predeterminada ? 1 : 0
+      userId, 
+      alias.trim(), 
+      calle.trim(), 
+      numero_exterior.trim(), 
+      numero_interior && numero_interior.trim() ? numero_interior.trim() : null,
+      colonia.trim(), 
+      ciudad.trim(), 
+      estado.trim(), 
+      codigo_postal.trim(), 
+      pais && pais.trim() ? pais.trim() : 'México', 
+      predeterminada ? 1 : 0
     ], (err, result) => {
       if (err) {
         console.error("❌ Error al crear dirección:", err);
         return res.status(500).json({ error: "Error al crear dirección." });
       }
+      
+      console.log("✅ Dirección creada exitosamente:", { 
+        id: result.insertId, 
+        alias: alias.trim(), 
+        usuario: userId 
+      });
       
       res.status(201).json({ 
         message: "Dirección creada correctamente.",
@@ -1060,8 +1333,69 @@ app.put("/api/direcciones/:id", verifyToken, (req, res) => {
     colonia, ciudad, estado, codigo_postal, pais, predeterminada 
   } = req.body;
 
+  // Validaciones básicas
   if (!alias || !calle || !numero_exterior || !colonia || !ciudad || !estado || !codigo_postal) {
     return res.status(400).json({ error: "Los campos requeridos no pueden estar vacíos." });
+  }
+
+  // Validaciones de longitud
+  if (alias.trim().length < 2) {
+    return res.status(400).json({ error: "El alias debe tener al menos 2 caracteres." });
+  }
+
+  if (calle.trim().length < 3) {
+    return res.status(400).json({ error: "La calle debe tener al menos 3 caracteres." });
+  }
+
+  if (colonia.trim().length < 2) {
+    return res.status(400).json({ error: "La colonia debe tener al menos 2 caracteres." });
+  }
+
+  if (ciudad.trim().length < 2) {
+    return res.status(400).json({ error: "La ciudad debe tener al menos 2 caracteres." });
+  }
+
+  if (estado.trim().length < 2) {
+    return res.status(400).json({ error: "El estado debe tener al menos 2 caracteres." });
+  }
+
+  // Validación de formato de código postal (5 dígitos)
+  const codigoPostalRegex = /^\d{5}$/;
+  if (!codigoPostalRegex.test(codigo_postal.trim())) {
+    return res.status(400).json({ error: "El código postal debe tener exactamente 5 dígitos." });
+  }
+
+  // Validación de formato de número exterior
+  const numeroExteriorRegex = /^[a-zA-Z0-9\s\-#]+$/;
+  if (!numeroExteriorRegex.test(numero_exterior.trim())) {
+    return res.status(400).json({ error: "El número exterior contiene caracteres no válidos." });
+  }
+
+  // Validación de formato de número interior (opcional)
+  if (numero_interior && numero_interior.trim()) {
+    const numeroInteriorRegex = /^[a-zA-Z0-9\s\-#]+$/;
+    if (!numeroInteriorRegex.test(numero_interior.trim())) {
+      return res.status(400).json({ error: "El número interior contiene caracteres no válidos." });
+    }
+  }
+
+  // Validación de ciudad y estado (solo letras, espacios, acentos)
+  const nombreRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-\.]+$/;
+  if (!nombreRegex.test(ciudad.trim())) {
+    return res.status(400).json({ error: "La ciudad solo puede contener letras, espacios y acentos." });
+  }
+
+  if (!nombreRegex.test(estado.trim())) {
+    return res.status(400).json({ error: "El estado solo puede contener letras, espacios y acentos." });
+  }
+
+  // Validar longitudes máximas
+  if (alias.trim().length > 50) {
+    return res.status(400).json({ error: "El alias no puede tener más de 50 caracteres." });
+  }
+
+  if (calle.trim().length > 100) {
+    return res.status(400).json({ error: "La calle no puede tener más de 100 caracteres." });
   }
 
   // Verificar que la dirección pertenece al usuario
@@ -1090,9 +1424,18 @@ app.put("/api/direcciones/:id", verifyToken, (req, res) => {
 
     const executeUpdate = () => {
       db.query(updateQuery, [
-        alias, calle, numero_exterior, numero_interior,
-        colonia, ciudad, estado, codigo_postal, pais || 'México', 
-        predeterminada ? 1 : 0, direccionId, userId
+        alias.trim(), 
+        calle.trim(), 
+        numero_exterior.trim(), 
+        numero_interior && numero_interior.trim() ? numero_interior.trim() : null,
+        colonia.trim(), 
+        ciudad.trim(), 
+        estado.trim(), 
+        codigo_postal.trim(), 
+        pais && pais.trim() ? pais.trim() : 'México', 
+        predeterminada ? 1 : 0, 
+        direccionId, 
+        userId
       ], (err, result) => {
         if (err) {
           console.error("❌ Error al actualizar dirección:", err);
@@ -1354,6 +1697,108 @@ app.post("/api/carrito/sincronizar", verifyToken, (req, res) => {
 
       console.log(`✅ Carrito sincronizado para usuario ${userId} con ${items.length} items`);
       res.json({ message: "Carrito sincronizado correctamente." });
+    });
+  });
+});
+
+// Endpoint temporal para insertar datos de prueba de pedidos
+app.post("/api/debug/insert-test-orders", (req, res) => {
+  console.log("🧪 Insertando datos de prueba de pedidos...");
+
+  // Datos de prueba para pedidos
+  const testOrders = [
+    {
+      userId: 4, // Usuario asasa12@gmail.com
+      total: 1490.00,
+      estado: 'completado',
+      metodo_pago: 'Tarjeta de Crédito',
+      direccion_envio: 'Calle Principal 123, Colonia Centro, Ciudad',
+      productos: [
+        { productId: 1, cantidad: 2, precio: 320.00 },
+        { productId: 40, cantidad: 1, precio: 850.00 }
+      ]
+    },
+    {
+      userId: 4,
+      total: 2380.00,
+      estado: 'pendiente',
+      metodo_pago: 'PayPal',
+      direccion_envio: 'Avenida Reforma 456, Colonia Roma, Ciudad',
+      productos: [
+        { productId: 46, cantidad: 1, precio: 1280.00 },
+        { productId: 43, cantidad: 2, precio: 550.00 }
+      ]
+    },
+    {
+      userId: 13, // Usuario prueba01@gmail.com 
+      total: 1150.00,
+      estado: 'enviado',
+      metodo_pago: 'Tarjeta de Débito',
+      direccion_envio: 'Boulevard Norte 789, Colonia Del Valle, Ciudad',
+      productos: [
+        { productId: 5, cantidad: 1, precio: 720.00 },
+        { productId: 1, cantidad: 1, precio: 320.00 }
+      ]
+    },
+    {
+      userId: 4,
+      total: 850.00,
+      estado: 'cancelado',
+      metodo_pago: 'Transferencia',
+      direccion_envio: 'Calle Secundaria 321, Colonia Norte, Ciudad',
+      productos: [
+        { productId: 40, cantidad: 1, precio: 850.00 }
+      ]
+    }
+  ];
+
+  let insertedOrders = 0;
+  const totalOrders = testOrders.length;
+
+  testOrders.forEach((order, orderIndex) => {
+    // Insertar pedido
+    const insertOrderQuery = `
+      INSERT INTO pedidos (ID_usuario, total, estado, metodo_pago, direccion_envio) 
+      VALUES (?, ?, ?, ?, ?)
+    `;
+
+    db.query(insertOrderQuery, [order.userId, order.total, order.estado, order.metodo_pago, order.direccion_envio], (err, result) => {
+      if (err) {
+        console.error(`❌ Error insertando pedido ${orderIndex}:`, err);
+        return;
+      }
+
+      const pedidoId = result.insertId;
+      console.log(`✅ Pedido ${pedidoId} creado para usuario ${order.userId}`);
+
+      // Insertar detalles del pedido
+      let insertedDetails = 0;
+      order.productos.forEach((producto) => {
+        const insertDetailQuery = `
+          INSERT INTO detalle_pedido (ID_pedido, ID_producto, cantidad, precio_unitario) 
+          VALUES (?, ?, ?, ?)
+        `;
+
+        db.query(insertDetailQuery, [pedidoId, producto.productId, producto.cantidad, producto.precio], (err) => {
+          if (err) {
+            console.error(`❌ Error insertando detalle de pedido ${pedidoId}:`, err);
+          } else {
+            console.log(`✅ Detalle insertado: Producto ${producto.productId} en pedido ${pedidoId}`);
+          }
+
+          insertedDetails++;
+          if (insertedDetails === order.productos.length) {
+            insertedOrders++;
+            if (insertedOrders === totalOrders) {
+              res.json({
+                success: true,
+                message: `${totalOrders} pedidos de prueba insertados correctamente`,
+                timestamp: new Date().toISOString()
+              });
+            }
+          }
+        });
+      });
     });
   });
 });
