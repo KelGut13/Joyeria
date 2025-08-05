@@ -1,5 +1,5 @@
 // Configuración de la API - FORZAR localhost para desarrollo
-const API_BASE_URL = 'http://localhost:5001';
+const API_BASE_URL = 'http://localhost:5000';
 
 export const API_ENDPOINTS = {
   // Autenticación
