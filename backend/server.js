@@ -6,44 +6,201 @@ import mysql from "mysql2";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Stripe from "stripe";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+import { body, validationResult } from "express-validator";
+import NodeCache from "node-cache";
+import compression from "compression";
 import { verifyToken } from "./middlewares/verifyToken.js";
 
-dotenv.config({ path: '../.env' });
-
-// Verificar que las claves de Stripe están configuradas
-if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_your_stripe_secret_key_here') {
-  console.warn("⚠️  STRIPE_SECRET_KEY no está configurada correctamente en .env");
-  console.warn("⚠️  Stripe estará deshabilitado - solo funcionará la base de datos");
-  var stripe = null;
-} else {
-  // Inicializar Stripe
-  var stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-  console.log("💳 Stripe inicializado correctamente");
-  console.log("🔑 Clave Stripe (últimos 4 chars):", process.env.STRIPE_SECRET_KEY.slice(-4));
-}
+// Cargar variables de entorno
+dotenv.config();
 
 console.log("🚀 Ejecutando server.js correcto...");
 
 // Debug de variables de entorno
-console.log("🔧 Variables de DB:");
-console.log("  DB_HOST:", process.env.DB_HOST);
-console.log("  DB_USER:", process.env.DB_USER);
-console.log("  DB_NAME:", process.env.DB_NAME);
-console.log("  DB_PORT:", process.env.DB_PORT);
+console.log("🔧 Variables de entorno cargadas:");
+console.log("  DB_HOST:", process.env.DB_HOST || "❌ No configurado");
+console.log("  DB_USER:", process.env.DB_USER || "❌ No configurado");
+console.log("  DB_NAME:", process.env.DB_NAME || "❌ No configurado");
+console.log("  DB_PORT:", process.env.DB_PORT || "❌ No configurado");
+console.log("  PORT:", process.env.PORT || "❌ No configurado");
+console.log("  STRIPE_SECRET_KEY:", process.env.STRIPE_SECRET_KEY ? "✅ Configurado" : "❌ No configurado");
+
+// Verificar que las claves de Stripe están configuradas
+var stripe = null;
+if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_your_stripe_secret_key_here') {
+  console.warn("⚠️  STRIPE_SECRET_KEY no está configurada correctamente en .env");
+  console.warn("⚠️  Stripe estará deshabilitado - solo funcionará la base de datos");
+  console.warn("💡 Para habilitar Stripe, configura tus claves en el archivo .env");
+} else {
+  try {
+    // Inicializar Stripe
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    console.log("💳 Stripe inicializado correctamente");
+    console.log("🔑 Clave Stripe (últimos 4 chars):", process.env.STRIPE_SECRET_KEY.slice(-4));
+  } catch (error) {
+    console.error("❌ Error inicializando Stripe:", error.message);
+    stripe = null;
+  }
+}
 
 const app = express();
-const PORT = process.env.PORT || 5001;
 
-// Middleware CORS actualizado - MÁS PERMISIVO para desarrollo
+// ================================
+// CONFIGURACIÓN DE CACHE Y COMPRESIÓN
+// ================================
+
+// Configurar cache en memoria (TTL: 5 minutos para productos, 1 hora para datos estáticos)
+const cache = new NodeCache({ 
+  stdTTL: 300, // 5 minutos por defecto
+  checkperiod: 60, // Verificar cada minuto para limpiar cache expirado
+  useClones: false // Mejor rendimiento
+});
+
+// Middleware de compresión para todas las respuestas
+app.use(compression({
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    return compression.filter(req, res);
+  },
+  threshold: 1024 // Solo comprimir respuestas > 1KB
+}));
+
+// Middleware de cache personalizado
+const cacheMiddleware = (duration = 300) => {
+  return (req, res, next) => {
+    // Solo cachear GET requests
+    if (req.method !== 'GET') {
+      return next();
+    }
+
+    const key = `cache:${req.originalUrl}`;
+    const cached = cache.get(key);
+
+    if (cached) {
+      console.log(`🎯 Cache HIT: ${req.originalUrl}`);
+      res.set('X-Cache', 'HIT');
+      return res.json(cached);
+    }
+
+    // Interceptar res.json para guardar en cache
+    const originalJson = res.json;
+    res.json = function(data) {
+      if (res.statusCode === 200) {
+        cache.set(key, data, duration);
+        console.log(`💾 Cache MISS (guardado): ${req.originalUrl}`);
+        res.set('X-Cache', 'MISS');
+      }
+      return originalJson.call(this, data);
+    };
+
+    next();
+  };
+};
+
+// Función para limpiar cache específico
+const clearCache = (pattern = null) => {
+  if (pattern) {
+    const keys = cache.keys().filter(key => key.includes(pattern));
+    cache.del(keys);
+    console.log(`🧹 Cache limpiado para patrón: ${pattern} (${keys.length} entradas)`);
+  } else {
+    cache.flushAll();
+    console.log('🧹 Cache completamente limpiado');
+  }
+};
+
+const PORT = process.env.PORT || 5000; // Puerto por defecto 5000 para consistencia
+
+// CORS configurado dinámicamente según el entorno
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3000',
+  'https://joyeria-frontend.vercel.app', // Para producción
+  'https://kelgut13.github.io' // Para GitHub Pages si se usa
+];
+
 const corsOptions = {
-  origin: true, // Permitir cualquier origen en desarrollo
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (mobile apps, postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // En desarrollo, permitir cualquier localhost
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    
+    // Verificar lista de orígenes permitidos
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    console.log(`🚫 Origen bloqueado por CORS: ${origin}`);
+    return callback(new Error('Bloqueado por política CORS'), false);
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  allowedHeaders: [
+    "Content-Type", 
+    "Authorization", 
+    "X-Requested-With",
+    "Accept",
+    "Origin"
+  ],
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  maxAge: 86400 // Cache preflight por 24 horas
 };
 
 app.use(cors(corsOptions));
+
+// ================================
+// MIDDLEWARES DE SEGURIDAD
+// ================================
+
+// Helmet para headers de seguridad
+app.use(helmet({
+  contentSecurityPolicy: false, // Deshabilitado para desarrollo
+  crossOriginEmbedderPolicy: false
+}));
+
+// Rate limiting general
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 1000, // Máximo 1000 requests por IP por ventana
+  message: {
+    error: 'Demasiadas solicitudes desde esta IP',
+    retryAfter: '15 minutos'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiting estricto para autenticación
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 10, // Máximo 10 intentos de login por IP
+  message: {
+    error: 'Demasiados intentos de autenticación',
+    retryAfter: '15 minutos'
+  },
+  skipSuccessfulRequests: true
+});
+
+// Rate limiting para registro de usuarios
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hora
+  max: 5, // Máximo 5 registros por IP por hora
+  message: {
+    error: 'Demasiados registros desde esta IP',
+    retryAfter: '1 hora'
+  }
+});
+
+app.use(generalLimiter);
 
 // Middleware adicional para manejar preflight
 app.use((req, res, next) => {
@@ -60,8 +217,8 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// MySQL Pool
-const db = mysql.createPool({
+// MySQL Pool con configuración flexible
+const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
@@ -72,24 +229,160 @@ const db = mysql.createPool({
   idleTimeout: 60000,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0
-});
+};
+
+console.log("🔧 Configuración de MySQL:");
+console.log(`  Conectando a: ${dbConfig.host}:${dbConfig.port}`);
+console.log(`  Base de datos: ${dbConfig.database}`);
+console.log(`  Usuario: ${dbConfig.user}`);
+
+const db = mysql.createPool(dbConfig);
 
 db.query("SELECT 1", (err) => {
   if (err) {
-    console.error("❌ Error conectando con MySQL:", err);
+    console.error("❌ Error conectando con MySQL:", err.message);
+    console.warn("💡 Asegúrate de que:");
+    console.warn("   - MySQL/XAMPP esté corriendo");
+    console.warn("   - La base de datos exista");
+    console.warn("   - Las credenciales sean correctas");
+    console.warn("   - El puerto 3306 esté disponible");
   } else {
     console.log("✅ Conectado correctamente a MySQL");
   }
 });
 
-// Agregar logs más detallados para debugging
+// Middleware de logging mejorado para debugging
 app.use((req, res, next) => {
-  console.log(`📡 ${req.method} ${req.path} - ${new Date().toISOString()}`);
+  const timestamp = new Date().toISOString();
+  const userAgent = req.get('User-Agent') || 'Unknown';
+  const ip = req.ip || req.connection.remoteAddress || 'Unknown';
+  
+  console.log(`📡 ${req.method} ${req.path}`);
+  console.log(`   🕒 ${timestamp}`);
+  console.log(`   🌐 IP: ${ip.substring(0, 15)}...`);
+  
+  // Log del body para POST/PUT (sin passwords)
+  if ((req.method === 'POST' || req.method === 'PUT') && req.body) {
+    const safeBody = { ...req.body };
+    if (safeBody.password) safeBody.password = '***';
+    if (safeBody.confirmPassword) safeBody.confirmPassword = '***';
+    console.log(`   📄 Body:`, Object.keys(safeBody));
+  }
+  
   next();
 });
 
+// ================================
+// HEALTH CHECK Y ENDPOINTS DE ESTADO
+// ================================
+
+// Health check básico
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: '1.0.0'
+  });
+});
+
+// Health check detallado
+app.get('/api/status', async (req, res) => {
+  const startTime = Date.now();
+  const status = {
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    environment: process.env.NODE_ENV || 'development',
+    port: PORT,
+    services: {}
+  };
+
+  // Verificar conexión a base de datos
+  try {
+    await new Promise((resolve, reject) => {
+      db.query('SELECT 1 as test', (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+    
+    status.services.database = {
+      status: 'connected',
+      host: process.env.DB_HOST,
+      name: process.env.DB_NAME,
+      responseTime: Date.now() - startTime
+    };
+  } catch (error) {
+    status.services.database = {
+      status: 'error',
+      error: error.message,
+      responseTime: Date.now() - startTime
+    };
+  }
+
+  // Verificar Stripe
+  if (stripe) {
+    status.services.stripe = {
+      status: 'configured',
+      mode: 'test'
+    };
+  } else {
+    status.services.stripe = {
+      status: 'not_configured'
+    };
+  }
+
+  const overallStatus = Object.values(status.services).every(service => 
+    service.status === 'connected' || service.status === 'configured'
+  ) ? 'healthy' : 'degraded';
+
+  res.status(overallStatus === 'healthy' ? 200 : 503).json({
+    ...status,
+    overall_status: overallStatus
+  });
+});
+
+// Endpoint para métricas de cache
+app.get('/api/cache/stats', (req, res) => {
+  const stats = cache.getStats();
+  res.json({
+    cache: {
+      keys: cache.keys().length,
+      hits: stats.hits,
+      misses: stats.misses,
+      hitRatio: stats.hits / (stats.hits + stats.misses) || 0,
+      memoryUsage: process.memoryUsage()
+    },
+    performance: {
+      uptime: process.uptime(),
+      loadAverage: process.loadavg ? process.loadavg() : 'N/A'
+    }
+  });
+});
+
+// Endpoint para limpiar cache (solo en desarrollo)
+app.post('/api/cache/clear', (req, res) => {
+  const { pattern } = req.body;
+  
+  try {
+    clearCache(pattern);
+    res.json({
+      success: true,
+      message: pattern ? `Cache limpiado para patrón: ${pattern}` : 'Cache completamente limpiado',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error al limpiar cache',
+      error: error.message
+    });
+  }
+});
+
 // Rutas
-app.get("/api/productos", (req, res) => {
+app.get("/api/productos", cacheMiddleware(600), (req, res) => { // Cache por 10 minutos
   console.log("🔍 Solicitando productos...");
   const query = "SELECT ID_producto, nombre, descripcion, precio, stock, imagen, id_marca, id_material, id_genero, id_categoria FROM productos WHERE activo = 1";
   
@@ -116,7 +409,7 @@ app.get("/api/productos", (req, res) => {
   });
 });
 
-app.get("/api/productos/:id", (req, res) => {
+app.get("/api/productos/:id", cacheMiddleware(300), (req, res) => { // Cache por 5 minutos
   const { id } = req.params;
   const query = "SELECT ID_producto, nombre, descripcion, precio, stock, imagen, id_marca, id_material, id_genero, id_categoria FROM productos WHERE activo = 1 AND ID_producto = ?";
   db.query(query, [id], (err, results) => {
@@ -248,7 +541,7 @@ app.get("/", (req, res) => {
   res.send("API Joyeria backend corriendo");
 });
 
-app.post("/api/login", (req, res) => {
+app.post("/api/login", authLimiter, (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -1865,6 +2158,75 @@ app.get("/api/debug/database", (req, res) => {
       }
     });
   });
+});
+
+// ================================
+// MIDDLEWARE DE MANEJO DE ERRORES GLOBAL
+// ================================
+
+// Middleware para rutas no encontradas
+app.use('*', (req, res) => {
+  console.log(`❌ Ruta no encontrada: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({
+    success: false,
+    message: 'Endpoint no encontrado',
+    path: req.originalUrl,
+    method: req.method,
+    availableEndpoints: [
+      'GET /api/productos',
+      'GET /api/categorias',
+      'POST /api/usuarios/registro',
+      'POST /api/usuarios/login',
+      'POST /api/carrito/agregar',
+      'GET /api/status'
+    ]
+  });
+});
+
+// Middleware para manejo de errores
+app.use((error, req, res, next) => {
+  console.error('💥 Error no capturado:');
+  console.error('📍 Ruta:', req.method, req.path);
+  console.error('🔍 Error:', error);
+  console.error('📋 Stack:', error.stack);
+  
+  // Errores de validación
+  if (error.name === 'ValidationError') {
+    return res.status(400).json({
+      success: false,
+      message: 'Error de validación',
+      details: error.message
+    });
+  }
+  
+  // Errores de base de datos
+  if (error.code && error.code.startsWith('ER_')) {
+    return res.status(500).json({
+      success: false,
+      message: 'Error de base de datos',
+      code: error.code
+    });
+  }
+  
+  // Error general
+  res.status(500).json({
+    success: false,
+    message: 'Error interno del servidor',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Manejar promesas rechazadas no capturadas
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🚨 Promesa rechazada no manejada:', reason);
+  console.error('📍 En:', promise);
+});
+
+// Manejar excepciones no capturadas
+process.on('uncaughtException', (error) => {
+  console.error('🚨 Excepción no capturada:', error);
+  console.error('📋 Stack:', error.stack);
+  process.exit(1);
 });
 
 // Iniciar servidor

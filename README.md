@@ -1,6 +1,70 @@
-# Getting Started with Create React App
+# 🏪 Joyería - E-commerce Platform
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**Plataforma de comercio electrónico para joyería con carrito de compras, autenticación de usuarios y procesamiento de pagos.**
+
+## 🚀 Inicio Rápido
+
+### Para Colaboradores Nuevos
+```bash
+git clone https://github.com/KelGut13/Joyeria.git
+cd Joyeria
+npm run setup    # Instala dependencias de frontend y backend
+```
+
+**📋 [Ver Guía Completa de Instalación - SETUP.md](./SETUP.md)**
+
+### Para Desarrollo
+```bash
+npm run dev      # Ejecuta frontend (3000) + backend (5000)
+# O por separado:
+npm start        # Solo frontend
+npm run backend  # Solo backend
+```
+
+## ⚡ Scripts Útiles
+
+```bash
+npm run setup    # Instalar todas las dependencias
+npm run dev      # Ejecutar frontend + backend
+npm run backend  # Solo backend
+cd backend && npm run check  # Verificar configuración
+```
+
+## 🔧 Configuración Rápida
+
+1. **Base de datos**: ✅ **Ya configurada** (remota en srv1009.hstgr.io)
+2. **Variables**: Copiar `backend/.env.example` → `backend/.env` 
+3. **Desarrollo**: `npm run dev`
+
+## 📁 Estructura
+
+```
+Joyeria/
+├── backend/          # API Node.js/Express
+├── src/             # Frontend React
+├── public/          # Archivos estáticos
+├── SETUP.md         # 📖 Guía completa
+└── package.json     # Scripts principales
+```
+
+## 🌐 URLs en Desarrollo
+
+- **Frontend**: http://localhost:3000
+- **Backend**: http://localhost:5000  
+- **Base de Datos**: srv1009.hstgr.io (remota, compartida)
+
+## 🤝 Colaboración
+
+- ✅ Usar `backend/.env.example` como plantilla
+- ✅ **No commitear** archivos `.env`
+- ✅ **No modificar** credenciales de base de datos (son compartidas)
+- ✅ Seguir la estructura de ramas: `feature/nombre`
+
+## 📞 Soporte
+
+¿Problemas? Consulta **[SETUP.md](./SETUP.md)** o abre un Issue.
+
+---
 
 ## Available Scripts
 
