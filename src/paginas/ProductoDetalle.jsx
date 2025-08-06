@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ChevronLeft, Heart, Share2, ShoppingCart, Star, Truck, Shield, RotateCcw } from "lucide-react";
 import "./estilos/ProductoDetalle.css";
 import Separar from "../componentes/Separador NavBar/Separador";
 import { getFirstProductImage, getProductImages, API_ENDPOINTS } from '../config/api';
+import { CarritoContext } from '../context/CarritoContext';
 
 const ProductoDetalle = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { agregarProducto } = useContext(CarritoContext);
   const [producto, setProducto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -81,9 +83,27 @@ const ProductoDetalle = () => {
   };
 
   const handleAgregarCarrito = () => {
-    // TODO: Implementar lógica del carrito
-    console.log(`Agregando ${cantidad} unidades del producto ${id} al carrito`);
-    alert(`${cantidad} ${producto.nombre} agregado(s) al carrito`);
+    try {
+      const productoCarrito = {
+        id: producto.ID_producto,
+        nombre: producto.nombre,
+        precio: producto.precio,
+        imagen: getFirstProductImage(producto),
+        cantidad: cantidad,
+        stock: producto.stock
+      };
+      
+      agregarProducto(productoCarrito);
+      
+      // Mostrar mensaje de éxito
+      alert(`✅ ${cantidad} ${producto.nombre} agregado(s) al carrito`);
+      
+      // Redirigir al carrito
+      navigate('/carrito');
+    } catch (error) {
+      console.error('Error al agregar al carrito:', error);
+      alert('❌ Error al agregar el producto al carrito');
+    }
   };
 
   const handleToggleFavorito = () => {
@@ -284,7 +304,7 @@ const ProductoDetalle = () => {
                   </div>
                 </div>
 
-                <div className="botones-accion">
+                <div className="acciones-producto">
                   <button 
                     className="btn-agregar-carrito"
                     onClick={handleAgregarCarrito}

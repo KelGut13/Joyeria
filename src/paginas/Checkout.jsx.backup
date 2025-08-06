@@ -106,18 +106,18 @@ const PaymentForm = ({
   };
 
   return (
-    <div className="checkout-payment-form">
-      <div className="checkout-stripe-info-header">
-        <div className="checkout-secure-payment-badge">
+    <div className="payment-form">
+      <div className="stripe-info-header">
+        <div className="secure-payment-badge">
           <Lock size={16} />
           <span>Pago seguro procesado por Stripe</span>
         </div>
-        <p className="checkout-test-card-info">
+        <p className="test-card-info">
           Para pruebas, usa la tarjeta: <code>4242 4242 4242 4242</code>
         </p>
       </div>
       
-      <div className="checkout-card-element-container">
+      <div className="card-element-container">
         <CardElement
           options={{
             style: {
@@ -135,13 +135,12 @@ const PaymentForm = ({
                 iconColor: '#ef4444',
               },
             },
-            hidePostalCode: true,
           }}
         />
       </div>
       
       {paymentError && (
-        <div className="checkout-payment-error">
+        <div className="payment-error">
           <span>❌ {paymentError}</span>
         </div>
       )}
@@ -150,11 +149,11 @@ const PaymentForm = ({
         type="button"
         onClick={handleStripePayment}
         disabled={!stripe || procesandoPedido}
-        className="checkout-btn-pagar-stripe"
+        className="btn-pagar-stripe"
       >
         {procesandoPedido ? (
           <>
-            <div className="checkout-spinner" />
+            <div className="spinner" />
             Procesando pago...
           </>
         ) : (
@@ -165,7 +164,7 @@ const PaymentForm = ({
         )}
       </button>
       
-      <div className="checkout-test-info">
+      <div className="test-info">
         <p>Para pruebas: 4242 4242 4242 4242 | MM/AA: fecha futura | CVC: 3 dígitos</p>
       </div>
     </div>
@@ -371,9 +370,9 @@ const Checkout = () => {
     return (
       <div className="checkout-page">
         <Separar />
-        <div className="checkout-loading-container">
-          <div className="checkout-loading-spinner">
-            <div className="checkout-spinner" />
+        <div className="loading-container">
+          <div className="loading-spinner">
+            <div className="spinner" />
             <p>Cargando información de checkout...</p>
           </div>
         </div>
@@ -386,8 +385,8 @@ const Checkout = () => {
       <Separar />
 
       {/* Botón volver */}
-      <div className="checkout-container">
-        <button onClick={() => navigate('/carrito')} className="checkout-btn-volver">
+      <div className="container">
+        <button onClick={() => navigate('/carrito')} className="btn-volver">
           <ChevronLeft size={20} />
           Volver al carrito
         </button>
@@ -395,25 +394,25 @@ const Checkout = () => {
 
       {/* Header */}
       <div className="checkout-header">
-        <div className="checkout-container">
+        <div className="container">
           <h1>Finalizar Compra</h1>
-          <div className="checkout-progress-indicator">
-            <div className="checkout-step completed">
-              <div className="checkout-step-icon">
+          <div className="progress-indicator">
+            <div className="step completed">
+              <div className="step-icon">
                 <Check size={16} />
               </div>
               <span>Carrito</span>
             </div>
-            <div className="checkout-step-line"></div>
-            <div className="checkout-step active">
-              <div className="checkout-step-icon">
+            <div className="step-line"></div>
+            <div className="step active">
+              <div className="step-icon">
                 <CreditCard size={16} />
               </div>
               <span>Pago</span>
             </div>
-            <div className="checkout-step-line"></div>
-            <div className="checkout-step">
-              <div className="checkout-step-icon">
+            <div className="step-line"></div>
+            <div className="step">
+              <div className="step-icon">
                 <Package size={16} />
               </div>
               <span>Confirmación</span>
@@ -423,31 +422,31 @@ const Checkout = () => {
       </div>
 
       <div className="checkout-content">
-        <div className="checkout-container">
+        <div className="container">
           <div className="checkout-grid">
             
             {/* Formulario de checkout */}
             <div className="checkout-form-container">
               <form className="checkout-form" onSubmit={handleSubmit}>
                 {error && (
-                  <div className="checkout-error-message">
+                  <div className="error-message">
                     <span>{error}</span>
                   </div>
                 )}
 
                 {/* Dirección de Envío */}
-                <div className="checkout-form-section">
-                  <div className="checkout-section-header">
+                <div className="form-section">
+                  <div className="section-header">
                     <MapPin size={24} />
                     <h3>Dirección de Envío</h3>
                   </div>
                   
                   {direcciones.length > 0 ? (
-                    <div className="checkout-direcciones-grid">
+                    <div className="direcciones-grid">
                       {direcciones.map(direccion => (
                         <div 
                           key={direccion.ID_direccion}
-                          className={`checkout-direccion-card ${direccionSeleccionada === direccion.ID_direccion.toString() ? 'selected' : ''}`}
+                          className={`direccion-card ${direccionSeleccionada === direccion.ID_direccion.toString() ? 'selected' : ''}`}
                           onClick={() => setDireccionSeleccionada(direccion.ID_direccion.toString())}
                         >
                           <input
@@ -457,9 +456,9 @@ const Checkout = () => {
                             checked={direccionSeleccionada === direccion.ID_direccion.toString()}
                             onChange={() => setDireccionSeleccionada(direccion.ID_direccion.toString())}
                           />
-                          <div className="checkout-direccion-info">
-                            <div className="checkout-direccion-header">
-                              <div className="checkout-direccion-icon">
+                          <div className="direccion-info">
+                            <div className="direccion-header">
+                              <div className="direccion-icon">
                                 {direccion.alias?.toLowerCase().includes('casa') ? 
                                   <Home size={20} /> : 
                                   direccion.alias?.toLowerCase().includes('trabajo') ? 
@@ -470,11 +469,11 @@ const Checkout = () => {
                               <div>
                                 <h4>{direccion.alias}</h4>
                                 {direccion.predeterminada && (
-                                  <span className="checkout-badge-predeterminada">Predeterminada</span>
+                                  <span className="badge-predeterminada">Predeterminada</span>
                                 )}
                               </div>
                             </div>
-                            <p className="checkout-direccion-texto">
+                            <p className="direccion-texto">
                               {direccion.calle} {direccion.numero_exterior}
                               {direccion.numero_interior && ` Int. ${direccion.numero_interior}`}<br/>
                               {direccion.colonia}, {direccion.ciudad}, {direccion.estado} {direccion.codigo_postal}
@@ -484,7 +483,7 @@ const Checkout = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="checkout-no-direcciones">
+                    <div className="no-direcciones">
                       <MapPin size={48} />
                       <p>No tienes direcciones guardadas</p>
                     </div>
@@ -493,17 +492,17 @@ const Checkout = () => {
                   <button
                     type="button"
                     onClick={() => setMostrarFormDireccion(!mostrarFormDireccion)}
-                    className="checkout-btn-nueva-direccion"
+                    className="btn-nueva-direccion"
                   >
                     <Plus size={18} />
                     {mostrarFormDireccion ? 'Cancelar' : 'Agregar Nueva Dirección'}
                   </button>
 
                   {mostrarFormDireccion && (
-                    <div className="checkout-form-nueva-direccion">
+                    <div className="form-nueva-direccion">
                       <h4>Nueva Dirección</h4>
-                      <div className="checkout-form-grid">
-                        <div className="checkout-form-group">
+                      <div className="form-grid">
+                        <div className="form-group">
                           <label>Alias</label>
                           <input
                             type="text"
@@ -514,7 +513,7 @@ const Checkout = () => {
                             required
                           />
                         </div>
-                        <div className="checkout-form-group">
+                        <div className="form-group">
                           <label>Calle</label>
                           <input
                             type="text"
@@ -525,7 +524,7 @@ const Checkout = () => {
                             required
                           />
                         </div>
-                        <div className="checkout-form-group">
+                        <div className="form-group">
                           <label>Número Exterior</label>
                           <input
                             type="text"
@@ -536,7 +535,7 @@ const Checkout = () => {
                             required
                           />
                         </div>
-                        <div className="checkout-form-group">
+                        <div className="form-group">
                           <label>Número Interior (Opcional)</label>
                           <input
                             type="text"
@@ -546,7 +545,7 @@ const Checkout = () => {
                             onChange={handleNuevaDireccionChange}
                           />
                         </div>
-                        <div className="checkout-form-group">
+                        <div className="form-group">
                           <label>Colonia</label>
                           <input
                             type="text"
@@ -557,7 +556,7 @@ const Checkout = () => {
                             required
                           />
                         </div>
-                        <div className="checkout-form-group">
+                        <div className="form-group">
                           <label>Ciudad</label>
                           <input
                             type="text"
@@ -568,7 +567,7 @@ const Checkout = () => {
                             required
                           />
                         </div>
-                        <div className="checkout-form-group">
+                        <div className="form-group">
                           <label>Estado</label>
                           <input
                             type="text"
@@ -579,7 +578,7 @@ const Checkout = () => {
                             required
                           />
                         </div>
-                        <div className="checkout-form-group">
+                        <div className="form-group">
                           <label>Código Postal</label>
                           <input
                             type="text"
@@ -590,8 +589,8 @@ const Checkout = () => {
                             required
                           />
                         </div>
-                        <div className="checkout-form-group checkout-checkbox-group">
-                          <label className="checkout-checkbox-label">
+                        <div className="form-group checkbox-group">
+                          <label className="checkbox-label">
                             <input
                               type="checkbox"
                               name="predeterminada"
@@ -605,7 +604,7 @@ const Checkout = () => {
                       <button
                         type="button"
                         onClick={handleGuardarNuevaDireccion}
-                        className="checkout-btn-guardar-direccion"
+                        className="btn-guardar-direccion"
                       >
                         <Check size={18} />
                         Guardar Dirección
@@ -615,14 +614,14 @@ const Checkout = () => {
                 </div>
 
                 {/* Método de Pago */}
-                <div className="checkout-form-section">
-                  <div className="checkout-section-header">
+                <div className="form-section">
+                  <div className="section-header">
                     <CreditCard size={24} />
                     <h3>Método de Pago</h3>
                   </div>
 
-                  <div className="checkout-metodos-pago">
-                    <div className="checkout-metodo-option">
+                  <div className="metodos-pago">
+                    <div className="metodo-option">
                       <input
                         type="radio"
                         id="tarjeta"
@@ -631,21 +630,21 @@ const Checkout = () => {
                         checked={metodoPago === 'Tarjeta de Crédito'}
                         onChange={(e) => setMetodoPago(e.target.value)}
                       />
-                      <label htmlFor="tarjeta" className="checkout-metodo-label">
-                        <div className="checkout-metodo-icon">
+                      <label htmlFor="tarjeta" className="metodo-label">
+                        <div className="metodo-icon">
                           <CreditCard size={24} />
                         </div>
                         <div>
                           <h4>Tarjeta de Crédito/Débito</h4>
                           <p>Pago seguro procesado por Stripe</p>
                         </div>
-                        <div className="checkout-security-badges">
+                        <div className="security-badges">
                           <Shield size={16} />
                         </div>
                       </label>
                     </div>
 
-                    <div className="checkout-metodo-option">
+                    <div className="metodo-option">
                       <input
                         type="radio"
                         id="efectivo"
@@ -654,8 +653,8 @@ const Checkout = () => {
                         checked={metodoPago === 'Pago en Efectivo'}
                         onChange={(e) => setMetodoPago(e.target.value)}
                       />
-                      <label htmlFor="efectivo" className="checkout-metodo-label">
-                        <div className="checkout-metodo-icon">
+                      <label htmlFor="efectivo" className="metodo-label">
+                        <div className="metodo-icon">
                           <Banknote size={24} />
                         </div>
                         <div>
@@ -665,7 +664,7 @@ const Checkout = () => {
                       </label>
                     </div>
 
-                    <div className="checkout-metodo-option">
+                    <div className="metodo-option">
                       <input
                         type="radio"
                         id="transferencia"
@@ -674,8 +673,8 @@ const Checkout = () => {
                         checked={metodoPago === 'Transferencia Bancaria'}
                         onChange={(e) => setMetodoPago(e.target.value)}
                       />
-                      <label htmlFor="transferencia" className="checkout-metodo-label">
-                        <div className="checkout-metodo-icon">
+                      <label htmlFor="transferencia" className="metodo-label">
+                        <div className="metodo-icon">
                           <University size={24} />
                         </div>
                         <div>
@@ -707,12 +706,12 @@ const Checkout = () => {
                 {metodoPago !== 'Tarjeta de Crédito' && metodoPago && (
                   <button 
                     type="submit" 
-                    className="checkout-btn-finalizar-compra"
+                    className="btn-finalizar-compra"
                     disabled={procesandoPedido || !direccionSeleccionada || !metodoPago}
                   >
                     {procesandoPedido ? (
                       <>
-                        <div className="checkout-spinner" />
+                        <div className="spinner" />
                         Procesando...
                       </>
                     ) : (
@@ -727,14 +726,14 @@ const Checkout = () => {
             </div>
 
             {/* Resumen del Pedido */}
-            <div className="checkout-order-summary">
-              <div className="checkout-summary-card">
+            <div className="order-summary">
+              <div className="summary-card">
                 <h3>Resumen del Pedido</h3>
                 
-                <div className="checkout-productos-summary">
+                <div className="productos-summary">
                   {items.map(item => (
-                    <div key={item.ID_producto} className="checkout-producto-summary-item">
-                      <div className="checkout-producto-image">
+                    <div key={item.ID_producto} className="producto-summary-item">
+                      <div className="producto-image">
                         <img 
                           src={getFirstProductImage(item)}
                           alt={item.nombre}
@@ -742,24 +741,24 @@ const Checkout = () => {
                             e.target.src = "/logo192.png";
                           }}
                         />
-                        <span className="checkout-cantidad-badge">{item.cantidad}</span>
+                        <span className="cantidad-badge">{item.cantidad}</span>
                       </div>
-                      <div className="checkout-producto-details">
+                      <div className="producto-details">
                         <h4>{item.nombre}</h4>
-                        <p className="checkout-producto-precio">${(item.precio * item.cantidad).toFixed(2)}</p>
+                        <p className="producto-precio">${(item.precio * item.cantidad).toFixed(2)}</p>
                       </div>
                     </div>
                   ))}
                 </div>
                 
-                <div className="checkout-summary-totals">
-                  <div className="checkout-total-line">
+                <div className="summary-totals">
+                  <div className="total-line">
                     <span>Subtotal ({items.length} {items.length === 1 ? 'producto' : 'productos'})</span>
                     <span>${subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="checkout-total-line">
+                  <div className="total-line">
                     <span>Envío</span>
-                    <span className="checkout-envio-gratis">
+                    <span className="envio-gratis">
                       {costoEnvio === 0 ? (
                         <>
                           <Truck size={16} />
@@ -771,19 +770,19 @@ const Checkout = () => {
                     </span>
                   </div>
                   <hr />
-                  <div className="checkout-total-line checkout-total-final">
+                  <div className="total-line total-final">
                     <span>Total</span>
                     <span>${total.toFixed(2)}</span>
                   </div>
                 </div>
 
                 {/* Garantías */}
-                <div className="checkout-guarantees">
-                  <div className="checkout-guarantee-item">
+                <div className="guarantees">
+                  <div className="guarantee-item">
                     <Shield size={16} />
                     <span>Compra segura y protegida</span>
                   </div>
-                  <div className="checkout-guarantee-item">
+                  <div className="guarantee-item">
                     <Truck size={16} />
                     <span>Envío gratis en pedidos +$500</span>
                   </div>

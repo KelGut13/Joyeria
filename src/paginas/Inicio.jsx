@@ -70,14 +70,15 @@ const Inicio = () => {
         </div>
       </section>
 
-      {/* Nueva colección */}
       <section className="seccion-nueva-coleccion">
-        <h2>Presentamos nuestra nueva colección</h2>
-        <div className="imagenes-coleccion">
-          <img src={coleccion1} alt="Colección 1" />
-          <img src={coleccion2} alt="Colección 2" />
-        </div>
-      </section>
+  <div className="texto-nueva-coleccion">
+    <h2>Presentamos nuestra nueva colección</h2>
+  </div>
+  <div className="imagenes-coleccion">
+    <img src={coleccion1} alt="Colección 1" />
+    <img src={coleccion2} alt="Colección 2" />
+  </div>
+</section>
 
       {/* A su servicio */}
       <section className="seccion-servicio">

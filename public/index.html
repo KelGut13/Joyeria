@@ -1,63 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
-    <meta name="author" content="Keycapsoft by Kelvim Gutiérrez" /> 
-    <meta
-      name="description"
-      content="Sitio Web Oficial de Curiosidades Nancy"
-    />
-    <meta name="keywords" content="Curiosidades Nancy, curiosidades nancy, joyeria, joyeria artesanal, joyas">
+    <meta name="author" content="Keycapsoft by Kelvim Gutiérrez" />
+    <meta name="description" content="Sitio Web Oficial de Curiosidades Nancy" />
+    <meta name="keywords" content="Curiosidades Nancy, curiosidades nancy, joyería, joyería artesanal, joyas" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
     <title>Curiosidades Nancy</title>
 
-    <!-- Schema Markup en JSON-LD -->
+    <!-- (opcional) Actualización de Schema si se aplica a tu marca -->
     <script type="application/ld+json">
       {
-        "@context": "https://schema.org",
-        "@type": "GovernmentOrganization",
-        "name": "FENINE",
-        "url": "https://fenineoficial.com",
-        "logo": "https://tusitio.com/logo.png",
+        "@context": "https://schema.org/",
+        "@type": "Organization",
+        "name": "Curiosidades Nancy",
+        "url": "https://curiosidadesnancy.shop/",
+        "logo": "%PUBLIC_URL%/logo192.png",
         "sameAs": [
-          "https://www.facebook.com/Nayaritas"
+          "https://www.facebook.com/p/Curiosidades-Nancy-100063615276770/"
         ],
         "contactPoint": {
           "@type": "ContactPoint",
-          "telephone": "+1 510-629-2748",
-          "contactType": "help to migrants nayaritas",
-          "areaServed": ["MX", "US"],
-          "availableLanguage": ["Spanish", "English"]
+          "telephone": "+52 000 000 0000",
+          "contactType": "Atención al cliente",
+          "areaServed": "MX",
+          "availableLanguage": ["Spanish"]
         },
         "address": {
           "@type": "PostalAddress",
-          "streetAddress": "514 W Anaheim St",
-          "addressLocality": "Wilmington",
-          "addressRegion": "California",
-          "postalCode": "90744",
-          "addressCountry": "US"
+          "addressLocality": "México",
+          "addressCountry": "MX"
         }
       }
     </script>
   </head>
+
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
 
-    <!-- ✅ Facebook SDK agregado aquí -->
+    <!-- ✅ SDK de Facebook para renderizar plugins -->
     <div id="fb-root"></div>
     <script async defer crossorigin="anonymous"
-      src="https://connect.facebook.net/es_LA/sdk.js#xfbml=1&version=v19.0"
-      nonce="curiosidadesNancy">
+      src="https://connect.facebook.net/es_LA/sdk.js#xfbml=1&version=v19.0">
     </script>
   </body>
 </html>

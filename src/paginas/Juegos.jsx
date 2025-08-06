@@ -3,7 +3,7 @@ import "./estilos/Juegos.css";
 import { Link } from "react-router-dom";
 import { useCarrito } from '../context/CarritoContext';
 import { getFirstProductImage, API_ENDPOINTS } from '../config/api';
-import { Filter, X, Search, ShoppingBag } from 'lucide-react';
+import { Filter, X, Search, ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react';
 
 const Juegos = () => {
   const [productos, setProductos] = useState([]);
@@ -14,6 +14,13 @@ const Juegos = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filtrosMovilAbierto, setFiltrosMovilAbierto] = useState(false);
+  
+  // Estado para controlar qué secciones de filtro están expandidas
+  const [filtrosExpandidos, setFiltrosExpandidos] = useState({
+    materiales: false,
+    generos: false,
+    marcas: false
+  });
   
   const { agregarProducto, estaEnCarrito, obtenerItemCarrito } = useCarrito();
   
@@ -116,6 +123,14 @@ const Juegos = () => {
     aplicarFiltros();
   }, [filtros, productos]);
 
+  // Limpiar overflow del body al desmontar componente
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, []);
+
   const aplicarFiltros = () => {
     let productosFiltrados = [...productos];
 
@@ -196,6 +211,54 @@ const Juegos = () => {
     });
   };
 
+  const toggleFiltroExpandido = (categoria) => {
+    setFiltrosExpandidos(prev => ({
+      ...prev,
+      [categoria]: !prev[categoria]
+    }));
+  };
+
+  const renderFiltroCategoria = (items, categoria, filtroActivo, handleChange, labelKey, idKey) => {
+    const itemsLimitados = filtrosExpandidos[categoria] ? items : items.slice(0, 3);
+    const mostrarVerMas = items.length > 3;
+
+    return (
+      <div className="filtro-categoria">
+        <div className="filtro-header" onClick={() => toggleFiltroExpandido(categoria)}>
+          <label>{categoria.charAt(0).toUpperCase() + categoria.slice(0, -1)}</label>
+          {mostrarVerMas && (
+            filtrosExpandidos[categoria] ? 
+            <ChevronUp size={20} className="filtro-icono" /> : 
+            <ChevronDown size={20} className="filtro-icono" />
+          )}
+        </div>
+        <ul>
+          {itemsLimitados.map((item) => (
+            <li key={item[idKey]}>
+              <input 
+                type="checkbox" 
+                id={`${categoria}-${item[idKey]}`}
+                checked={filtroActivo.includes(item[idKey])}
+                onChange={() => handleChange(item[idKey])}
+              />
+              <label htmlFor={`${categoria}-${item[idKey]}`}>
+                {item[labelKey]}
+              </label>
+            </li>
+          ))}
+        </ul>
+        {mostrarVerMas && !filtrosExpandidos[categoria] && (
+          <button 
+            className="ver-mas-btn"
+            onClick={() => toggleFiltroExpandido(categoria)}
+          >
+            Ver más ({items.length - 3} más)
+          </button>
+        )}
+      </div>
+    );
+  };
+
   const handleAgregarAlCarrito = async (e, producto) => {
     e.preventDefault();
     e.stopPropagation();
@@ -212,7 +275,19 @@ const Juegos = () => {
   };
 
   const toggleFiltrosMovil = () => {
-    setFiltrosMovilAbierto(!filtrosMovilAbierto);
+    const nuevoEstado = !filtrosMovilAbierto;
+    setFiltrosMovilAbierto(nuevoEstado);
+    
+    // Controlar overflow del body para evitar scroll en el fondo
+    if (nuevoEstado) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.classList.add('filtros-abiertos');
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.classList.remove('filtros-abiertos');
+    }
   };
 
   return (
@@ -224,87 +299,65 @@ const Juegos = () => {
       </div>
 
       <div className="contenido-juegos">
+        {/* Overlay para filtros móvil */}
+        {filtrosMovilAbierto && (
+          <div 
+            className="filtros-overlay"
+            onClick={toggleFiltrosMovil}
+          />
+        )}
+        
         {/* Filtros Sidebar */}
         <aside className={`filtros ${filtrosMovilAbierto ? 'filtros-movil-activo' : ''}`}>
           {filtrosMovilAbierto && (
             <button 
               className="cerrar-filtros-movil"
               onClick={toggleFiltrosMovil}
-              style={{
-                position: 'absolute',
-                top: '1rem',
-                right: '1rem',
-                background: 'none',
-                border: 'none',
-                fontSize: '1.5rem',
-                cursor: 'pointer',
-                color: '#6b7280'
-              }}
+              aria-label="Cerrar filtros"
+              title="Cerrar filtros"
             >
               <X size={24} />
             </button>
           )}
           
-          <h3>
-            Filtrar por
-          </h3>
+          <div className="filtros-contenido">
+            <div className="filtros-header-movil">
+              <h3>
+                Filtrar por
+              </h3>
+              {filtrosMovilAbierto && (
+                <span className="filtros-instruccion">
+                  Toca fuera para cerrar
+                </span>
+              )}
+            </div>
 
-          <div className="filtro-categoria">
-            <label>Material</label>
-            <ul>
-              {materiales.map((material) => (
-                <li key={material.ID_material}>
-                  <input 
-                    type="checkbox" 
-                    id={`material-${material.ID_material}`}
-                    checked={filtros.materiales.includes(material.ID_material)}
-                    onChange={() => handleMaterialChange(material.ID_material)}
-                  />
-                  <label htmlFor={`material-${material.ID_material}`}>
-                    {material.nombre_material}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {renderFiltroCategoria(
+            materiales, 
+            'materiales', 
+            filtros.materiales, 
+            handleMaterialChange, 
+            'nombre_material', 
+            'ID_material'
+          )}
 
-          <div className="filtro-categoria">
-            <label>Género</label>
-            <ul>
-              {generos.map((genero) => (
-                <li key={genero.ID_genero}>
-                  <input 
-                    type="checkbox" 
-                    id={`genero-${genero.ID_genero}`}
-                    checked={filtros.generos.includes(genero.ID_genero)}
-                    onChange={() => handleGeneroChange(genero.ID_genero)}
-                  />
-                  <label htmlFor={`genero-${genero.ID_genero}`}>
-                    {genero.nombre_genero}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {renderFiltroCategoria(
+            generos, 
+            'generos', 
+            filtros.generos, 
+            handleGeneroChange, 
+            'nombre_genero', 
+            'ID_genero'
+          )}
 
-          <div className="filtro-categoria">
-            <label>Marca</label>
-            <ul>
-              {marcas.map((marca) => (
-                <li key={marca.ID_marca}>
-                  <input 
-                    type="checkbox" 
-                    id={`marca-${marca.ID_marca}`}
-                    checked={filtros.marcas.includes(marca.ID_marca)}
-                    onChange={() => handleMarcaChange(marca.ID_marca)}
-                  />
-                  <label htmlFor={`marca-${marca.ID_marca}`}>
-                    {marca.nombre_marca}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {renderFiltroCategoria(
+            marcas, 
+            'marcas', 
+            filtros.marcas, 
+            handleMarcaChange, 
+            'nombre_marca', 
+            'ID_marca'
+          )}
 
           <div className="filtro-precio">
             <label>Precio</label>
@@ -332,6 +385,7 @@ const Juegos = () => {
               Limpiar filtros
             </button>
           </div>
+        </div> {/* Cierre de filtros-contenido */}
         </aside>
 
         {/* Products Grid */}
@@ -411,15 +465,6 @@ const Juegos = () => {
       >
         <Filter size={20} />
       </button>
-
-      {/* Show More Button */}
-      {!loading && !error && productosFiltrados.length > 0 && (
-        <div className="mostrar-mas-contenedor">
-          <button className="mostrar-mas-btn">
-            Mostrar más productos
-          </button>
-        </div>
-      )}
     </div>
   );
 };

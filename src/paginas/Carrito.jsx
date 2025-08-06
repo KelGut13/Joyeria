@@ -1,64 +1,50 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useCarrito } from '../context/CarritoContext';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Shield, Truck, RotateCcw, Lock } from 'lucide-react';
+import { CarritoContext } from '../context/CarritoContext';
 import './estilos/Carrito.css';
 import Separar from '../componentes/Separador NavBar/Separador';
 
 const Carrito = () => {
   const navigate = useNavigate();
   const { 
-    items, 
-    cantidadItems, 
-    subtotal, 
-    total, 
-    costoEnvio,
-    descuento,
+    productos, 
     actualizarCantidad, 
     eliminarProducto, 
-    limpiarCarrito
-  } = useCarrito();
-
+    limpiarCarrito,
+    obtenerTotal,
+    obtenerCantidadTotal
+  } = useContext(CarritoContext);
+  
   const [loading, setLoading] = useState(false);
+  const [eliminating, setEliminating] = useState(null);
+
+  const subtotal = obtenerTotal();
+  const cantidadTotal = obtenerCantidadTotal();
+  const costoEnvio = subtotal >= 500 ? 0 : 50;
+  const total = subtotal + costoEnvio;
 
   const handleCantidadChange = async (productoId, nuevaCantidad) => {
     if (nuevaCantidad < 1) return;
     
     setLoading(true);
     try {
-      await actualizarCantidad(productoId, nuevaCantidad);
+      actualizarCantidad(productoId, nuevaCantidad);
     } catch (error) {
       console.error('Error al actualizar cantidad:', error);
-      alert('Error al actualizar la cantidad');
     } finally {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 300);
     }
   };
 
   const handleEliminar = async (productoId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este producto del carrito?')) {
-      setLoading(true);
-      try {
-        await eliminarProducto(productoId);
-      } catch (error) {
-        console.error('Error al eliminar producto:', error);
-        alert('Error al eliminar el producto');
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
-  const handleLimpiarCarrito = async () => {
-    if (window.confirm('¿Estás seguro de que quieres vaciar todo el carrito?')) {
-      setLoading(true);
-      try {
-        await limpiarCarrito();
-      } catch (error) {
-        console.error('Error al limpiar carrito:', error);
-        alert('Error al limpiar el carrito');
-      } finally {
-        setLoading(false);
-      }
+    setEliminating(productoId);
+    try {
+      eliminarProducto(productoId);
+    } catch (error) {
+      console.error('Error al eliminar producto:', error);
+    } finally {
+      setTimeout(() => setEliminating(null), 300);
     }
   };
 
@@ -75,16 +61,30 @@ const Carrito = () => {
     navigate('/checkout');
   };
 
-  if (items.length === 0) {
+  // Si el carrito está vacío
+  if (!productos || productos.length === 0) {
     return (
       <div className="carrito-page">
         <Separar />
+        
+        {/* Breadcrumb */}
+        <nav className="breadcrumb">
+          <div className="container">
+            <Link to="/">Inicio</Link>
+            <span>/</span>
+            <span>Carrito</span>
+          </div>
+        </nav>
+
         <div className="container">
           <div className="carrito-vacio">
-            <div className="carrito-vacio-icon">🛒</div>
+            <div className="carrito-vacio-icon">
+              <ShoppingBag size={80} strokeWidth={1} />
+            </div>
             <h2>Tu carrito está vacío</h2>
-            <p>Agrega algunos productos increíbles a tu carrito</p>
-            <Link to="/" className="btn-continuar-comprando">
+            <p>Descubre nuestros productos únicos y comienza a llenar tu carrito</p>
+            <Link to="/juegos" className="btn-explorar">
+              <ShoppingBag size={20} />
               Explorar Productos
             </Link>
           </div>
@@ -93,151 +93,203 @@ const Carrito = () => {
     );
   }
 
+  // Carrito con productos
   return (
     <div className="carrito-page">
       <Separar />
-      <div className="container">
-        <div className="carrito-header">
-          <h1>Carrito de Compras</h1>
-          <span className="carrito-contador">{cantidadItems} artículo(s)</span>
+      
+      {/* Breadcrumb */}
+      <nav className="breadcrumb">
+        <div className="container">
+          <Link to="/">Inicio</Link>
+          <span>/</span>
+          <span>Carrito</span>
         </div>
+      </nav>
 
-        {loading && (
-          <div className="loading-overlay">
-            <div className="loading-spinner">Actualizando carrito...</div>
-          </div>
-        )}
+      {/* Botón volver */}
+      <div className="container">
+        <button onClick={() => navigate(-1)} className="btn-volver">
+          <ArrowLeft size={20} />
+          Volver
+        </button>
+      </div>
 
-        <div className="carrito-content">
-          <div className="carrito-items">
-            {items.map(item => (
-              <div key={item.ID_producto} className="carrito-item">
-                <img 
-                  src={
-                    item.imagen
-                      ? Array.isArray(item.imagen)
-                        ? item.imagen[0]
-                        : item.imagen.split(",")[0]
-                      : "/placeholder.jpg"
-                  }
-                  alt={item.nombre}
-                  onError={(e) => {
-                    e.target.src = "/placeholder.jpg";
-                  }}
-                />
-                
-                <div className="item-info">
-                  <h3>{item.nombre}</h3>
-                  <p className="item-descripcion">{item.descripcion}</p>
-                  <span className="item-precio">${item.precio}</span>
-                  <div className="item-stock-info">
-                    {item.stock <= 5 && item.stock > 0 && (
-                      <span className="stock-bajo">Solo {item.stock} disponibles</span>
-                    )}
-                    {item.stock === 0 && (
-                      <span className="sin-stock">Sin stock</span>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="item-controls">
-                  <div className="cantidad-control">
-                    <button 
-                      onClick={() => handleCantidadChange(item.ID_producto, item.cantidad - 1)}
-                      disabled={item.cantidad <= 1 || loading}
-                    >
-                      -
-                    </button>
-                    <span>{item.cantidad}</span>
-                    <button 
-                      onClick={() => handleCantidadChange(item.ID_producto, item.cantidad + 1)}
-                      disabled={item.cantidad >= item.stock || loading}
-                    >
-                      +
-                    </button>
-                  </div>
-                  
-                  <div className="item-total">
-                    ${(item.precio * item.cantidad).toFixed(2)}
-                  </div>
-                  
-                  <button 
-                    className="btn-eliminar"
-                    onClick={() => handleEliminar(item.ID_producto)}
-                    disabled={loading}
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </div>
-            ))}
-            
-            <div className="carrito-acciones">
-              <Link to="/" className="btn-continuar">
-                ← Continuar Comprando
-              </Link>
+      <div className="carrito-content">
+        <div className="container">
+          {/* Header del carrito */}
+          <div className="carrito-header">
+            <div className="header-info">
+              <h1>Carrito de Compras</h1>
+              <span className="items-count">{cantidadTotal} artículo{cantidadTotal !== 1 ? 's' : ''}</span>
+            </div>
+            {productos.length > 0 && (
               <button 
                 className="btn-limpiar"
-                onClick={handleLimpiarCarrito}
+                onClick={() => {
+                  if (window.confirm('¿Estás seguro de que quieres vaciar todo el carrito?')) {
+                    limpiarCarrito();
+                  }
+                }}
                 disabled={loading}
               >
-                Vaciar Carrito
+                <Trash2 size={18} />
+                Vaciar carrito
               </button>
+            )}
+          </div>
+
+          <div className="carrito-grid">
+            {/* Lista de productos */}
+            <div className="productos-lista">
+              {productos.map(producto => (
+                <div 
+                  key={producto.id} 
+                  className={`producto-item ${eliminating === producto.id ? 'eliminando' : ''}`}
+                >
+                  <div className="producto-imagen">
+                    <img
+                      src={producto.imagen || '/logo192.png'}
+                      alt={producto.nombre}
+                      onError={(e) => {
+                        e.target.src = '/logo192.png';
+                      }}
+                    />
+                  </div>
+                  
+                  <div className="producto-info">
+                    <h3>{producto.nombre}</h3>
+                    <p className="producto-precio">${producto.precio.toFixed(2)}</p>
+                    <div className="producto-stock">
+                      {producto.stock <= 5 && producto.stock > 0 && (
+                        <span className="stock-bajo">Solo {producto.stock} disponibles</span>
+                      )}
+                      {producto.stock === 0 && (
+                        <span className="sin-stock">Sin stock</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="producto-controles">
+                    <div className="cantidad-controls">
+                      <button 
+                        onClick={() => handleCantidadChange(producto.id, producto.cantidad - 1)}
+                        disabled={producto.cantidad <= 1 || loading}
+                        className="btn-cantidad"
+                      >
+                        <Minus size={16} />
+                      </button>
+                      <span className="cantidad-display">{producto.cantidad}</span>
+                      <button 
+                        onClick={() => handleCantidadChange(producto.id, producto.cantidad + 1)}
+                        disabled={producto.cantidad >= producto.stock || loading}
+                        className="btn-cantidad"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                    
+                    <div className="producto-subtotal">
+                      ${(producto.precio * producto.cantidad).toFixed(2)}
+                    </div>
+                    
+                    <button 
+                      className="btn-eliminar"
+                      onClick={() => handleEliminar(producto.id)}
+                      disabled={loading}
+                      title="Eliminar producto"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Resumen del pedido */}
+            <div className="resumen-pedido">
+              <div className="resumen-card">
+                <h3>Resumen del Pedido</h3>
+                
+                <div className="resumen-detalles">
+                  <div className="detalle-linea">
+                    <span>Subtotal ({cantidadTotal} artículos)</span>
+                    <span>${subtotal.toFixed(2)}</span>
+                  </div>
+                  
+                  <div className="detalle-linea">
+                    <span>Envío</span>
+                    <span className={costoEnvio === 0 ? 'envio-gratis' : ''}>
+                      {costoEnvio === 0 ? 'GRATIS' : `$${costoEnvio.toFixed(2)}`}
+                    </span>
+                  </div>
+                  
+                  {subtotal < 500 && (
+                    <div className="envio-gratis-info">
+                      <p>Agrega ${(500 - subtotal).toFixed(2)} más para <strong>envío gratis</strong></p>
+                      <div className="progress-bar">
+                        <div 
+                          className="progress-fill" 
+                          style={{width: `${Math.min((subtotal / 500) * 100, 100)}%`}}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <hr />
+                  
+                  <div className="detalle-linea total">
+                    <span>Total</span>
+                    <span>${total.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <button 
+                  className="btn-checkout"
+                  onClick={handleCheckout}
+                  disabled={loading}
+                >
+                  <Lock size={20} />
+                  Proceder al Pago
+                </button>
+                
+                <div className="garantias">
+                  <div className="garantia-item">
+                    <Shield size={16} />
+                    <span>Compra 100% segura</span>
+                  </div>
+                  <div className="garantia-item">
+                    <Truck size={16} />
+                    <span>Envío gratis en compras +$500</span>
+                  </div>
+                  <div className="garantia-item">
+                    <RotateCcw size={16} />
+                    <span>30 días para devoluciones</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="carrito-resumen">
-            <h3>Resumen del Pedido</h3>
-            
-            <div className="resumen-lineas">
-              <div className="linea">
-                <span>Subtotal ({cantidadItems} artículos):</span>
-                <span>${subtotal.toFixed(2)}</span>
-              </div>
-              
-              {descuento > 0 && (
-                <div className="linea descuento">
-                  <span>Descuento:</span>
-                  <span>-${descuento.toFixed(2)}</span>
-                </div>
-              )}
-              
-              <div className="linea">
-                <span>Envío:</span>
-                <span>{costoEnvio === 0 ? 'GRATIS' : `$${costoEnvio.toFixed(2)}`}</span>
-              </div>
-              
-              <div className="linea total">
-                <span>Total:</span>
-                <span>${total.toFixed(2)}</span>
-              </div>
-            </div>
-
-            <button 
-              className="btn-checkout"
-              onClick={handleCheckout}
-              disabled={loading}
-            >
-              Proceder al Pago
-            </button>
-            
-            <div className="garantias">
-              <div className="garantia">
-                <span>🔒</span>
-                <span>Compra 100% segura</span>
-              </div>
-              <div className="garantia">
-                <span>🚚</span>
-                <span>Envío gratis en compras +$500</span>
-              </div>
-              <div className="garantia">
-                <span>↩️</span>
-                <span>30 días para devoluciones</span>
-              </div>
-            </div>
+          {/* Continuar comprando */}
+          <div className="continuar-comprando">
+            <Link to="/juegos" className="btn-continuar">
+              <ArrowLeft size={20} />
+              Continuar Comprando
+            </Link>
           </div>
         </div>
       </div>
+
+      {/* Loading overlay */}
+      {loading && (
+        <div className="loading-overlay">
+          <div className="loading-spinner">
+            <div className="spinner"></div>
+            <p>Actualizando carrito...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
