@@ -249,14 +249,19 @@
   .crear-cuenta-form {
     padding: 32px 24px;
     min-width: 0;
-    max-width: 100%;
+    max-width: calc(100% - 32px);
+    width: calc(100% - 32px);
+    margin: 0 16px;
     border-radius: 16px;
     gap: 20px;
+    box-sizing: border-box;
   }
   
   .crear-cuenta-form input {
     padding: 12px 14px;
     font-size: 16px; /* Previene zoom en iOS */
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .modal-content {
@@ -270,8 +275,15 @@
 }
 
 @media (max-width: 400px) {
+  .crear-cuenta-container {
+    padding: 20px 12px;
+  }
+
   .crear-cuenta-form {
     padding: 24px 20px;
+    max-width: calc(100% - 24px);
+    width: calc(100% - 24px);
+    margin: 0 12px;
   }
   
   .crear-cuenta-container h2 {

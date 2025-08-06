@@ -60,15 +60,15 @@ const Login = () => {
   };
 
   return (
-    <div className="login-page">
+    <div className="inicio-login-page">
       <Separar />
-      <div className="login-img-section">
-        <img src={chicaImg} alt="Joyería" className="login-img" />
+      <div className="inicio-login-img-section">
+        <img src={chicaImg} alt="Joyería" className="inicio-login-img" />
       </div>
-      <div className="login-form-section">
-        <h2 className="login-title">Iniciar sesión</h2>
-        <form className="login-form" onSubmit={handleSubmit}>
-          <div className="form-group">
+      <div className="inicio-login-form-section">
+        <h2 className="inicio-login-title">Iniciar sesión</h2>
+        <form className="inicio-login-form" onSubmit={handleSubmit}>
+          <div className="inicio-form-group">
             <label htmlFor="email">Correo electrónico</label>
             <input 
               type="email" 
@@ -81,7 +81,7 @@ const Login = () => {
             />
           </div>
           
-          <div className="form-group">
+          <div className="inicio-form-group">
             <label htmlFor="password">Contraseña</label>
             <input 
               type="password" 
@@ -96,11 +96,11 @@ const Login = () => {
           
           {error && <div className="error">{error}</div>}
           
-          <button type="submit" className="login-btn">ACCEDER</button>
+          <button type="submit" className="inicio-login-btn">ACCEDER</button>
           
-          <div className="login-links">
-            <a href="#" className="forgot-link">¿Olvidaste tu contraseña?</a>
-            <Link to="/crear-cuenta" className="create-link">Crear Cuenta Nueva</Link>
+          <div className="inicio-login-links">
+            <a href="#" className="inicio-forgot-link">¿Olvidaste tu contraseña?</a>
+            <Link to="/crear-cuenta" className="inicio-create-link">Crear Cuenta Nueva</Link>
           </div>
         </form>
       </div>

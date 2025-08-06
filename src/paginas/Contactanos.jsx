@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import "./estilos/Contactanos.css";
-import Separar from "../componentes/Separador NavBar/Separador";
 import Accesibilidad from "../componentes/Accesibilidad/Accesibilidad";
 import { API_ENDPOINTS } from '../config/api';
 
@@ -47,51 +46,64 @@ function Contactanos() {
 
   return (
     <div className="contactanos-container">
-      <Separar />
       <h1 className="contactanos-titulo">Contáctanos</h1>
 
       <form className="contactanos-form" onSubmit={handleSubmit}>
-        <label className="contactanos-label">Nombre:</label>
-        <input
-          className="contactanos-input"
-          type="text"
-          name="nombre"
-          value={formData.nombre}
-          onChange={handleChange}
-          required
-        />
+        <div className="contactanos-form-group">
+          <label className="contactanos-label">Nombre:</label>
+          <input
+            className="contactanos-input"
+            type="text"
+            name="nombre"
+            value={formData.nombre}
+            onChange={handleChange}
+            placeholder="Ingresa tu nombre completo"
+            required
+          />
+        </div>
 
-        <label className="contactanos-label">Correo:</label>
-        <input
-          className="contactanos-input"
-          type="email"
-          name="correo"
-          value={formData.correo}
-          onChange={handleChange}
-          required
-        />
+        <div className="contactanos-form-group">
+          <label className="contactanos-label">Correo:</label>
+          <input
+            className="contactanos-input"
+            type="email"
+            name="correo"
+            value={formData.correo}
+            onChange={handleChange}
+            placeholder="ejemplo@correo.com"
+            required
+          />
+        </div>
 
-        <label className="contactanos-label">Asunto:</label>
-        <input
-          className="contactanos-input"
-          type="text"
-          name="asunto"
-          value={formData.asunto}
-          onChange={handleChange}
-          required
-        />
+        <div className="contactanos-form-group">
+          <label className="contactanos-label">Asunto:</label>
+          <input
+            className="contactanos-input"
+            type="text"
+            name="asunto"
+            value={formData.asunto}
+            onChange={handleChange}
+            placeholder="¿De qué quieres hablar?"
+            required
+          />
+        </div>
 
-        <label className="contactanos-label">Mensaje:</label>
-        <textarea
-          className="contactanos-textarea"
-          name="mensaje"
-          rows="4"
-          value={formData.mensaje}
-          onChange={handleChange}
-          required
-        ></textarea>
+        <div className="contactanos-form-group">
+          <label className="contactanos-label">Mensaje:</label>
+          <textarea
+            className="contactanos-textarea"
+            name="mensaje"
+            rows="4"
+            value={formData.mensaje}
+            onChange={handleChange}
+            placeholder="Cuéntanos tu consulta o comentario..."
+            required
+          ></textarea>
+        </div>
 
-        <button className="contactanos-boton" type="submit">Enviar</button>
+        <button className="contactanos-boton" type="submit">
+          {estado === "Enviando..." ? "Enviando..." : "Enviar Mensaje"}
+        </button>
       </form>
 
       {estado && <p className="contactanos-estado">{estado}</p>}
