@@ -68,11 +68,31 @@ const Login = () => {
       <div className="login-form-section">
         <h2 className="login-title">Iniciar sesión</h2>
         <form className="login-form" onSubmit={handleSubmit}>
-          <label htmlFor="email">Correo electrónico</label>
-          <input type="email" id="email" name="email" value={form.email} onChange={handleChange} required />
+          <div className="form-group">
+            <label htmlFor="email">Correo electrónico</label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              value={form.email} 
+              onChange={handleChange} 
+              placeholder="ejemplo@correo.com"
+              required 
+            />
+          </div>
           
-          <label htmlFor="password">Contraseña</label>
-          <input type="password" id="password" name="password" value={form.password} onChange={handleChange} required />
+          <div className="form-group">
+            <label htmlFor="password">Contraseña</label>
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              value={form.password} 
+              onChange={handleChange} 
+              placeholder="Ingresa tu contraseña"
+              required 
+            />
+          </div>
           
           {error && <div className="error">{error}</div>}
           
@@ -80,7 +100,7 @@ const Login = () => {
           
           <div className="login-links">
             <a href="#" className="forgot-link">¿Olvidaste tu contraseña?</a>
-            <Link to="/crear-cuenta" className="create-link">Crear Cuenta</Link>
+            <Link to="/crear-cuenta" className="create-link">Crear Cuenta Nueva</Link>
           </div>
         </form>
       </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
 import { useCarrito } from '../../context/CarritoContext';
@@ -9,6 +9,24 @@ const CarritoIcono = () => {
   const navigate = useNavigate();
   const { items, cantidadItems, subtotal, eliminarProducto } = useCarrito();
   const [mostrarDropdown, setMostrarDropdown] = useState(false);
+  const carritoRef = useRef(null);
+
+  // Cerrar dropdown cuando se haga clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (carritoRef.current && !carritoRef.current.contains(event.target)) {
+        setMostrarDropdown(false);
+      }
+    };
+
+    if (mostrarDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [mostrarDropdown]);
 
   const handleVerCarritoCompleto = () => {
     setMostrarDropdown(false);
@@ -56,9 +74,8 @@ const CarritoIcono = () => {
 
   return (
     <div 
+      ref={carritoRef}
       className="carrito-contenedor"
-      onMouseEnter={() => setMostrarDropdown(true)}
-      onMouseLeave={() => setMostrarDropdown(false)}
     >
       <button 
         onClick={handleCarritoClick}

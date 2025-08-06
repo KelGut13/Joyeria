@@ -463,8 +463,27 @@
   }
 }
 
+/* Forzar modo móvil para pantallas entre 768px y 900px */
+@media screen and (max-width: 900px) and (min-width: 768px) {
+  .navbar-search {
+    display: none !important;
+  }
+
+  .navbar-icons {
+    display: none !important;
+  }
+
+  .navbar-mobile-icons {
+    display: flex !important;
+  }
+
+  .hamburger-btn {
+    display: flex !important;
+  }
+}
+
 /* Responsive - Tabletas y dispositivos medianos */
-@media screen and (max-width: 1024px) and (min-width: 769px) {
+@media screen and (max-width: 1024px) and (min-width: 901px) {
   .navbar-content {
     padding: 0 20px;
     gap: 16px;
@@ -495,7 +514,7 @@
 }
 
 /* Responsive - Móvil */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 900px) {
   .navbar {
     padding: 0;
     height: 56px;

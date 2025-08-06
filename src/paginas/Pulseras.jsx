@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import "./estilos/Productos.css";
-import Separar from "../componentes/Separador NavBar/Separador";
+import "./estilos/Pulseras.css";
 import { Link } from "react-router-dom";
 import { useCarrito } from '../context/CarritoContext';
 import { getFirstProductImage, API_ENDPOINTS } from '../config/api';
+import { Filter, X, Search, ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react';
 
 const Pulseras = () => {
   const [productos, setProductos] = useState([]);
@@ -11,13 +11,19 @@ const Pulseras = () => {
   const [materiales, setMateriales] = useState([]);
   const [generos, setGeneros] = useState([]);
   const [marcas, setMarcas] = useState([]);
-  const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filtrosMovilAbierto, setFiltrosMovilAbierto] = useState(false);
+  
+  // Estado para controlar qué secciones de filtro están expandidas
+  const [filtrosExpandidos, setFiltrosExpandidos] = useState({
+    materiales: false,
+    generos: false,
+    marcas: false
+  });
   
   const { agregarProducto, estaEnCarrito, obtenerItemCarrito } = useCarrito();
-
-  // Estados para filtros
+  
   const [filtros, setFiltros] = useState({
     materiales: [],
     generos: [],
@@ -35,7 +41,6 @@ const Pulseras = () => {
         setLoading(true);
         console.log(`🔄 Intento ${retryCount + 1} de obtener datos...`);
         
-        // Fetch productos, materiales, géneros y marcas en paralelo
         const [productosResponse, materialesResponse, generosResponse, marcasResponse] = await Promise.all([
           fetch(API_ENDPOINTS.PRODUCTOS, {
             headers: { 'Content-Type': 'application/json' }
@@ -54,7 +59,7 @@ const Pulseras = () => {
         if (!productosResponse.ok || !materialesResponse.ok || !generosResponse.ok || !marcasResponse.ok) {
           throw new Error(`HTTP error! status: ${productosResponse.status}`);
         }
-        
+
         const [productosData, materialesData, generosData, marcasData] = await Promise.all([
           productosResponse.json(),
           materialesResponse.json(),
@@ -63,12 +68,17 @@ const Pulseras = () => {
         ]);
         
         console.log("✅ Productos obtenidos:", productosData);
+        console.log("✅ Materiales obtenidos:", materialesData);
+        console.log("✅ Géneros obtenidos:", generosData);
+        console.log("✅ Marcas obtenidas:", marcasData);
+
+        // Filtrar productos de pulseras (categoría 3)
+        const productosPulseras = productosData.filter((producto) => producto.id_categoria === 3);
         
-        // Filtrar solo pulseras (categoria ID = 4)
-        const pulseras = productosData.filter((producto) => producto.id_categoria === 4);
+        console.log("🔍 Pulseras filtradas:", productosPulseras);
         
-        setProductos(pulseras);
-        setProductosFiltrados(pulseras);
+        setProductos(productosPulseras);
+        setProductosFiltrados(productosPulseras);
         setMateriales(materialesData);
         setGeneros(generosData);
         setMarcas(marcasData);
@@ -98,36 +108,39 @@ const Pulseras = () => {
     obtenerDatos();
   }, []);
 
-  // Aplicar filtros cuando cambien
   useEffect(() => {
     aplicarFiltros();
   }, [filtros, productos]);
 
+  // Limpiar overflow del body al desmontar componente
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, []);
+
   const aplicarFiltros = () => {
     let productosFiltrados = [...productos];
 
-    // Filtro por materiales
     if (filtros.materiales.length > 0) {
       productosFiltrados = productosFiltrados.filter(producto =>
         filtros.materiales.includes(producto.id_material)
       );
     }
 
-    // Filtro por géneros
     if (filtros.generos.length > 0) {
       productosFiltrados = productosFiltrados.filter(producto =>
         filtros.generos.includes(producto.id_genero)
       );
     }
 
-    // Filtro por marcas
     if (filtros.marcas.length > 0) {
       productosFiltrados = productosFiltrados.filter(producto =>
         filtros.marcas.includes(producto.id_marca)
       );
     }
 
-    // Filtro por precio
     if (filtros.precioMin !== '') {
       productosFiltrados = productosFiltrados.filter(producto =>
         parseFloat(producto.precio) >= parseFloat(filtros.precioMin)
@@ -141,31 +154,6 @@ const Pulseras = () => {
     }
 
     setProductosFiltrados(productosFiltrados);
-  };
-
-  const handleAgregarAlCarrito = async (e, producto) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    console.log('🛒 Agregando pulsera al carrito:', producto.nombre);
-    
-    try {
-      // Verificar que el producto tenga todos los campos necesarios
-      if (!producto.ID_producto || !producto.nombre || !producto.precio || !producto.stock) {
-        console.error('❌ Datos de producto incompletos:', producto);
-        throw new Error('Datos de producto incompletos');
-      }
-
-      await agregarProducto(producto, 1);
-      
-      // Mostrar confirmación más amigable
-      alert(`✅ ${producto.nombre} agregado al carrito exitosamente`);
-      console.log('✅ Pulsera agregada al carrito correctamente');
-      
-    } catch (error) {
-      console.error('❌ Error al agregar pulsera al carrito:', error);
-      alert(`❌ Error: ${error.message}`);
-    }
   };
 
   const handleMaterialChange = (materialId) => {
@@ -202,10 +190,6 @@ const Pulseras = () => {
     }));
   };
 
-  const actualizarPrecio = () => {
-    aplicarFiltros();
-  };
-
   const limpiarFiltros = () => {
     setFiltros({
       materiales: [],
@@ -216,125 +200,187 @@ const Pulseras = () => {
     });
   };
 
-  // Cierra los filtros al cambiar el tamaño de pantalla a desktop
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth > 768) setMostrarFiltros(false);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const toggleFiltroExpandido = (categoria) => {
+    setFiltrosExpandidos(prev => ({
+      ...prev,
+      [categoria]: !prev[categoria]
+    }));
+  };
 
-  const handleRetry = () => {
-    setError(null);
-    setLoading(true);
-    window.location.reload();
+  const renderFiltroCategoria = (items, categoria, filtroActivo, handleChange, labelKey, idKey) => {
+    const itemsLimitados = filtrosExpandidos[categoria] ? items : items.slice(0, 3);
+    const mostrarVerMas = items.length > 3;
+
+    // Función para obtener el nombre correcto de la categoría
+    const getNombreCategoria = (categoria) => {
+      switch(categoria) {
+        case 'materiales':
+          return 'Material';
+        case 'generos':
+          return 'Género';
+        case 'marcas':
+          return 'Marca';
+        default:
+          return categoria.charAt(0).toUpperCase() + categoria.slice(1);
+      }
+    };
+
+    return (
+      <div className="filtro-categoria">
+        <div className="filtro-header" onClick={() => toggleFiltroExpandido(categoria)}>
+          <label>{getNombreCategoria(categoria)}</label>
+          {mostrarVerMas && (
+            filtrosExpandidos[categoria] ? 
+            <ChevronUp size={20} className="filtro-icono" /> : 
+            <ChevronDown size={20} className="filtro-icono" />
+          )}
+        </div>
+        <ul>
+          {itemsLimitados.map((item) => (
+            <li key={item[idKey]}>
+              <input 
+                type="checkbox" 
+                id={`${categoria}-${item[idKey]}`}
+                checked={filtroActivo.includes(item[idKey])}
+                onChange={() => handleChange(item[idKey])}
+              />
+              <label htmlFor={`${categoria}-${item[idKey]}`}>
+                {item[labelKey]}
+              </label>
+            </li>
+          ))}
+        </ul>
+        {mostrarVerMas && !filtrosExpandidos[categoria] && (
+          <button 
+            className="ver-mas-btn"
+            onClick={() => toggleFiltroExpandido(categoria)}
+          >
+            Ver más ({items.length - 3} más)
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  const handleAgregarAlCarrito = async (e, producto) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (estaEnCarrito(producto.ID_producto)) {
+      return;
+    }
+
+    try {
+      await agregarProducto(producto);
+    } catch (error) {
+      console.error('Error al agregar producto al carrito:', error);
+    }
+  };
+
+  const toggleFiltrosMovil = () => {
+    const nuevoEstado = !filtrosMovilAbierto;
+    setFiltrosMovilAbierto(nuevoEstado);
+    
+    // Controlar overflow del body para evitar scroll en el fondo
+    if (nuevoEstado) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.classList.add('filtros-abiertos');
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.classList.remove('filtros-abiertos');
+    }
   };
 
   return (
-    <div className="productos-page">
-      <Separar />
-      
-      <div className="banner-productos pulseras-banner">
-        <img src="../pulseras-banner.jpg" alt="Banner Pulseras" />
-        <div className="banner-overlay">
-          <h2>🔗 Pulseras únicas que complementan tu estilo</h2>
-        </div>
+    <div className="pulseras-page">
+      {/* Hero Banner */}
+      <div className="banner-pulseras">
+        <img src="../8.png" alt="Colección de Pulseras" />
+        <h2>Pulseras</h2>
       </div>
 
-      {/* Botón Filtro solo en móvil */}
-      <button
-        className="btn-filtro-movil"
-        onClick={() => setMostrarFiltros((prev) => !prev)}
-      >
-        {mostrarFiltros ? "Cerrar filtros" : "Filtro"}
-      </button>
+      <div className="contenido-pulseras">
+        {/* Overlay para filtros móvil */}
+        {filtrosMovilAbierto && (
+          <div 
+            className="filtros-overlay"
+            onClick={toggleFiltrosMovil}
+          />
+        )}
+        
+        {/* Filtros Sidebar */}
+        <aside className={`filtros ${filtrosMovilAbierto ? 'filtros-movil-activo' : ''}`}>
+          {filtrosMovilAbierto && (
+            <button 
+              className="cerrar-filtros-movil"
+              onClick={toggleFiltrosMovil}
+              aria-label="Cerrar filtros"
+              title="Cerrar filtros"
+            >
+              <X size={24} />
+            </button>
+          )}
+          
+          <div className="filtros-contenido">
+            <div className="filtros-header-movil">
+              <h3>
+                Filtrar por
+              </h3>
+              {filtrosMovilAbierto && (
+                <span className="filtros-instruccion">
+                  Toca fuera para cerrar
+                </span>
+              )}
+            </div>
 
-      <div className="contenido-productos">
-        {/* Filtros */}
-        <aside
-          className={`filtros ${
-            mostrarFiltros ? "filtros-movil-activo" : ""
-          }`}
-        >
-          <h3>Filtrar por:</h3>
+          {renderFiltroCategoria(
+            materiales, 
+            'materiales', 
+            filtros.materiales, 
+            handleMaterialChange, 
+            'nombre_material', 
+            'ID_material'
+          )}
 
-          <div className="filtro-categoria">
-            <label>Material</label>
-            <ul>
-              {materiales.map((material) => (
-                <li key={material.ID_material}>
-                  <input 
-                    type="checkbox" 
-                    id={`material-${material.ID_material}`}
-                    checked={filtros.materiales.includes(material.ID_material)}
-                    onChange={() => handleMaterialChange(material.ID_material)}
-                  />
-                  <label htmlFor={`material-${material.ID_material}`}>
-                    {material.nombre_material}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {renderFiltroCategoria(
+            generos, 
+            'generos', 
+            filtros.generos, 
+            handleGeneroChange, 
+            'nombre_genero', 
+            'ID_genero'
+          )}
 
-          <div className="filtro-categoria">
-            <label>Género</label>
-            <ul>
-              {generos.map((genero) => (
-                <li key={genero.ID_genero}>
-                  <input 
-                    type="checkbox" 
-                    id={`genero-${genero.ID_genero}`}
-                    checked={filtros.generos.includes(genero.ID_genero)}
-                    onChange={() => handleGeneroChange(genero.ID_genero)}
-                  />
-                  <label htmlFor={`genero-${genero.ID_genero}`}>
-                    {genero.nombre_genero}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="filtro-categoria">
-            <label>Marca</label>
-            <ul>
-              {marcas.map((marca) => (
-                <li key={marca.ID_marca}>
-                  <input 
-                    type="checkbox" 
-                    id={`marca-${marca.ID_marca}`}
-                    checked={filtros.marcas.includes(marca.ID_marca)}
-                    onChange={() => handleMarcaChange(marca.ID_marca)}
-                  />
-                  <label htmlFor={`marca-${marca.ID_marca}`}>
-                    {marca.nombre_marca}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {renderFiltroCategoria(
+            marcas, 
+            'marcas', 
+            filtros.marcas, 
+            handleMarcaChange, 
+            'nombre_marca', 
+            'ID_marca'
+          )}
 
           <div className="filtro-precio">
             <label>Precio</label>
             <div className="rango-precio">
               <input 
                 type="number" 
-                placeholder="Min" 
+                placeholder="Precio mínimo" 
                 value={filtros.precioMin}
                 onChange={(e) => handlePrecioChange('precioMin', e.target.value)}
               />
               <input 
                 type="number" 
-                placeholder="Max" 
+                placeholder="Precio máximo" 
                 value={filtros.precioMax}
                 onChange={(e) => handlePrecioChange('precioMax', e.target.value)}
               />
-              <button className="actualizar-precio" onClick={actualizarPrecio}>
-                Actualizar
-              </button>
             </div>
+            <button className="actualizar-precio" onClick={aplicarFiltros}>
+              Actualizar precio
+            </button>
           </div>
 
           <div className="filtro-acciones">
@@ -342,9 +388,10 @@ const Pulseras = () => {
               Limpiar filtros
             </button>
           </div>
+        </div>
         </aside>
 
-        {/* Productos */}
+        {/* Products Grid */}
         <section className="productos">
           {loading ? (
             <div className="loading-container">
@@ -353,20 +400,15 @@ const Pulseras = () => {
             </div>
           ) : error ? (
             <div className="error-container">
-              <p style={{ color: "red" }}>
-                ⚠️ {error}
-                <br />
-                <button 
-                  onClick={handleRetry} 
-                  className="retry-btn"
-                >
-                  Intentar de nuevo
-                </button>
-              </p>
+              <p>⚠️ {error}</p>
+              <button onClick={() => window.location.reload()} className="retry-btn">
+                Reintentar
+              </button>
             </div>
           ) : productosFiltrados.length === 0 ? (
             <div className="empty-container">
-              <p>🔍 No hay pulseras disponibles con los filtros seleccionados.</p>
+              <Search size={48} style={{ color: '#6b7280', marginBottom: '1rem' }} />
+              <p>No se encontraron productos con los filtros seleccionados</p>
               <button onClick={limpiarFiltros} className="retry-btn">
                 Limpiar filtros
               </button>
@@ -375,6 +417,7 @@ const Pulseras = () => {
             productosFiltrados.map((producto) => (
               <div className="producto" key={producto.ID_producto}>
                 <div className="producto-badge">Nuevo</div>
+                
                 <Link to={`/producto/${producto.ID_producto}`}>
                   <img
                     src={getFirstProductImage(producto)}
@@ -383,42 +426,50 @@ const Pulseras = () => {
                       e.target.src = "/logo192.png";
                     }}
                   />
+                  
                   <div className="producto-info">
                     <p>{producto.nombre}</p>
-                    <span>${producto.precio}</span>
+                    <span>${parseFloat(producto.precio).toFixed(2)}</span>
                   </div>
                 </Link>
-                <div style={{ padding: '0 1.25rem 1.25rem' }}>
-                  <button 
-                    className="add-to-cart-btn"
-                    onClick={(e) => handleAgregarAlCarrito(e, producto)}
-                  >
-                    {estaEnCarrito(producto.ID_producto) ? 'En el carrito' : 'Agregar al carrito'}
-                  </button>
-                </div>
+                
+                <button 
+                  className="add-to-cart-btn"
+                  onClick={(e) => handleAgregarAlCarrito(e, producto)}
+                  disabled={estaEnCarrito(producto.ID_producto)}
+                >
+                  {estaEnCarrito(producto.ID_producto) ? (
+                    <>
+                      <ShoppingBag size={16} style={{ marginRight: '0.5rem' }} />
+                      En el carrito
+                    </>
+                  ) : (
+                    'Agregar al carrito'
+                  )}
+                </button>
               </div>
             ))
           )}
         </section>
-        
-        {/* Mostrar contador fuera de la grid */}
-        {!loading && !error && productosFiltrados.length > 0 && (
-          <div className="productos-counter">
-            <span>{productosFiltrados.length} producto(s) encontrado(s)</span>
-          </div>
-        )}
       </div>
 
-      {/* Botón mostrar más */}
-      <div className="mostrar-mas-contenedor">
-        <button className="mostrar-mas-btn">Mostrar más</button>
-      </div>
+      {/* Products Counter */}
+      {!loading && !error && productosFiltrados.length > 0 && (
+        <div className="productos-counter">
+          <span>Mostrando {productosFiltrados.length} producto(s)</span>
+        </div>
+      )}
+
+      {/* Mobile Filter Toggle */}
+      <button 
+        className="filtros-toggle"
+        onClick={toggleFiltrosMovil}
+        title="Filtros"
+      >
+        <Filter size={20} />
+      </button>
     </div>
   );
 };
 
 export default Pulseras;
-
-/* Actualizar el producto "Anillo" para que tenga la categoría correcta
-UPDATE productos SET id_categoria = 2 WHERE ID_producto = 4;
-*/

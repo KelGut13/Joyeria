@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import "./estilos/Productos.css";
-import Separar from "../componentes/Separador NavBar/Separador";
+import "./estilos/Aretes.css";
 import { Link } from "react-router-dom";
 import { useCarrito } from '../context/CarritoContext';
-import { getFirstProductImage, API_ENDPOINTS, apiRequest, checkServerHealth, checkDatabaseStructure } from '../config/api';
+import { getFirstProductImage, API_ENDPOINTS } from '../config/api';
+import { Filter, X, Search, ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react';
 
 const Aretes = () => {
   const [productos, setProductos] = useState([]);
@@ -11,13 +11,19 @@ const Aretes = () => {
   const [materiales, setMateriales] = useState([]);
   const [generos, setGeneros] = useState([]);
   const [marcas, setMarcas] = useState([]);
-  const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [serverStatus, setServerStatus] = useState('checking');
-  const [debugInfo, setDebugInfo] = useState(null);
+  const [filtrosMovilAbierto, setFiltrosMovilAbierto] = useState(false);
   
-  // Estados para filtros
+  // Estado para controlar qué secciones de filtro están expandidas
+  const [filtrosExpandidos, setFiltrosExpandidos] = useState({
+    materiales: false,
+    generos: false,
+    marcas: false
+  });
+  
+  const { agregarProducto, estaEnCarrito, obtenerItemCarrito } = useCarrito();
+  
   const [filtros, setFiltros] = useState({
     materiales: [],
     generos: [],
@@ -26,109 +32,72 @@ const Aretes = () => {
     precioMax: ''
   });
 
-  const { agregarProducto, estaEnCarrito, obtenerItemCarrito } = useCarrito();
-
   useEffect(() => {
-    // Verificar conectividad del servidor al montar el componente
-    const checkServer = async () => {
-      console.log('🏥 Verificando estado del servidor...');
-      const health = await checkServerHealth();
-      setServerStatus(health.status);
-      console.log('🏥 Estado del servidor:', health);
-      
-      if (health.status === 'ok') {
-        // Si el servidor está ok, verificar también la base de datos
-        console.log('🗄️ Verificando estructura de base de datos...');
-        const dbCheck = await checkDatabaseStructure();
-        setDebugInfo(dbCheck.data);
-        console.log('🗄️ Estado de la base de datos:', dbCheck);
-      } else {
-        console.error('❌ Servidor no disponible:', health.message);
-      }
-    };
-    
-    checkServer();
-  }, []);
-
-  useEffect(() => {
-    // Solo intentar obtener datos si no hay error de servidor
-    if (serverStatus === 'checking') {
-      console.log('⏳ Esperando verificación del servidor...');
-      return;
-    }
-    
     // Obtener productos, materiales, géneros y marcas de la base de datos
     const obtenerDatos = async (retryCount = 0) => {
-      const maxRetries = 2; // Reducir reintentos
-      
-      if (serverStatus === 'error' && retryCount === 0) {
-        setError("El servidor backend no está disponible o hay un problema de conexión.\n\nEl endpoint /api/test funciona, pero hay un problema específico con los endpoints de datos.\n\nVerifique:\n1. Que el servidor backend esté corriendo completamente\n2. Que no haya errores en la consola del servidor\n3. Que la base de datos esté conectada");
-        setLoading(false);
-        return;
-      }
+      const maxRetries = 3;
       
       try {
         setLoading(true);
         console.log(`🔄 Intento ${retryCount + 1} de obtener datos...`);
         
-        // Probar cada endpoint individualmente para identificar el problema
-        console.log('🧪 Probando endpoint de productos...');
-        const productosData = await apiRequest(API_ENDPOINTS.PRODUCTOS);
-        console.log('✅ Productos OK');
+        const [productosResponse, materialesResponse, generosResponse, marcasResponse] = await Promise.all([
+          fetch(API_ENDPOINTS.PRODUCTOS, {
+            headers: { 'Content-Type': 'application/json' }
+          }),
+          fetch(API_ENDPOINTS.MATERIALES, {
+            headers: { 'Content-Type': 'application/json' }
+          }),
+          fetch(API_ENDPOINTS.GENEROS, {
+            headers: { 'Content-Type': 'application/json' }
+          }),
+          fetch(API_ENDPOINTS.MARCAS, {
+            headers: { 'Content-Type': 'application/json' }
+          })
+        ]);
         
-        console.log('🧪 Probando endpoint de materiales...');
-        const materialesData = await apiRequest(API_ENDPOINTS.MATERIALES);
-        console.log('✅ Materiales OK');
+        if (!productosResponse.ok || !materialesResponse.ok || !generosResponse.ok || !marcasResponse.ok) {
+          throw new Error(`HTTP error! status: ${productosResponse.status}`);
+        }
+
+        const [productosData, materialesData, generosData, marcasData] = await Promise.all([
+          productosResponse.json(),
+          materialesResponse.json(),
+          generosResponse.json(),
+          marcasResponse.json()
+        ]);
         
-        console.log('🧪 Probando endpoint de géneros...');
-        const generosData = await apiRequest(API_ENDPOINTS.GENEROS);
-        console.log('✅ Géneros OK');
+        console.log("✅ Productos obtenidos:", productosData);
+        console.log("✅ Materiales obtenidos:", materialesData);
+        console.log("✅ Géneros obtenidos:", generosData);
+        console.log("✅ Marcas obtenidas:", marcasData);
+
+        // Filtrar productos por categoría de aretes (id_categoria === 1)
+        const productosAretes = productosData.filter((producto) => producto.id_categoria === 1);
         
-        console.log('🧪 Probando endpoint de marcas...');
-        const marcasData = await apiRequest(API_ENDPOINTS.MARCAS);
-        console.log('✅ Marcas OK');
+        console.log("🔍 Aretes filtrados:", productosAretes);
         
-        console.log("✅ Todos los datos obtenidos correctamente");
-        console.log("📊 Resumen:", {
-          productos: productosData.length,
-          materiales: materialesData.length,
-          generos: generosData.length,
-          marcas: marcasData.length
-        });
-        
-        // Filtrar solo aretes (categoria ID = 1)
-        const aretes = productosData.filter((producto) => producto.id_categoria === 1);
-        console.log("🔍 Aretes filtrados:", aretes.length, "de", productosData.length, "productos totales");
-        
-        setProductos(aretes);
-        setProductosFiltrados(aretes);
+        setProductos(productosAretes);
+        setProductosFiltrados(productosAretes);
         setMateriales(materialesData);
         setGeneros(generosData);
         setMarcas(marcasData);
         setError(null);
-        setServerStatus('ok');
       } catch (err) {
         console.error(`❌ Error al cargar datos (intento ${retryCount + 1}):`, err);
         
-        if (retryCount < maxRetries) {
-          console.log(`🔄 Reintentando en 2 segundos... (${retryCount + 1}/${maxRetries})`);
-          setTimeout(() => {
-            obtenerDatos(retryCount + 1);
-          }, 2000);
-          return;
+        if (err.message.includes('Failed to fetch') || err.name === 'TypeError') {
+          if (retryCount < maxRetries) {
+            console.log(`🔄 Reintentando en 3 segundos... (${retryCount + 1}/${maxRetries})`);
+            setTimeout(() => {
+              obtenerDatos(retryCount + 1);
+            }, 3000);
+            return;
+          }
+          setError("No se pudo conectar con el servidor. Verifique su conexión a internet.");
+        } else {
+          setError(`Error al cargar datos: ${err.message}`);
         }
-        
-        // Determinar el tipo de error más específicamente
-        let errorMessage = `ERROR: ${err.message}`;
-        
-        if (err.message.includes('No se pudo conectar con el servidor backend')) {
-          errorMessage = `PROBLEMA DE CONECTIVIDAD:\n\n${err.message}\n\nSi /api/test funciona pero esto no, puede ser:\n1. Un endpoint específico no está configurado\n2. Problema con la base de datos\n3. Error en el código del servidor\n\nRevise la consola del servidor backend para más detalles.`;
-        } else if (err.message.includes('Error HTTP')) {
-          errorMessage = `ERROR DEL SERVIDOR:\n\n${err.message}\n\nEl servidor está funcionando pero devolvió un error.\nRevise los logs del servidor backend.`;
-        }
-        
-        setError(errorMessage);
-        setServerStatus('error');
       } finally {
         if (retryCount === 0 || retryCount >= maxRetries) {
           setLoading(false);
@@ -137,38 +106,41 @@ const Aretes = () => {
     };
 
     obtenerDatos();
-  }, [serverStatus]);
+  }, []);
 
-  // Aplicar filtros cuando cambien
   useEffect(() => {
     aplicarFiltros();
   }, [filtros, productos]);
 
+  // Limpiar overflow del body al desmontar componente
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, []);
+
   const aplicarFiltros = () => {
     let productosFiltrados = [...productos];
 
-    // Filtro por materiales
     if (filtros.materiales.length > 0) {
       productosFiltrados = productosFiltrados.filter(producto =>
         filtros.materiales.includes(producto.id_material)
       );
     }
 
-    // Filtro por géneros
     if (filtros.generos.length > 0) {
       productosFiltrados = productosFiltrados.filter(producto =>
         filtros.generos.includes(producto.id_genero)
       );
     }
 
-    // Filtro por marcas
     if (filtros.marcas.length > 0) {
       productosFiltrados = productosFiltrados.filter(producto =>
         filtros.marcas.includes(producto.id_marca)
       );
     }
 
-    // Filtro por precio
     if (filtros.precioMin !== '') {
       productosFiltrados = productosFiltrados.filter(producto =>
         parseFloat(producto.precio) >= parseFloat(filtros.precioMin)
@@ -218,10 +190,6 @@ const Aretes = () => {
     }));
   };
 
-  const actualizarPrecio = () => {
-    aplicarFiltros();
-  };
-
   const limpiarFiltros = () => {
     setFiltros({
       materiales: [],
@@ -232,164 +200,187 @@ const Aretes = () => {
     });
   };
 
-  // Cierra los filtros al cambiar el tamaño de pantalla a desktop
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth > 768) setMostrarFiltros(false);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const handleRetry = async () => {
-    setError(null);
-    setLoading(true);
-    setServerStatus('checking');
-    
-    // Verificar servidor primero
-    const health = await checkServerHealth();
-    setServerStatus(health.status);
-    
-    if (health.status === 'ok') {
-      // Verificar base de datos también
-      const dbCheck = await checkDatabaseStructure();
-      setDebugInfo(dbCheck.data);
-      
-      // Si el servidor está ok, recargar la página
-      window.location.reload();
-    }
+  const toggleFiltroExpandido = (categoria) => {
+    setFiltrosExpandidos(prev => ({
+      ...prev,
+      [categoria]: !prev[categoria]
+    }));
   };
 
-  const handleAgregarAlCarrito = (e, producto) => {
+  const renderFiltroCategoria = (items, categoria, filtroActivo, handleChange, labelKey, idKey) => {
+    const itemsLimitados = filtrosExpandidos[categoria] ? items : items.slice(0, 3);
+    const mostrarVerMas = items.length > 3;
+
+    // Función para obtener el nombre correcto de la categoría
+    const getNombreCategoria = (categoria) => {
+      switch(categoria) {
+        case 'materiales':
+          return 'Material';
+        case 'generos':
+          return 'Género';
+        case 'marcas':
+          return 'Marca';
+        default:
+          return categoria.charAt(0).toUpperCase() + categoria.slice(1);
+      }
+    };
+
+    return (
+      <div className="filtro-categoria">
+        <div className="filtro-header" onClick={() => toggleFiltroExpandido(categoria)}>
+          <label>{getNombreCategoria(categoria)}</label>
+          {mostrarVerMas && (
+            filtrosExpandidos[categoria] ? 
+            <ChevronUp size={20} className="filtro-icono" /> : 
+            <ChevronDown size={20} className="filtro-icono" />
+          )}
+        </div>
+        <ul>
+          {itemsLimitados.map((item) => (
+            <li key={item[idKey]}>
+              <input 
+                type="checkbox" 
+                id={`${categoria}-${item[idKey]}`}
+                checked={filtroActivo.includes(item[idKey])}
+                onChange={() => handleChange(item[idKey])}
+              />
+              <label htmlFor={`${categoria}-${item[idKey]}`}>
+                {item[labelKey]}
+              </label>
+            </li>
+          ))}
+        </ul>
+        {mostrarVerMas && !filtrosExpandidos[categoria] && (
+          <button 
+            className="ver-mas-btn"
+            onClick={() => toggleFiltroExpandido(categoria)}
+          >
+            Ver más ({items.length - 3} más)
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  const handleAgregarAlCarrito = async (e, producto) => {
     e.preventDefault();
     e.stopPropagation();
     
-    try {
-      // Verificar que el producto tenga todos los campos necesarios
-      if (!producto.ID_producto || !producto.nombre || !producto.precio || !producto.stock) {
-        throw new Error('Datos de producto incompletos');
-      }
+    if (estaEnCarrito(producto.ID_producto)) {
+      return;
+    }
 
-      agregarProducto(producto, 1);
-      
-      // Mostrar confirmación más amigable
-      alert(`${producto.nombre} agregado al carrito exitosamente`);
-      
-      console.log('Producto agregado al carrito:', producto);
-      console.log('Estado actual del carrito después de agregar:', {
-        estaEnCarrito: estaEnCarrito(producto.ID_producto),
-        itemCarrito: obtenerItemCarrito(producto.ID_producto)
-      });
-      
+    try {
+      await agregarProducto(producto);
     } catch (error) {
-      console.error('Error al agregar al carrito:', error);
-      alert(`Error: ${error.message}`);
+      console.error('Error al agregar producto al carrito:', error);
+    }
+  };
+
+  const toggleFiltrosMovil = () => {
+    const nuevoEstado = !filtrosMovilAbierto;
+    setFiltrosMovilAbierto(nuevoEstado);
+    
+    // Controlar overflow del body para evitar scroll en el fondo
+    if (nuevoEstado) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.classList.add('filtros-abiertos');
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.classList.remove('filtros-abiertos');
     }
   };
 
   return (
-    <div className="productos-page">
-      <Separar />
-      
-      <div className="banner-productos aretes-banner">
-        <img src="../9.png" alt="Banner Aretes" />
-        <div className="banner-overlay">
-          <h2>✨ Aretes únicos que reflejan tu personalidad</h2>
-        </div>
+    <div className="aretes-page">
+      {/* Hero Banner */}
+      <div className="banner-aretes">
+        <img src="../aretes.png" alt="Colección de Aretes" />
+        <h2>Aretes</h2>
       </div>
 
-      <button
-        className="btn-filtro-movil"
-        onClick={() => setMostrarFiltros((prev) => !prev)}
-      >
-        {mostrarFiltros ? "Cerrar filtros" : "Filtro"}
-      </button>
+      <div className="contenido-aretes">
+        {/* Overlay para filtros móvil */}
+        {filtrosMovilAbierto && (
+          <div 
+            className="filtros-overlay"
+            onClick={toggleFiltrosMovil}
+          />
+        )}
+        
+        {/* Filtros Sidebar */}
+        <aside className={`filtros ${filtrosMovilAbierto ? 'filtros-movil-activo' : ''}`}>
+          {filtrosMovilAbierto && (
+            <button 
+              className="cerrar-filtros-movil"
+              onClick={toggleFiltrosMovil}
+              aria-label="Cerrar filtros"
+              title="Cerrar filtros"
+            >
+              <X size={24} />
+            </button>
+          )}
+          
+          <div className="filtros-contenido">
+            <div className="filtros-header-movil">
+              <h3>
+                Filtrar por
+              </h3>
+              {filtrosMovilAbierto && (
+                <span className="filtros-instruccion">
+                  Toca fuera para cerrar
+                </span>
+              )}
+            </div>
 
-      <div className="contenido-productos">
-        {/* Filtros */}
-        <aside
-          className={`filtros ${
-            mostrarFiltros ? "filtros-movil-activo" : ""
-          }`}
-        >
-          <h3>Filtrar por:</h3>
+          {renderFiltroCategoria(
+            materiales, 
+            'materiales', 
+            filtros.materiales, 
+            handleMaterialChange, 
+            'nombre_material', 
+            'ID_material'
+          )}
 
-          <div className="filtro-categoria">
-            <label>Material</label>
-            <ul>
-              {materiales.map((material) => (
-                <li key={material.ID_material}>
-                  <input 
-                    type="checkbox" 
-                    id={`material-${material.ID_material}`}
-                    checked={filtros.materiales.includes(material.ID_material)}
-                    onChange={() => handleMaterialChange(material.ID_material)}
-                  />
-                  <label htmlFor={`material-${material.ID_material}`}>
-                    {material.nombre_material}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {renderFiltroCategoria(
+            generos, 
+            'generos', 
+            filtros.generos, 
+            handleGeneroChange, 
+            'nombre_genero', 
+            'ID_genero'
+          )}
 
-          <div className="filtro-categoria">
-            <label>Género</label>
-            <ul>
-              {generos.map((genero) => (
-                <li key={genero.ID_genero}>
-                  <input 
-                    type="checkbox" 
-                    id={`genero-${genero.ID_genero}`}
-                    checked={filtros.generos.includes(genero.ID_genero)}
-                    onChange={() => handleGeneroChange(genero.ID_genero)}
-                  />
-                  <label htmlFor={`genero-${genero.ID_genero}`}>
-                    {genero.nombre_genero}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="filtro-categoria">
-            <label>Marca</label>
-            <ul>
-              {marcas.map((marca) => (
-                <li key={marca.ID_marca}>
-                  <input 
-                    type="checkbox" 
-                    id={`marca-${marca.ID_marca}`}
-                    checked={filtros.marcas.includes(marca.ID_marca)}
-                    onChange={() => handleMarcaChange(marca.ID_marca)}
-                  />
-                  <label htmlFor={`marca-${marca.ID_marca}`}>
-                    {marca.nombre_marca}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {renderFiltroCategoria(
+            marcas, 
+            'marcas', 
+            filtros.marcas, 
+            handleMarcaChange, 
+            'nombre_marca', 
+            'ID_marca'
+          )}
 
           <div className="filtro-precio">
             <label>Precio</label>
             <div className="rango-precio">
               <input 
                 type="number" 
-                placeholder="Min" 
+                placeholder="Precio mínimo" 
                 value={filtros.precioMin}
                 onChange={(e) => handlePrecioChange('precioMin', e.target.value)}
               />
               <input 
                 type="number" 
-                placeholder="Max" 
+                placeholder="Precio máximo" 
                 value={filtros.precioMax}
                 onChange={(e) => handlePrecioChange('precioMax', e.target.value)}
               />
-              <button className="actualizar-precio" onClick={actualizarPrecio}>
-                Actualizar
-              </button>
             </div>
+            <button className="actualizar-precio" onClick={aplicarFiltros}>
+              Actualizar precio
+            </button>
           </div>
 
           <div className="filtro-acciones">
@@ -397,110 +388,27 @@ const Aretes = () => {
               Limpiar filtros
             </button>
           </div>
+        </div> {/* Cierre de filtros-contenido */}
         </aside>
 
-        {/* Productos */}
+        {/* Products Grid */}
         <section className="productos">
           {loading ? (
             <div className="loading-container">
               <div className="loading-spinner"></div>
               <p>Cargando productos...</p>
-              {serverStatus === 'checking' && (
-                <p style={{ fontSize: '0.9rem', color: '#666' }}>
-                  Verificando conexión con el servidor...
-                </p>
-              )}
             </div>
           ) : error ? (
             <div className="error-container">
-              <div style={{ 
-                background: '#fef2f2', 
-                border: '1px solid #fecaca', 
-                borderRadius: '8px', 
-                padding: '1.5rem',
-                maxWidth: '600px',
-                textAlign: 'left'
-              }}>
-                <h3 style={{ color: '#dc2626', margin: '0 0 1rem 0' }}>
-                  Error de Conexión
-                </h3>
-                <pre style={{ 
-                  color: '#7f1d1d', 
-                  fontSize: '0.9rem',
-                  whiteSpace: 'pre-wrap',
-                  fontFamily: 'inherit',
-                  margin: '0 0 1rem 0'
-                }}>
-                  {error}
-                </pre>
-                
-                {debugInfo && (
-                  <div style={{ 
-                    background: '#e0f2fe', 
-                    padding: '1rem', 
-                    borderRadius: '6px',
-                    margin: '1rem 0',
-                    fontSize: '0.8rem'
-                  }}>
-                    <strong>Info de la Base de Datos:</strong>
-                    <pre style={{ margin: '0.5rem 0 0 0', color: '#01579b' }}>
-                      {JSON.stringify(debugInfo, null, 2)}
-                    </pre>
-                  </div>
-                )}
-                
-                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button 
-                    onClick={handleRetry} 
-                    className="retry-btn"
-                    style={{
-                      background: '#dc2626',
-                      color: 'white',
-                      border: 'none',
-                      padding: '0.75rem 1.5rem',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontWeight: '500'
-                    }}
-                  >
-                    Reintentar
-                  </button>
-                  <a 
-                    href="http://localhost:5001/api/test" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    style={{
-                      background: '#059669',
-                      color: 'white',
-                      textDecoration: 'none',
-                      padding: '0.75rem 1.5rem',
-                      borderRadius: '6px',
-                      fontWeight: '500'
-                    }}
-                  >
-                    Probar API
-                  </a>
-                  <a 
-                    href="http://localhost:5001/api/debug/database" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    style={{
-                      background: '#7c3aed',
-                      color: 'white',
-                      textDecoration: 'none',
-                      padding: '0.75rem 1.5rem',
-                      borderRadius: '6px',
-                      fontWeight: '500'
-                    }}
-                  >
-                    Ver DB Debug
-                  </a>
-                </div>
-              </div>
+              <p>⚠️ {error}</p>
+              <button onClick={() => window.location.reload()} className="retry-btn">
+                Reintentar
+              </button>
             </div>
           ) : productosFiltrados.length === 0 ? (
             <div className="empty-container">
-              <p>No hay aretes disponibles con los filtros seleccionados.</p>
+              <Search size={48} style={{ color: '#6b7280', marginBottom: '1rem' }} />
+              <p>No se encontraron productos con los filtros seleccionados</p>
               <button onClick={limpiarFiltros} className="retry-btn">
                 Limpiar filtros
               </button>
@@ -509,6 +417,7 @@ const Aretes = () => {
             productosFiltrados.map((producto) => (
               <div className="producto" key={producto.ID_producto}>
                 <div className="producto-badge">Nuevo</div>
+                
                 <Link to={`/producto/${producto.ID_producto}`}>
                   <img
                     src={getFirstProductImage(producto)}
@@ -517,41 +426,50 @@ const Aretes = () => {
                       e.target.src = "/logo192.png";
                     }}
                   />
+                  
                   <div className="producto-info">
                     <p>{producto.nombre}</p>
-                    <span>${producto.precio}</span>
+                    <span>${parseFloat(producto.precio).toFixed(2)}</span>
                   </div>
                 </Link>
-                <div style={{ padding: '0 1.25rem 1.25rem' }}>
-                  <button 
-                    className="add-to-cart-btn"
-                    onClick={(e) => handleAgregarAlCarrito(e, producto)}
-                  >
-                    {estaEnCarrito(producto.ID_producto) ? 'En el carrito' : 'Agregar al carrito'}
-                  </button>
-                </div>
+                
+                <button 
+                  className="add-to-cart-btn"
+                  onClick={(e) => handleAgregarAlCarrito(e, producto)}
+                  disabled={estaEnCarrito(producto.ID_producto)}
+                >
+                  {estaEnCarrito(producto.ID_producto) ? (
+                    <>
+                      <ShoppingBag size={16} style={{ marginRight: '0.5rem' }} />
+                      En el carrito
+                    </>
+                  ) : (
+                    'Agregar al carrito'
+                  )}
+                </button>
               </div>
             ))
-          )}
-          
-          {!loading && !error && productosFiltrados.length > 0 && (
-            <div className="productos-counter">
-              <span>{productosFiltrados.length} producto(s) encontrado(s)</span>
-            </div>
           )}
         </section>
       </div>
 
-      {/* Botón mostrar más */}
-      <div className="mostrar-mas-contenedor">
-        <button className="mostrar-mas-btn">Mostrar más</button>
-      </div>
+      {/* Products Counter */}
+      {!loading && !error && productosFiltrados.length > 0 && (
+        <div className="productos-counter">
+          <span>Mostrando {productosFiltrados.length} producto(s)</span>
+        </div>
+      )}
+
+      {/* Mobile Filter Toggle */}
+      <button 
+        className="filtros-toggle"
+        onClick={toggleFiltrosMovil}
+        title="Filtros"
+      >
+        <Filter size={20} />
+      </button>
     </div>
   );
 };
 
 export default Aretes;
-
-/* Actualizar el producto "Anillo" para que tenga la categoría correcta
-UPDATE productos SET id_categoria = 2 WHERE ID_producto = 4;
-*/

@@ -14,7 +14,7 @@ import "./paginas/estilos/variables.css";
 import Aretes from "./paginas/Aretes";
 import Anillos from "./paginas/Anillos";
 import Collares from "./paginas/Collares";
-import Pulsera from "./paginas/Pulsera";
+import Pulseras from "./paginas/Pulseras";
 import Llavero from "./paginas/Llavero";
 import Juegos from "./paginas/Juegos";
 import { CarritoProvider } from "./context/CarritoContext";
@@ -45,7 +45,7 @@ const LanguageWrapper = () => {
         <Route path="/aretes" element={<Aretes />} />
         <Route path="/anillos" element={<Anillos />} />
         <Route path="/collares" element={<Collares />} />
-        <Route path="/pulseras" element={<Pulsera />} />
+        <Route path="/pulseras" element={<Pulseras />} />
         <Route path="/llaveros" element={<Llavero />} />
         <Route path="/Juegos" element={<Juegos />} />
         <Route path="/carrito" element={<Carrito />} />

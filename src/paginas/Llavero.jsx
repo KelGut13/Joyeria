@@ -3,6 +3,7 @@ import "./estilos/Llavero.css";
 import { Link } from "react-router-dom";
 import { useCarrito } from '../context/CarritoContext';
 import { getFirstProductImage, API_ENDPOINTS } from '../config/api';
+import { Filter, X, Search, ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react';
 
 const Llavero = () => {
   const [productos, setProductos] = useState([]);
@@ -12,6 +13,14 @@ const Llavero = () => {
   const [marcas, setMarcas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filtrosMovilAbierto, setFiltrosMovilAbierto] = useState(false);
+  
+  // Estado para controlar qué secciones de filtro están expandidas
+  const [filtrosExpandidos, setFiltrosExpandidos] = useState({
+    materiales: false,
+    generos: false,
+    marcas: false
+  });
   
   const { agregarProducto, estaEnCarrito, obtenerItemCarrito } = useCarrito();
   
@@ -63,24 +72,13 @@ const Llavero = () => {
         console.log("✅ Géneros obtenidos:", generosData);
         console.log("✅ Marcas obtenidas:", marcasData);
 
-        // Para llaveros, filtrar productos que contengan "llavero" en el nombre
-        // Si no hay productos específicos, mostrar productos de anillos (categoria 2) como accesorios pequeños
-        const llaverosPorNombre = productosData.filter((producto) => 
-          producto.nombre.toLowerCase().includes('llavero') || 
-          producto.nombre.toLowerCase().includes('chaveiro') ||
-          producto.nombre.toLowerCase().includes('keychain') ||
-          producto.nombre.toLowerCase().includes('llave')
-        );
+        // Filtrar productos de llaveros (categoría 4)
+        const productosLlaveros = productosData.filter((producto) => producto.id_categoria === 4);
         
-        // Si no hay productos específicos de "llaveros", usar productos de anillos como alternativa
-        const productosParaLlaveros = llaverosPorNombre.length > 0 
-          ? llaverosPorNombre 
-          : productosData.filter((producto) => producto.id_categoria === 2);
+        console.log("🔍 Llaveros filtrados:", productosLlaveros);
         
-        console.log("🔍 Llaveros filtrados:", productosParaLlaveros);
-        
-        setProductos(productosParaLlaveros);
-        setProductosFiltrados(productosParaLlaveros);
+        setProductos(productosLlaveros);
+        setProductosFiltrados(productosLlaveros);
         setMateriales(materialesData);
         setGeneros(generosData);
         setMarcas(marcasData);
@@ -113,6 +111,14 @@ const Llavero = () => {
   useEffect(() => {
     aplicarFiltros();
   }, [filtros, productos]);
+
+  // Limpiar overflow del body al desmontar componente
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, []);
 
   const aplicarFiltros = () => {
     let productosFiltrados = [...productos];
@@ -148,33 +154,6 @@ const Llavero = () => {
     }
 
     setProductosFiltrados(productosFiltrados);
-  };
-
-  const handleAgregarAlCarrito = (e, producto) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    try {
-      // Verificar que el producto tenga todos los campos necesarios
-      if (!producto.ID_producto || !producto.nombre || !producto.precio || !producto.stock) {
-        throw new Error('Datos de producto incompletos');
-      }
-
-      agregarProducto(producto, 1);
-      
-      // Mostrar confirmación más amigable
-      alert(`${producto.nombre} agregado al carrito exitosamente`);
-      
-      console.log('Producto agregado al carrito:', producto);
-      console.log('Estado actual del carrito después de agregar:', {
-        estaEnCarrito: estaEnCarrito(producto.ID_producto),
-        itemCarrito: obtenerItemCarrito(producto.ID_producto)
-      });
-      
-    } catch (error) {
-      console.error('Error al agregar al carrito:', error);
-      alert(`Error: ${error.message}`);
-    }
   };
 
   const handleMaterialChange = (materialId) => {
@@ -221,95 +200,187 @@ const Llavero = () => {
     });
   };
 
+  const toggleFiltroExpandido = (categoria) => {
+    setFiltrosExpandidos(prev => ({
+      ...prev,
+      [categoria]: !prev[categoria]
+    }));
+  };
+
+  const renderFiltroCategoria = (items, categoria, filtroActivo, handleChange, labelKey, idKey) => {
+    const itemsLimitados = filtrosExpandidos[categoria] ? items : items.slice(0, 3);
+    const mostrarVerMas = items.length > 3;
+
+    // Función para obtener el nombre correcto de la categoría
+    const getNombreCategoria = (categoria) => {
+      switch(categoria) {
+        case 'materiales':
+          return 'Material';
+        case 'generos':
+          return 'Género';
+        case 'marcas':
+          return 'Marca';
+        default:
+          return categoria.charAt(0).toUpperCase() + categoria.slice(1);
+      }
+    };
+
+    return (
+      <div className="filtro-categoria">
+        <div className="filtro-header" onClick={() => toggleFiltroExpandido(categoria)}>
+          <label>{getNombreCategoria(categoria)}</label>
+          {mostrarVerMas && (
+            filtrosExpandidos[categoria] ? 
+            <ChevronUp size={20} className="filtro-icono" /> : 
+            <ChevronDown size={20} className="filtro-icono" />
+          )}
+        </div>
+        <ul>
+          {itemsLimitados.map((item) => (
+            <li key={item[idKey]}>
+              <input 
+                type="checkbox" 
+                id={`${categoria}-${item[idKey]}`}
+                checked={filtroActivo.includes(item[idKey])}
+                onChange={() => handleChange(item[idKey])}
+              />
+              <label htmlFor={`${categoria}-${item[idKey]}`}>
+                {item[labelKey]}
+              </label>
+            </li>
+          ))}
+        </ul>
+        {mostrarVerMas && !filtrosExpandidos[categoria] && (
+          <button 
+            className="ver-mas-btn"
+            onClick={() => toggleFiltroExpandido(categoria)}
+          >
+            Ver más ({items.length - 3} más)
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  const handleAgregarAlCarrito = async (e, producto) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (estaEnCarrito(producto.ID_producto)) {
+      return;
+    }
+
+    try {
+      await agregarProducto(producto);
+    } catch (error) {
+      console.error('Error al agregar producto al carrito:', error);
+    }
+  };
+
+  const toggleFiltrosMovil = () => {
+    const nuevoEstado = !filtrosMovilAbierto;
+    setFiltrosMovilAbierto(nuevoEstado);
+    
+    // Controlar overflow del body para evitar scroll en el fondo
+    if (nuevoEstado) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.classList.add('filtros-abiertos');
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.classList.remove('filtros-abiertos');
+    }
+  };
+
   return (
     <div className="llavero-page">
-      {/* Banner principal */}
+      {/* Hero Banner */}
       <div className="banner-llavero">
-        <img src="../6.png" alt="Banner Llaveros" />
-        
+        <img src="../9.png" alt="Colección de Llaveros" />
+        <h2>Llaveros</h2>
       </div>
 
       <div className="contenido-llavero">
-        {/* Filtros */}
-        <aside className="filtros">
-          <h3>Filtrar por:</h3>
+        {/* Overlay para filtros móvil */}
+        {filtrosMovilAbierto && (
+          <div 
+            className="filtros-overlay"
+            onClick={toggleFiltrosMovil}
+          />
+        )}
+        
+        {/* Filtros Sidebar */}
+        <aside className={`filtros ${filtrosMovilAbierto ? 'filtros-movil-activo' : ''}`}>
+          {filtrosMovilAbierto && (
+            <button 
+              className="cerrar-filtros-movil"
+              onClick={toggleFiltrosMovil}
+              aria-label="Cerrar filtros"
+              title="Cerrar filtros"
+            >
+              <X size={24} />
+            </button>
+          )}
+          
+          <div className="filtros-contenido">
+            <div className="filtros-header-movil">
+              <h3>
+                Filtrar por
+              </h3>
+              {filtrosMovilAbierto && (
+                <span className="filtros-instruccion">
+                  Toca fuera para cerrar
+                </span>
+              )}
+            </div>
 
-          <div className="filtro-categoria">
-            <label>Material</label>
-            <ul>
-              {materiales.map((material) => (
-                <li key={material.ID_material}>
-                  <input 
-                    type="checkbox" 
-                    id={`material-${material.ID_material}`}
-                    checked={filtros.materiales.includes(material.ID_material)}
-                    onChange={() => handleMaterialChange(material.ID_material)}
-                  />
-                  <label htmlFor={`material-${material.ID_material}`}>
-                    {material.nombre_material}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {renderFiltroCategoria(
+            materiales, 
+            'materiales', 
+            filtros.materiales, 
+            handleMaterialChange, 
+            'nombre_material', 
+            'ID_material'
+          )}
 
-          <div className="filtro-categoria">
-            <label>Género</label>
-            <ul>
-              {generos.map((genero) => (
-                <li key={genero.ID_genero}>
-                  <input 
-                    type="checkbox" 
-                    id={`genero-${genero.ID_genero}`}
-                    checked={filtros.generos.includes(genero.ID_genero)}
-                    onChange={() => handleGeneroChange(genero.ID_genero)}
-                  />
-                  <label htmlFor={`genero-${genero.ID_genero}`}>
-                    {genero.nombre_genero}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {renderFiltroCategoria(
+            generos, 
+            'generos', 
+            filtros.generos, 
+            handleGeneroChange, 
+            'nombre_genero', 
+            'ID_genero'
+          )}
 
-          <div className="filtro-categoria">
-            <label>Marca</label>
-            <ul>
-              {marcas.map((marca) => (
-                <li key={marca.ID_marca}>
-                  <input 
-                    type="checkbox" 
-                    id={`marca-${marca.ID_marca}`}
-                    checked={filtros.marcas.includes(marca.ID_marca)}
-                    onChange={() => handleMarcaChange(marca.ID_marca)}
-                  />
-                  <label htmlFor={`marca-${marca.ID_marca}`}>
-                    {marca.nombre_marca}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {renderFiltroCategoria(
+            marcas, 
+            'marcas', 
+            filtros.marcas, 
+            handleMarcaChange, 
+            'nombre_marca', 
+            'ID_marca'
+          )}
 
           <div className="filtro-precio">
             <label>Precio</label>
             <div className="rango-precio">
               <input 
                 type="number" 
-                placeholder="Min" 
+                placeholder="Precio mínimo" 
                 value={filtros.precioMin}
                 onChange={(e) => handlePrecioChange('precioMin', e.target.value)}
               />
               <input 
                 type="number" 
-                placeholder="Max" 
+                placeholder="Precio máximo" 
                 value={filtros.precioMax}
                 onChange={(e) => handlePrecioChange('precioMax', e.target.value)}
               />
-              <button className="actualizar-precio" onClick={aplicarFiltros}>
-                Actualizar
-              </button>
             </div>
+            <button className="actualizar-precio" onClick={aplicarFiltros}>
+              Actualizar precio
+            </button>
           </div>
 
           <div className="filtro-acciones">
@@ -317,9 +388,10 @@ const Llavero = () => {
               Limpiar filtros
             </button>
           </div>
+        </div>
         </aside>
 
-        {/* Productos */}
+        {/* Products Grid */}
         <section className="productos">
           {loading ? (
             <div className="loading-container">
@@ -328,11 +400,15 @@ const Llavero = () => {
             </div>
           ) : error ? (
             <div className="error-container">
-              <p style={{ color: "red" }}>⚠️ {error}</p>
+              <p>⚠️ {error}</p>
+              <button onClick={() => window.location.reload()} className="retry-btn">
+                Reintentar
+              </button>
             </div>
           ) : productosFiltrados.length === 0 ? (
             <div className="empty-container">
-              <p>🔍 No hay llaveros disponibles con los filtros seleccionados.</p>
+              <Search size={48} style={{ color: '#6b7280', marginBottom: '1rem' }} />
+              <p>No se encontraron productos con los filtros seleccionados</p>
               <button onClick={limpiarFiltros} className="retry-btn">
                 Limpiar filtros
               </button>
@@ -341,6 +417,7 @@ const Llavero = () => {
             productosFiltrados.map((producto) => (
               <div className="producto" key={producto.ID_producto}>
                 <div className="producto-badge">Nuevo</div>
+                
                 <Link to={`/producto/${producto.ID_producto}`}>
                   <img
                     src={getFirstProductImage(producto)}
@@ -349,35 +426,48 @@ const Llavero = () => {
                       e.target.src = "/logo192.png";
                     }}
                   />
+                  
                   <div className="producto-info">
                     <p>{producto.nombre}</p>
-                    <span>${producto.precio}</span>
+                    <span>${parseFloat(producto.precio).toFixed(2)}</span>
                   </div>
                 </Link>
-                <div style={{ padding: '0 1.25rem 1.25rem' }}>
-                  <button 
-                    className="add-to-cart-btn"
-                    onClick={(e) => handleAgregarAlCarrito(e, producto)}
-                  >
-                    {estaEnCarrito(producto.ID_producto) ? 'En el carrito' : 'Agregar al carrito'}
-                  </button>
-                </div>
+                
+                <button 
+                  className="add-to-cart-btn"
+                  onClick={(e) => handleAgregarAlCarrito(e, producto)}
+                  disabled={estaEnCarrito(producto.ID_producto)}
+                >
+                  {estaEnCarrito(producto.ID_producto) ? (
+                    <>
+                      <ShoppingBag size={16} style={{ marginRight: '0.5rem' }} />
+                      En el carrito
+                    </>
+                  ) : (
+                    'Agregar al carrito'
+                  )}
+                </button>
               </div>
             ))
           )}
         </section>
-        
-        {!loading && !error && productosFiltrados.length > 0 && (
-          <div className="productos-counter">
-            <span>{productosFiltrados.length} producto(s) encontrado(s)</span>
-          </div>
-        )}
       </div>
 
-      {/* Botón mostrar más */}
-      <div className="mostrar-mas-contenedor">
-        <button className="mostrar-mas-btn">Mostrar más</button>
-      </div>
+      {/* Products Counter */}
+      {!loading && !error && productosFiltrados.length > 0 && (
+        <div className="productos-counter">
+          <span>Mostrando {productosFiltrados.length} producto(s)</span>
+        </div>
+      )}
+
+      {/* Mobile Filter Toggle */}
+      <button 
+        className="filtros-toggle"
+        onClick={toggleFiltrosMovil}
+        title="Filtros"
+      >
+        <Filter size={20} />
+      </button>
     </div>
   );
 };

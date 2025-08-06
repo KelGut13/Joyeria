@@ -222,10 +222,24 @@ const Juegos = () => {
     const itemsLimitados = filtrosExpandidos[categoria] ? items : items.slice(0, 3);
     const mostrarVerMas = items.length > 3;
 
+    // Función para obtener el nombre correcto de la categoría
+    const getNombreCategoria = (categoria) => {
+      switch(categoria) {
+        case 'materiales':
+          return 'Material';
+        case 'generos':
+          return 'Género';
+        case 'marcas':
+          return 'Marca';
+        default:
+          return categoria.charAt(0).toUpperCase() + categoria.slice(1);
+      }
+    };
+
     return (
       <div className="filtro-categoria">
         <div className="filtro-header" onClick={() => toggleFiltroExpandido(categoria)}>
-          <label>{categoria.charAt(0).toUpperCase() + categoria.slice(0, -1)}</label>
+          <label>{getNombreCategoria(categoria)}</label>
           {mostrarVerMas && (
             filtrosExpandidos[categoria] ? 
             <ChevronUp size={20} className="filtro-icono" /> : 
@@ -364,20 +378,20 @@ const Juegos = () => {
             <div className="rango-precio">
               <input 
                 type="number" 
-                placeholder="Min" 
+                placeholder="Precio mínimo" 
                 value={filtros.precioMin}
                 onChange={(e) => handlePrecioChange('precioMin', e.target.value)}
               />
               <input 
                 type="number" 
-                placeholder="Max" 
+                placeholder="Precio máximo" 
                 value={filtros.precioMax}
                 onChange={(e) => handlePrecioChange('precioMax', e.target.value)}
               />
-              <button className="actualizar-precio" onClick={aplicarFiltros}>
-                Actualizar
-              </button>
             </div>
+            <button className="actualizar-precio" onClick={aplicarFiltros}>
+              Actualizar precio
+            </button>
           </div>
 
           <div className="filtro-acciones">

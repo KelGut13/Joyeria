@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Separar from "../componentes/Separador NavBar/Separador";
 import { API_ENDPOINTS } from "../config/api";
 import "./estilos/CrearCuenta.css";
 import "../paginas/estilos/variables.css";
@@ -40,6 +39,8 @@ const CrearCuenta = () => {
       setError("El primer apellido es requerido.");
       return;
     }
+
+    // El segundo apellido es opcional, no necesita validación
 
     if (!form.email.trim()) {
       setError("El correo electrónico es requerido.");
@@ -122,48 +123,109 @@ const CrearCuenta = () => {
 
   return (
     <div className="crear-cuenta-container">
-      <Separar />
-      <h2>Crear Cuenta</h2>
+      <h2>Crear una nueva cuenta</h2>
       <form className="crear-cuenta-form" onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="nombre">Nombre</label>
-          <input type="text" id="nombre" name="nombre" value={form.nombre} onChange={handleChange} required />
+          <label htmlFor="nombre">Nombre *</label>
+          <input 
+            type="text" 
+            id="nombre" 
+            name="nombre" 
+            value={form.nombre} 
+            onChange={handleChange} 
+            placeholder="Ingresa tu nombre"
+            required 
+          />
         </div>
         <div className="form-group">
-          <label htmlFor="primer_apellido">Primer Apellido</label>
-          <input type="text" id="primer_apellido" name="primer_apellido" value={form.primer_apellido} onChange={handleChange} required />
+          <label htmlFor="primer_apellido">Primer Apellido *</label>
+          <input 
+            type="text" 
+            id="primer_apellido" 
+            name="primer_apellido" 
+            value={form.primer_apellido} 
+            onChange={handleChange} 
+            placeholder="Ingresa tu primer apellido"
+            required 
+          />
         </div>
         <div className="form-group">
           <label htmlFor="segundo_apellido">Segundo Apellido</label>
-          <input type="text" id="segundo_apellido" name="segundo_apellido" value={form.segundo_apellido} onChange={handleChange} required />
+          <input 
+            type="text" 
+            id="segundo_apellido" 
+            name="segundo_apellido" 
+            value={form.segundo_apellido} 
+            onChange={handleChange} 
+            placeholder="Ingresa tu segundo apellido (opcional)"
+          />
         </div>
         <div className="form-group">
-          <label htmlFor="email">Correo electrónico</label>
-          <input type="email" id="email" name="email" value={form.email} onChange={handleChange} required />
+          <label htmlFor="email">Correo electrónico *</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            value={form.email} 
+            onChange={handleChange} 
+            placeholder="ejemplo@correo.com"
+            required 
+          />
         </div>
         <div className="form-group">
-          <label htmlFor="password">Contraseña</label>
-          <input type="password" id="password" name="password" value={form.password} onChange={handleChange} required />
+          <label htmlFor="telefono">Teléfono *</label>
+          <input 
+            type="tel" 
+            id="telefono" 
+            name="telefono" 
+            value={form.telefono} 
+            onChange={handleChange} 
+            placeholder="10 dígitos sin espacios"
+            maxLength="10"
+            required 
+          />
         </div>
         <div className="form-group">
-          <label htmlFor="repetir_password">Repetir Contraseña</label>
-          <input type="password" id="repetir_password" name="repetir_password" value={form.repetir_password} onChange={handleChange} required />
+          <label htmlFor="password">Contraseña *</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            value={form.password} 
+            onChange={handleChange} 
+            placeholder="Mínimo 6 caracteres"
+            minLength="6"
+            required 
+          />
         </div>
         <div className="form-group">
-          <label htmlFor="telefono">Teléfono</label>
-          <input type="text" id="telefono" name="telefono" value={form.telefono} onChange={handleChange} required />
+          <label htmlFor="repetir_password">Confirmar Contraseña *</label>
+          <input 
+            type="password" 
+            id="repetir_password" 
+            name="repetir_password" 
+            value={form.repetir_password} 
+            onChange={handleChange} 
+            placeholder="Repite tu contraseña"
+            required 
+          />
         </div>
+        
         {error && <div className="error">{error}</div>}
         {success && <div className="success">{success}</div>}
-        <button type="submit">Crear Cuenta</button>
+        
+        <button type="submit">Crear cuenta</button>
       </form>
 
       {/* Modal de éxito */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3>¡Cuenta creada exitosamente!</h3>
-            <button onClick={handleModalClose}>Aceptar</button>
+            <h3>¡Cuenta creada exitosamente! 🎉</h3>
+            <p style={{color: '#64748b', marginBottom: '24px', fontSize: '0.9rem'}}>
+              Tu cuenta ha sido creada correctamente. Ahora puedes iniciar sesión.
+            </p>
+            <button onClick={handleModalClose}>Continuar</button>
           </div>
         </div>
       )}

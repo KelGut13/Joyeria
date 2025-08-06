@@ -1,4 +1,4 @@
-/* Modern Minimalist E-commerce Catalog Design */
+/* Modern Minimalist E-commerce Catalog Design - Pulseras */
 :root {
   --primary-color: #2d2d2d;
   --accent-color: #B983E8;
@@ -15,7 +15,7 @@
   --radius-lg: 16px;
 }
 
-.juegos-page {
+.pulseras-page {
   min-height: 100vh;
   background: var(--surface-gray);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -25,33 +25,33 @@
 }
 
 /* Hero Section */
-.banner-juegos {
+.banner-pulseras {
   position: relative;
   margin-top: 80px;
   height: 300px;
   overflow: hidden;
   border-radius: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #a8e6cf 0%, #dcedc8 50%, #c8e6c9 100%);
 }
 
-.banner-juegos img {
+.banner-pulseras img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   opacity: 0.3;
 }
 
-.banner-juegos::after {
+.banner-pulseras::after {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(185, 131, 232, 0.8) 0%, rgba(45, 45, 45, 0.6) 100%);
+  background: linear-gradient(135deg, rgba(168, 230, 207, 0.8) 0%, rgba(220, 237, 200, 0.6) 100%);
 }
 
-.banner-juegos h2 {
+.banner-pulseras h2 {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -67,7 +67,7 @@
 }
 
 /* Main Content Container */
-.contenido-juegos {
+.contenido-pulseras {
   max-width: 1400px;
   margin: 0 auto;
   padding: 3rem 2rem;
@@ -260,7 +260,7 @@
 .rango-precio input:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px rgba(185, 131, 232, 0.1);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
 .actualizar-precio,
@@ -468,287 +468,6 @@
   font-weight: 500;
 }
 
-/* Show More Button */
-.mostrar-mas-contenedor {
-  text-align: center;
-  margin: 3rem 0;
-}
-
-.mostrar-mas-btn {
-  background: transparent;
-  color: var(--text-primary);
-  border: 2px solid var(--border-light);
-  padding: 1rem 3rem;
-  font-size: 0.875rem;
-  border-radius: 50px;
-  cursor: pointer;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-family: inherit;
-}
-
-.mostrar-mas-btn:hover {
-  background: var(--text-primary);
-  color: white;
-  border-color: var(--text-primary);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-medium);
-}
-
-/* Responsive Design */
-@media screen and (max-width: 1200px) {
-  .contenido-juegos {
-    grid-template-columns: 280px 1fr;
-    gap: 3rem;
-    padding: 2rem 1.5rem;
-  }
-  
-  .productos {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1.5rem;
-  }
-}
-
-@media screen and (max-width: 968px) {
-  .contenido-juegos {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    padding: 2rem 1rem;
-  }
-  
-  .filtros {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    max-width: 100vw !important;
-    min-width: 0 !important;
-    background: var(--surface-white);
-    z-index: 1001;
-    border-radius: 0;
-    padding: 2rem 1.5rem;
-    margin: 0 !important;
-    overflow-y: auto;
-    overflow-x: hidden !important;
-    box-shadow: none;
-    border: none;
-    box-sizing: border-box !important;
-  }
-  
-  .filtros.filtros-movil-activo {
-    display: block !important;
-    animation: slideIn 0.3s ease;
-  }
-
-  /* Control de overflow interno del modal */
-  .filtros * {
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .filtros-contenido {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow-x: hidden !important;
-  }
-
-  .filtros-header-movil,
-  .filtro-categoria,
-  .filtro-precio,
-  .filtro-acciones {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    overflow-x: hidden !important;
-  }
-  
-  .productos {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  }
-  
-  .banner-juegos {
-    height: 250px;
-    margin-top: 70px;
-  }
-}
-
-@media screen and (max-width: 768px) {
-  .banner-juegos {
-    height: 200px;
-  }
-  
-  .banner-juegos h2 {
-    font-size: clamp(1.5rem, 4vw, 2.5rem);
-  }
-  
-  .contenido-juegos {
-    padding: 1.5rem 1rem;
-  }
-  
-  .filtros {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    max-width: 100vw !important;
-    max-height: 100vh !important;
-    min-width: 0 !important;
-    background: var(--surface-white);
-    z-index: 1001;
-    border-radius: 0;
-    padding: 1.5rem 1rem;
-    margin: 0 !important;
-    overflow-y: auto;
-    overflow-x: hidden !important;
-    box-shadow: none;
-    border: none;
-    box-sizing: border-box !important;
-    transform: none !important;
-  }
-  
-  .filtros.filtros-movil-activo {
-    display: block !important;
-    animation: slideIn 0.3s ease;
-  }
-  
-  .productos {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.25rem;
-  }
-  
-  .producto img {
-    height: 200px;
-  }
-  
-  .producto-info {
-    padding: 1.25rem;
-  }
-  
-  .add-to-cart-btn {
-    width: calc(100% - 2.5rem);
-    margin: 0 1.25rem 1.25rem;
-  }
-}
-
-@media screen and (max-width: 480px) {
-  .contenido-juegos {
-    padding: 1rem 0.5rem;
-  }
-  
-  .filtros {
-    padding: 1rem 0.75rem !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    left: 0 !important;
-    right: 0 !important;
-    margin: 0 !important;
-  }
-  
-  .filtros-contenido {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-  
-  .filtros-header-movil {
-    margin-bottom: 1rem;
-    padding-top: 0.5rem;
-  }
-  
-  .filtros-header-movil h3 {
-    font-size: 1.25rem;
-  }
-  
-  .cerrar-filtros-movil {
-    width: 36px !important;
-    height: 36px !important;
-    top: 0.75rem !important;
-    right: 0.75rem !important;
-    min-width: 36px !important;
-    max-width: 36px !important;
-    min-height: 36px !important;
-    max-height: 36px !important;
-  }
-  
-  .filtro-categoria {
-    margin-bottom: 1.5rem;
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  
-  .filtro-categoria li {
-    padding: 0.6rem 0.75rem;
-  }
-  
-  .ver-mas-btn {
-    padding: 0.4rem 0.75rem;
-    font-size: 0.75rem;
-  }
-  
-  .productos {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 1rem;
-  }
-  
-  .producto img {
-    height: 160px;
-  }
-  
-  .producto-info {
-    padding: 1rem;
-  }
-  
-  .producto-info p {
-    font-size: 0.95rem;
-  }
-  
-  .producto-info span {
-    font-size: 1.1rem;
-  }
-  
-  .add-to-cart-btn {
-    width: calc(100% - 2rem);
-    margin: 0 1rem 1rem;
-    padding: 0.75rem;
-    font-size: 0.8rem;
-  }
-  
-  .banner-juegos {
-    height: 150px;
-  }
-  
-  .filtros {
-    padding: 1.5rem 1rem;
-  }
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
 /* Mobile Filter Toggle Button */
 .filtros-toggle {
   display: none;
@@ -864,11 +583,260 @@
   background: #A76DE4;
 }
 
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive Design */
+@media screen and (max-width: 1200px) {
+  .contenido-pulseras {
+    grid-template-columns: 280px 1fr;
+    gap: 3rem;
+    padding: 2rem 1.5rem;
+  }
+  
+  .productos {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
 @media screen and (max-width: 968px) {
   .filtros-toggle {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .contenido-pulseras {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 2rem 1rem;
+  }
+  
+  .filtros {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    background: var(--surface-white);
+    z-index: 1001;
+    border-radius: 0;
+    padding: 2rem 1.5rem;
+    margin: 0 !important;
+    overflow-y: auto;
+    overflow-x: hidden !important;
+    box-shadow: none;
+    border: none;
+    box-sizing: border-box !important;
+  }
+  
+  .filtros.filtros-movil-activo {
+    display: block !important;
+    animation: slideIn 0.3s ease;
+  }
+
+  .filtros * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .filtros-contenido {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  .filtros-header-movil,
+  .filtro-categoria,
+  .filtro-precio,
+  .filtro-acciones {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow-x: hidden !important;
+  }
+  
+  .productos {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+  
+  .banner-pulseras {
+    height: 250px;
+    margin-top: 70px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .banner-pulseras {
+    height: 200px;
+  }
+  
+  .banner-pulseras h2 {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+  }
+  
+  .contenido-pulseras {
+    padding: 1.5rem 1rem;
+  }
+  
+  .filtros {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    min-width: 0 !important;
+    background: var(--surface-white);
+    z-index: 1001;
+    border-radius: 0;
+    padding: 1.5rem 1rem;
+    margin: 0 !important;
+    overflow-y: auto;
+    overflow-x: hidden !important;
+    box-shadow: none;
+    border: none;
+    box-sizing: border-box !important;
+    transform: none !important;
+  }
+  
+  .filtros.filtros-movil-activo {
+    display: block !important;
+    animation: slideIn 0.3s ease;
+  }
+  
+  .productos {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.25rem;
+  }
+  
+  .producto img {
+    height: 200px;
+  }
+  
+  .producto-info {
+    padding: 1.25rem;
+  }
+  
+  .add-to-cart-btn {
+    width: calc(100% - 2.5rem);
+    margin: 0 1.25rem 1.25rem;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .contenido-pulseras {
+    padding: 1rem 0.5rem;
+  }
+  
+  .filtros {
+    padding: 1rem 0.75rem !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin: 0 !important;
+  }
+  
+  .filtros-contenido {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  .filtros-header-movil {
+    margin-bottom: 1rem;
+    padding-top: 0.5rem;
+  }
+  
+  .filtros-header-movil h3 {
+    font-size: 1.25rem;
+  }
+  
+  .cerrar-filtros-movil {
+    width: 36px !important;
+    height: 36px !important;
+    top: 0.75rem !important;
+    right: 0.75rem !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+  }
+  
+  .filtro-categoria {
+    margin-bottom: 1.5rem;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .filtro-categoria li {
+    padding: 0.6rem 0.75rem;
+  }
+  
+  .ver-mas-btn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+  }
+  
+  .productos {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+  
+  .producto img {
+    height: 160px;
+  }
+  
+  .producto-info {
+    padding: 1rem;
+  }
+  
+  .producto-info p {
+    font-size: 0.95rem;
+  }
+  
+  .producto-info span {
+    font-size: 1.1rem;
+  }
+  
+  .add-to-cart-btn {
+    width: calc(100% - 2rem);
+    margin: 0 1rem 1rem;
+    padding: 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .banner-pulseras {
+    height: 150px;
+  }
+  
+  .filtros {
+    padding: 1.5rem 1rem;
   }
 }
 
@@ -879,43 +847,32 @@
   }
 
   .filtros.filtros-movil-activo {
-    /* Forzar dimensiones exactas del viewport */
     width: 100vw !important;
     height: 100vh !important;
     min-width: 100vw !important;
     max-width: 100vw !important;
     min-height: 100vh !important;
     max-height: 100vh !important;
-    
-    /* Posicionamiento absoluto desde las esquinas */
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    
-    /* Prevenir cualquier overflow */
     overflow-x: hidden !important;
     overflow-y: auto !important;
-    
-    /* Reset de margins y paddings que puedan causar desbordamiento */
     margin: 0 !important;
     padding: 1rem !important;
     border: none !important;
     outline: none !important;
-    
-    /* Box-sizing para incluir padding en las dimensiones */
     box-sizing: border-box !important;
   }
 
-  /* Asegurar que todo el contenido interno respete el contenedor */
   .filtros.filtros-movil-activo * {
     max-width: 100% !important;
     box-sizing: border-box !important;
     overflow-wrap: break-word !important;
   }
-}
-@media screen and (max-width: 968px) {
+
   body:has(.filtros-movil-activo) {
     overflow: hidden;
   }
@@ -924,14 +881,8 @@
     overflow: hidden;
   }
   
-  .juegos-page:has(.filtros-movil-activo) {
+  .pulseras-page:has(.filtros-movil-activo) {
     overflow: hidden;
-  }
-  
-  /* Asegurar que todos los elementos dentro del filtro respeten el ancho */
-  .filtros * {
-    max-width: 100% !important;
-    box-sizing: border-box !important;
   }
   
   .filtros .filtro-categoria,

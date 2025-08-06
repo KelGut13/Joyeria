@@ -79,19 +79,13 @@
   border: 1px solid #e5e7eb;
   min-width: 350px;
   max-width: 400px;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
   transition: all 0.3s ease;
   z-index: 1000;
   margin-top: 0.5rem;
   overflow: hidden;
-}
-
-.carrito-contenedor:hover .carrito-dropdown {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
 }
 
 .carrito-dropdown-header {
