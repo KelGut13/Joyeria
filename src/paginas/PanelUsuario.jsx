@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, ShieldCheck, Smartphone, MapPin, Edit, Lock, Users, Mail } from "lucide-react";
+import { API_ENDPOINTS } from "../config/api";
 import "./estilos/PanelUsuario.css";
 import Separar from "../componentes/Separador NavBar/Separador";
 
@@ -182,8 +183,71 @@ const ModalDatosPersonales = ({ usuario, setUsuario, onClose }) => {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		setLoading(true);
 		setError('');
+
+		// Validaciones del frontend
+		if (!form.nombre.trim()) {
+			setError('El nombre es requerido.');
+			return;
+		}
+
+		if (form.nombre.trim().length < 2) {
+			setError('El nombre debe tener al menos 2 caracteres.');
+			return;
+		}
+
+		if (form.nombre.trim().length > 50) {
+			setError('El nombre no puede tener más de 50 caracteres.');
+			return;
+		}
+
+		// Validación de solo letras, espacios y acentos para nombre
+		const nombreRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+		if (!nombreRegex.test(form.nombre.trim())) {
+			setError('El nombre solo puede contener letras, espacios y acentos.');
+			return;
+		}
+
+		if (!form.primer_apellido.trim()) {
+			setError('El primer apellido es requerido.');
+			return;
+		}
+
+		if (form.primer_apellido.trim().length < 2) {
+			setError('El primer apellido debe tener al menos 2 caracteres.');
+			return;
+		}
+
+		if (form.primer_apellido.trim().length > 50) {
+			setError('El primer apellido no puede tener más de 50 caracteres.');
+			return;
+		}
+
+		// Validación de solo letras, espacios y acentos para primer apellido
+		if (!nombreRegex.test(form.primer_apellido.trim())) {
+			setError('El primer apellido solo puede contener letras, espacios y acentos.');
+			return;
+		}
+
+		// Segundo apellido es opcional, pero si existe debe ser válido
+		if (form.segundo_apellido && form.segundo_apellido.trim()) {
+			if (form.segundo_apellido.trim().length < 2) {
+				setError('El segundo apellido debe tener al menos 2 caracteres.');
+				return;
+			}
+
+			if (form.segundo_apellido.trim().length > 50) {
+				setError('El segundo apellido no puede tener más de 50 caracteres.');
+				return;
+			}
+
+			if (!nombreRegex.test(form.segundo_apellido.trim())) {
+				setError('El segundo apellido solo puede contener letras, espacios y acentos.');
+				return;
+			}
+		}
+
+		setLoading(true);
 
 		try {
 			const token = localStorage.getItem('token');
@@ -194,16 +258,23 @@ const ModalDatosPersonales = ({ usuario, setUsuario, onClose }) => {
 				return;
 			}
 
-			console.log('Enviando datos:', form);
+			// Limpiar y formatear datos antes de enviar
+			const dataToSend = {
+				nombre: form.nombre.trim(),
+				primer_apellido: form.primer_apellido.trim(),
+				segundo_apellido: form.segundo_apellido.trim() || null
+			};
+
+			console.log('Enviando datos:', dataToSend);
 			console.log('Token:', token ? 'Presente' : 'No presente');
 
-			const response = await fetch('https://api.curiosidadesnancy.shop/api/actualizar-datos-personales', {
+			const response = await fetch(API_ENDPOINTS.ACTUALIZAR_DATOS_PERSONALES, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
 					'Authorization': `Bearer ${token}`
 				},
-				body: JSON.stringify(form)
+				body: JSON.stringify(dataToSend)
 			});
 
 			console.log('Response status:', response.status);
@@ -299,22 +370,60 @@ const ModalDatosCuenta = ({ usuario, setUsuario, onClose }) => {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		setLoading(true);
 		setError('');
+
+		// Validaciones del frontend
+		if (!form.email.trim()) {
+			setError('El correo electrónico es requerido.');
+			return;
+		}
+
+		// Validación de formato de email
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailRegex.test(form.email.trim())) {
+			setError('El formato del correo electrónico no es válido.');
+			return;
+		}
+
+		if (form.email.trim().length > 100) {
+			setError('El correo electrónico no puede tener más de 100 caracteres.');
+			return;
+		}
+
+		if (!form.telefono.trim()) {
+			setError('El número de teléfono es requerido.');
+			return;
+		}
+
+		// Validación de formato de teléfono (10 dígitos)
+		const telefonoRegex = /^\d{10}$/;
+		if (!telefonoRegex.test(form.telefono.trim())) {
+			setError('El teléfono debe tener exactamente 10 dígitos numéricos.');
+			return;
+		}
+
+		setLoading(true);
 
 		try {
 			const token = localStorage.getItem('token');
-			const response = await fetch('https://api.curiosidadesnancy.shop/api/actualizar-cuenta', {
+
+			// Limpiar y formatear datos antes de enviar
+			const dataToSend = {
+				email: form.email.trim().toLowerCase(),
+				telefono: form.telefono.trim()
+			};
+
+			const response = await fetch(API_ENDPOINTS.ACTUALIZAR_CUENTA, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
 					'Authorization': `Bearer ${token}`
 				},
-				body: JSON.stringify(form)
+				body: JSON.stringify(dataToSend)
 			});
 
 			if (response.ok) {
-				const usuarioActualizado = { ...usuario, ...form };
+				const usuarioActualizado = { ...usuario, ...dataToSend };
 				localStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
 				setUsuario(usuarioActualizado);
 				alert('Datos de cuenta actualizados correctamente');
@@ -383,38 +492,90 @@ const ModalSeguridad = ({ usuario, onClose }) => {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		setLoading(true);
 		setError('');
 
-		if (form.newPassword !== form.confirmPassword) {
-			setError('Las contraseñas no coinciden');
-			setLoading(false);
+		// Validaciones del frontend
+		if (!form.currentPassword.trim()) {
+			setError('La contraseña actual es requerida.');
 			return;
 		}
 
+		if (!form.newPassword.trim()) {
+			setError('La nueva contraseña es requerida.');
+			return;
+		}
+
+		if (form.newPassword.length < 6) {
+			setError('La nueva contraseña debe tener al menos 6 caracteres.');
+			return;
+		}
+
+		if (form.newPassword.length > 100) {
+			setError('La nueva contraseña no puede tener más de 100 caracteres.');
+			return;
+		}
+
+		// Validación de contraseña segura (opcional: mayúscula, minúscula, número)
+		const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{6,}$/;
+		if (!passwordRegex.test(form.newPassword)) {
+			setError('La nueva contraseña debe contener al menos una mayúscula, una minúscula y un número.');
+			return;
+		}
+
+		if (!form.confirmPassword.trim()) {
+			setError('La confirmación de contraseña es requerida.');
+			return;
+		}
+
+		if (form.newPassword !== form.confirmPassword) {
+			setError('Las contraseñas no coinciden.');
+			return;
+		}
+
+		if (form.currentPassword === form.newPassword) {
+			setError('La nueva contraseña debe ser diferente a la actual.');
+			return;
+		}
+
+		setLoading(true);
+
 		try {
 			const token = localStorage.getItem('token');
-			const response = await fetch('https://api.curiosidadesnancy.shop/api/cambiar-password', {
+
+			const dataToSend = {
+				currentPassword: form.currentPassword.trim(),
+				newPassword: form.newPassword.trim()
+			};
+
+			const response = await fetch(API_ENDPOINTS.CAMBIAR_PASSWORD, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
 					'Authorization': `Bearer ${token}`
 				},
-				body: JSON.stringify({
-					currentPassword: form.currentPassword,
-					newPassword: form.newPassword
-				})
+				body: JSON.stringify(dataToSend)
 			});
 
 			if (response.ok) {
 				alert('Contraseña actualizada correctamente');
 				onClose();
+				setForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
 			} else {
-				const data = await response.json();
-				setError(data.error || 'Error al cambiar contraseña');
+				const errorData = await response.json();
+				
+				if (response.status === 400) {
+					setError(errorData.error || 'Datos inválidos');
+				} else if (response.status === 401) {
+					setError('Contraseña actual incorrecta');
+				} else if (response.status === 404) {
+					setError('Usuario no encontrado');
+				} else {
+					setError('Error al actualizar la contraseña');
+				}
 			}
-		} catch (err) {
-			setError('Error de conexión con el servidor');
+		} catch (error) {
+			console.error('Error:', error);
+			setError('Error de conexión. Verifica tu internet.');
 		} finally {
 			setLoading(false);
 		}
@@ -499,7 +660,7 @@ const ModalDirecciones = ({ usuario, onClose }) => {
 		try {
 			setLoading(true);
 			const token = localStorage.getItem('token');
-			const response = await fetch('https://api.curiosidadesnancy.shop/api/direcciones', {
+			const response = await fetch(API_ENDPOINTS.DIRECCIONES, {
 				headers: {
 					'Authorization': `Bearer ${token}`
 				}
@@ -563,7 +724,7 @@ const ModalDirecciones = ({ usuario, onClose }) => {
 
 		try {
 			const token = localStorage.getItem('token');
-			const response = await fetch(`https://api.curiosidadesnancy.shop/api/direcciones/${direccionId}`, {
+			const response = await fetch(API_ENDPOINTS.DIRECCION_BY_ID(direccionId), {
 				method: 'DELETE',
 				headers: {
 					'Authorization': `Bearer ${token}`
@@ -584,16 +745,134 @@ const ModalDirecciones = ({ usuario, onClose }) => {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		setLoading(true);
 		setError('');
+
+		// Validaciones del frontend
+		if (!form.alias.trim()) {
+			setError('El alias es requerido.');
+			return;
+		}
+
+		if (form.alias.trim().length < 2) {
+			setError('El alias debe tener al menos 2 caracteres.');
+			return;
+		}
+
+		if (!form.calle.trim()) {
+			setError('La calle es requerida.');
+			return;
+		}
+
+		if (form.calle.trim().length < 3) {
+			setError('La calle debe tener al menos 3 caracteres.');
+			return;
+		}
+
+		if (!form.numero_exterior.trim()) {
+			setError('El número exterior es requerido.');
+			return;
+		}
+
+		// Validación de número exterior (alfanumérico)
+		const numeroExteriorRegex = /^[a-zA-Z0-9\s\-#]+$/;
+		if (!numeroExteriorRegex.test(form.numero_exterior.trim())) {
+			setError('El número exterior solo puede contener letras, números, espacios, guiones y #.');
+			return;
+		}
+
+		if (!form.colonia.trim()) {
+			setError('La colonia es requerida.');
+			return;
+		}
+
+		if (form.colonia.trim().length < 2) {
+			setError('La colonia debe tener al menos 2 caracteres.');
+			return;
+		}
+
+		if (!form.ciudad.trim()) {
+			setError('La ciudad es requerida.');
+			return;
+		}
+
+		if (form.ciudad.trim().length < 2) {
+			setError('La ciudad debe tener al menos 2 caracteres.');
+			return;
+		}
+
+		// Validación de solo letras, espacios y acentos para ciudad
+		const ciudadRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-\.]+$/;
+		if (!ciudadRegex.test(form.ciudad.trim())) {
+			setError('La ciudad solo puede contener letras, espacios, acentos y guiones.');
+			return;
+		}
+
+		if (!form.estado.trim()) {
+			setError('El estado es requerido.');
+			return;
+		}
+
+		if (form.estado.trim().length < 2) {
+			setError('El estado debe tener al menos 2 caracteres.');
+			return;
+		}
+
+		// Validación de solo letras, espacios y acentos para estado
+		const estadoRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-\.]+$/;
+		if (!estadoRegex.test(form.estado.trim())) {
+			setError('El estado solo puede contener letras, espacios, acentos y guiones.');
+			return;
+		}
+
+		if (!form.codigo_postal.trim()) {
+			setError('El código postal es requerido.');
+			return;
+		}
+
+		// Validación de código postal (5 dígitos para México)
+		const codigoPostalRegex = /^\d{5}$/;
+		if (!codigoPostalRegex.test(form.codigo_postal.trim())) {
+			setError('El código postal debe tener exactamente 5 dígitos.');
+			return;
+		}
+
+		if (!form.pais.trim()) {
+			setError('El país es requerido.');
+			return;
+		}
+
+		// Validación de número interior (opcional pero si existe debe ser válido)
+		if (form.numero_interior && form.numero_interior.trim()) {
+			const numeroInteriorRegex = /^[a-zA-Z0-9\s\-#]+$/;
+			if (!numeroInteriorRegex.test(form.numero_interior.trim())) {
+				setError('El número interior solo puede contener letras, números, espacios, guiones y #.');
+				return;
+			}
+		}
+
+		setLoading(true);
 
 		try {
 			const token = localStorage.getItem('token');
 			const url = editingDireccion 
-				? `https://api.curiosidadesnancy.shop/api/direcciones/${editingDireccion.ID_direccion}`
-				: 'https://api.curiosidadesnancy.shop/api/direcciones';
+				? API_ENDPOINTS.DIRECCION_BY_ID(editingDireccion.ID_direccion)
+				: API_ENDPOINTS.DIRECCIONES;
 			
 			const method = editingDireccion ? 'PUT' : 'POST';
+
+			// Limpiar y formatear datos antes de enviar
+			const dataToSend = {
+				alias: form.alias.trim(),
+				calle: form.calle.trim(),
+				numero_exterior: form.numero_exterior.trim(),
+				numero_interior: form.numero_interior.trim() || null,
+				colonia: form.colonia.trim(),
+				ciudad: form.ciudad.trim(),
+				estado: form.estado.trim(),
+				codigo_postal: form.codigo_postal.trim(),
+				pais: form.pais.trim(),
+				predeterminada: form.predeterminada
+			};
 
 			const response = await fetch(url, {
 				method,
@@ -601,7 +880,7 @@ const ModalDirecciones = ({ usuario, onClose }) => {
 					'Content-Type': 'application/json',
 					'Authorization': `Bearer ${token}`
 				},
-				body: JSON.stringify(form)
+				body: JSON.stringify(dataToSend)
 			});
 
 			if (response.ok) {
@@ -614,7 +893,8 @@ const ModalDirecciones = ({ usuario, onClose }) => {
 				setError(data.error || 'Error al guardar dirección');
 			}
 		} catch (err) {
-			setError('Error de conexión');
+			console.error('❌ Error en direcciones:', err);
+			setError('Error de conexión con el servidor.');
 		} finally {
 			setLoading(false);
 		}

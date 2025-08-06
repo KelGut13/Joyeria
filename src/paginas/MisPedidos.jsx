@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './estilos/MisPedidos.css';
 import Separar from '../componentes/Separador NavBar/Separador';
+import { API_ENDPOINTS } from '../config/api';
 
 const MisPedidos = () => {
   const [pedidos, setPedidos] = useState([]);
@@ -21,9 +22,10 @@ const MisPedidos = () => {
         return;
       }
 
-      const response = await fetch('https://api.curiosidadesnancy.shop/api/mis-pedidos', {
+      const response = await fetch(API_ENDPOINTS.MIS_PEDIDOS, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 

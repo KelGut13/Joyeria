@@ -277,7 +277,7 @@ export const CarritoProvider = ({ children }) => {
 
     try {
       console.log('🔄 Cargando carrito del servidor para usuario:', usuario.id);
-      const response = await fetch('http://localhost:5001/api/carrito', {
+      const response = await fetch(API_ENDPOINTS.CARRITO, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -438,7 +438,7 @@ export const CarritoProvider = ({ children }) => {
     if (usuario && token) {
       // Usuario logueado: actualizar en servidor
       try {
-        const response = await fetch(`http://localhost:5001/api/carrito/${productoId}`, {
+        const response = await fetch(`${API_ENDPOINTS.CARRITO}/${productoId}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -478,7 +478,7 @@ export const CarritoProvider = ({ children }) => {
     if (usuario && token) {
       // Usuario logueado: eliminar del servidor
       try {
-        const response = await fetch(`http://localhost:5001/api/carrito/${productoId}`, {
+        const response = await fetch(`${API_ENDPOINTS.CARRITO}/${productoId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -517,7 +517,7 @@ export const CarritoProvider = ({ children }) => {
     if (usuario && token) {
       // Usuario logueado: limpiar en servidor
       try {
-        const response = await fetch('http://localhost:5001/api/carrito', {
+        const response = await fetch(API_ENDPOINTS.CARRITO, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,

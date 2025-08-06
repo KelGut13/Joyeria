@@ -25,6 +25,7 @@ export const API_ENDPOINTS = {
   
   // Carrito
   CARRITO: `${API_BASE_URL}/api/carrito`,
+  CARRITO_AGREGAR: `${API_BASE_URL}/api/carrito`,
   CARRITO_PRODUCTO: (id) => `${API_BASE_URL}/api/carrito/${id}`,
   CARRITO_SINCRONIZAR: `${API_BASE_URL}/api/carrito/sincronizar`,
   

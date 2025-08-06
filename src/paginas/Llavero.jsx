@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./estilos/Llavero.css";
+import { Link } from "react-router-dom";
+import { useCarrito } from '../context/CarritoContext';
 import { getFirstProductImage, API_ENDPOINTS } from '../config/api';
 
 const Llavero = () => {
@@ -10,6 +12,8 @@ const Llavero = () => {
   const [marcas, setMarcas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const { agregarProducto, estaEnCarrito, obtenerItemCarrito } = useCarrito();
   
   const [filtros, setFiltros] = useState({
     materiales: [],
@@ -144,6 +148,33 @@ const Llavero = () => {
     }
 
     setProductosFiltrados(productosFiltrados);
+  };
+
+  const handleAgregarAlCarrito = (e, producto) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      // Verificar que el producto tenga todos los campos necesarios
+      if (!producto.ID_producto || !producto.nombre || !producto.precio || !producto.stock) {
+        throw new Error('Datos de producto incompletos');
+      }
+
+      agregarProducto(producto, 1);
+      
+      // Mostrar confirmación más amigable
+      alert(`${producto.nombre} agregado al carrito exitosamente`);
+      
+      console.log('Producto agregado al carrito:', producto);
+      console.log('Estado actual del carrito después de agregar:', {
+        estaEnCarrito: estaEnCarrito(producto.ID_producto),
+        itemCarrito: obtenerItemCarrito(producto.ID_producto)
+      });
+      
+    } catch (error) {
+      console.error('Error al agregar al carrito:', error);
+      alert(`Error: ${error.message}`);
+    }
   };
 
   const handleMaterialChange = (materialId) => {
@@ -310,16 +341,27 @@ const Llavero = () => {
             productosFiltrados.map((producto) => (
               <div className="producto" key={producto.ID_producto}>
                 <div className="producto-badge">Nuevo</div>
-                <img
-                  src={getFirstProductImage(producto)}
-                  alt={producto.nombre}
-                  onError={(e) => {
-                    e.target.src = "/logo192.png";
-                  }}
-                />
-                <p>{producto.nombre}</p>
-                <span>${producto.precio}</span>
-                <button className="add-to-cart-btn">Agregar al carrito</button>
+                <Link to={`/producto/${producto.ID_producto}`}>
+                  <img
+                    src={getFirstProductImage(producto)}
+                    alt={producto.nombre}
+                    onError={(e) => {
+                      e.target.src = "/logo192.png";
+                    }}
+                  />
+                  <div className="producto-info">
+                    <p>{producto.nombre}</p>
+                    <span>${producto.precio}</span>
+                  </div>
+                </Link>
+                <div style={{ padding: '0 1.25rem 1.25rem' }}>
+                  <button 
+                    className="add-to-cart-btn"
+                    onClick={(e) => handleAgregarAlCarrito(e, producto)}
+                  >
+                    {estaEnCarrito(producto.ID_producto) ? 'En el carrito' : 'Agregar al carrito'}
+                  </button>
+                </div>
               </div>
             ))
           )}

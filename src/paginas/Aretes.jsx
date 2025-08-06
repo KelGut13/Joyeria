@@ -507,22 +507,22 @@ const Aretes = () => {
             </div>
           ) : (
             productosFiltrados.map((producto) => (
-              <Link 
-                to={`/producto/${producto.ID_producto}`}
-                className="producto" 
-                key={producto.ID_producto}
-              >
+              <div className="producto" key={producto.ID_producto}>
                 <div className="producto-badge">Nuevo</div>
-                <img
-                  src={getFirstProductImage(producto)}
-                  alt={producto.nombre}
-                  onError={(e) => {
-                    e.target.src = "/logo192.png";
-                  }}
-                />
-                <div className="producto-info">
-                  <p>{producto.nombre}</p>
-                  <span>${producto.precio}</span>
+                <Link to={`/producto/${producto.ID_producto}`}>
+                  <img
+                    src={getFirstProductImage(producto)}
+                    alt={producto.nombre}
+                    onError={(e) => {
+                      e.target.src = "/logo192.png";
+                    }}
+                  />
+                  <div className="producto-info">
+                    <p>{producto.nombre}</p>
+                    <span>${producto.precio}</span>
+                  </div>
+                </Link>
+                <div style={{ padding: '0 1.25rem 1.25rem' }}>
                   <button 
                     className="add-to-cart-btn"
                     onClick={(e) => handleAgregarAlCarrito(e, producto)}
@@ -530,7 +530,7 @@ const Aretes = () => {
                     {estaEnCarrito(producto.ID_producto) ? 'En el carrito' : 'Agregar al carrito'}
                   </button>
                 </div>
-              </Link>
+              </div>
             ))
           )}
           

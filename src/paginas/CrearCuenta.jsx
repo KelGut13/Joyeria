@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Separar from "../componentes/Separador NavBar/Separador";
+import { API_ENDPOINTS } from "../config/api";
 import "./estilos/CrearCuenta.css";
 import "../paginas/estilos/variables.css";
 
@@ -29,22 +30,67 @@ const CrearCuenta = () => {
     setError("");
     setSuccess("");
 
+    // Validaciones del frontend
+    if (!form.nombre.trim()) {
+      setError("El nombre es requerido.");
+      return;
+    }
+
+    if (!form.primer_apellido.trim()) {
+      setError("El primer apellido es requerido.");
+      return;
+    }
+
+    if (!form.email.trim()) {
+      setError("El correo electrónico es requerido.");
+      return;
+    }
+
+    // Validación de formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      setError("El formato del correo electrónico no es válido.");
+      return;
+    }
+
+    if (!form.telefono.trim()) {
+      setError("El número de teléfono es requerido.");
+      return;
+    }
+
+    // Validación de formato de teléfono (solo números, 10 dígitos)
+    const telefonoRegex = /^\d{10}$/;
+    if (!telefonoRegex.test(form.telefono)) {
+      setError("El teléfono debe tener exactamente 10 dígitos numéricos.");
+      return;
+    }
+
+    if (!form.password) {
+      setError("La contraseña es requerida.");
+      return;
+    }
+
+    if (form.password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+
     if (form.password !== form.repetir_password) {
       setError("Las contraseñas no coinciden.");
       return;
     }
 
     try {
-      const res = await fetch("https://api.curiosidadesnancy.shop/api/crear-cuenta", {
+      const res = await fetch(API_ENDPOINTS.CREAR_CUENTA, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nombre: form.nombre,
-          primer_apellido: form.primer_apellido,
-          segundo_apellido: form.segundo_apellido,
-          email: form.email,
+          nombre: form.nombre.trim(),
+          primer_apellido: form.primer_apellido.trim(),
+          segundo_apellido: form.segundo_apellido.trim() || null,
+          email: form.email.trim().toLowerCase(),
           password: form.password,
-          telefono: form.telefono
+          telefono: form.telefono.trim()
         })
       });
       const data = await res.json();
@@ -64,6 +110,7 @@ const CrearCuenta = () => {
         setError(data.error || "Error al crear la cuenta.");
       }
     } catch (err) {
+      console.error("❌ Error en registro:", err);
       setError("Error de conexión con el servidor.");
     }
   };

@@ -15,6 +15,8 @@ const Pulseras = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
+  const { agregarProducto, estaEnCarrito, obtenerItemCarrito } = useCarrito();
+
   // Estados para filtros
   const [filtros, setFiltros] = useState({
     materiales: [],
@@ -61,13 +63,9 @@ const Pulseras = () => {
         ]);
         
         console.log("✅ Productos obtenidos:", productosData);
-        console.log("✅ Materiales obtenidos:", materialesData);
-        console.log("✅ Géneros obtenidos:", generosData);
-        console.log("✅ Marcas obtenidas:", marcasData);
         
         // Filtrar solo pulseras (categoria ID = 4)
         const pulseras = productosData.filter((producto) => producto.id_categoria === 4);
-        console.log("🔗 Pulseras encontradas:", pulseras);
         
         setProductos(pulseras);
         setProductosFiltrados(pulseras);
@@ -143,6 +141,31 @@ const Pulseras = () => {
     }
 
     setProductosFiltrados(productosFiltrados);
+  };
+
+  const handleAgregarAlCarrito = async (e, producto) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('🛒 Agregando pulsera al carrito:', producto.nombre);
+    
+    try {
+      // Verificar que el producto tenga todos los campos necesarios
+      if (!producto.ID_producto || !producto.nombre || !producto.precio || !producto.stock) {
+        console.error('❌ Datos de producto incompletos:', producto);
+        throw new Error('Datos de producto incompletos');
+      }
+
+      await agregarProducto(producto, 1);
+      
+      // Mostrar confirmación más amigable
+      alert(`✅ ${producto.nombre} agregado al carrito exitosamente`);
+      console.log('✅ Pulsera agregada al carrito correctamente');
+      
+    } catch (error) {
+      console.error('❌ Error al agregar pulsera al carrito:', error);
+      alert(`❌ Error: ${error.message}`);
+    }
   };
 
   const handleMaterialChange = (materialId) => {
@@ -352,16 +375,27 @@ const Pulseras = () => {
             productosFiltrados.map((producto) => (
               <div className="producto" key={producto.ID_producto}>
                 <div className="producto-badge">Nuevo</div>
-                <img
-                  src={getFirstProductImage(producto)}
-                  alt={producto.nombre}
-                  onError={(e) => {
-                    e.target.src = "/logo192.png";
-                  }}
-                />
-                <p>{producto.nombre}</p>
-                <span>${producto.precio}</span>
-                <button className="add-to-cart-btn">Agregar al carrito</button>
+                <Link to={`/producto/${producto.ID_producto}`}>
+                  <img
+                    src={getFirstProductImage(producto)}
+                    alt={producto.nombre}
+                    onError={(e) => {
+                      e.target.src = "/logo192.png";
+                    }}
+                  />
+                  <div className="producto-info">
+                    <p>{producto.nombre}</p>
+                    <span>${producto.precio}</span>
+                  </div>
+                </Link>
+                <div style={{ padding: '0 1.25rem 1.25rem' }}>
+                  <button 
+                    className="add-to-cart-btn"
+                    onClick={(e) => handleAgregarAlCarrito(e, producto)}
+                  >
+                    {estaEnCarrito(producto.ID_producto) ? 'En el carrito' : 'Agregar al carrito'}
+                  </button>
+                </div>
               </div>
             ))
           )}

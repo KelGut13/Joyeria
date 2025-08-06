@@ -1,28 +1,29 @@
-/* Modern Professional Jewelry E-commerce Design - Unified */
+/* Modern Minimalist Jewelry Design - Premium */
 .productos-page {
   padding: 0;
   font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #fafafa;
+  background: #f8f9fa;
   min-height: 100vh;
-  color: #2d2d2d;
+  color: #1a1a1a;
   line-height: 1.6;
 }
 
-/* Banner Sections */
+/* Banner Sections - More minimalist */
 .banner-productos {
   position: relative;
   text-align: center;
-  padding: 4rem 0rem;
-  margin-top: 2%;
+  padding: 2rem 1rem;
+  margin-top: 1rem;
   overflow: hidden;
 }
 
 .banner-productos img {
   width: 100%;
-  height: 420px;
+  height: 300px;
   object-fit: cover;
-  border-radius: 12px;
-  filter: brightness(0.8);
+  border-radius: 8px;
+  filter: brightness(0.85);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
 .banner-overlay {
@@ -31,70 +32,73 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(45, 45, 45, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
+  background: linear-gradient(135deg, rgba(26, 26, 26, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 8px;
 }
 
 .banner-overlay h2 {
   color: white;
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  font-size: 2.2rem;
+  font-weight: 600;
+  text-shadow: 1px 2px 8px rgba(0, 0, 0, 0.6);
   text-align: center;
   max-width: 90%;
-  letter-spacing: 0.025em;
-  line-height: 1.2;
+  letter-spacing: 0.015em;
+  line-height: 1.3;
 }
 
-/* Banners específicos por categoría */
+/* Banners específicos por categoría - More subtle gradients */
 .anillos-banner .banner-overlay {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.5) 0%, rgba(118, 75, 162, 0.7) 100%);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.4) 0%, rgba(124, 58, 237, 0.6) 100%);
 }
 
 .collares-banner .banner-overlay {
-  background: linear-gradient(135deg, rgba(240, 147, 251, 0.5) 0%, rgba(245, 87, 108, 0.7) 100%);
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.4) 0%, rgba(219, 39, 119, 0.6) 100%);
 }
 
 .pulseras-banner .banner-overlay {
-  background: linear-gradient(135deg, rgba(79, 172, 254, 0.5) 0%, rgba(0, 242, 254, 0.7) 100%);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(16, 185, 129, 0.6) 100%);
 }
 
-/* Filter Toggle Button */
+/* Filter Toggle Button - More modern */
 .btn-filtro-movil {
   display: none;
   width: 100%;
-  background: #2d2d2d;
+  background: #1a1a1a;
   color: white;
   border: none;
-  padding: 1rem;
-  font-size: 1rem;
+  padding: 0.875rem 1rem;
+  font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  margin-bottom: 1rem;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  transition: all 0.2s ease;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.025em;
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .btn-filtro-movil:hover {
-  background: #1f1f1f;
+  background: #0f0f0f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Main Content Layout */
+/* Main Content Layout - More spacious */
 .contenido-productos {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1.5rem 3rem;
   display: grid;
   grid-template-columns: 280px 1fr;
-  gap: 3rem;
+  gap: 2.5rem;
   align-items: start;
 }
 
-/* Filters Sidebar */
+/* Filters Sidebar - Cleaner design */
 .filtros {
   background: white;
   border-radius: 8px;
@@ -242,40 +246,41 @@
   color: #374151;
 }
 
-/* Products Section */
+/* Products Section - More minimal grid */
 .productos {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2rem;
-  padding-bottom: 4rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.5rem;
+  padding-bottom: 3rem;
 }
 
-/* Product Counter */
+/* Product Counter - Cleaner styling */
 .productos-counter {
   grid-column: 1 / -1;
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .productos-counter span {
-  background: #f8f9fa;
+  background: #ffffff;
   color: #6b7280;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
   font-weight: 500;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* Product Cards */
+/* Product Cards - Minimalist design */
 .producto {
   background: white;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   border: 1px solid #f3f4f6;
-  transition: all 0.3s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   cursor: pointer;
   display: flex;
@@ -290,76 +295,75 @@
 }
 
 .producto:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  border-color: #e5e7eb;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  border-color: #d1d5db;
 }
 
 .producto-badge {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: #2d2d2d;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: #1a1a1a;
   color: white;
   padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
   font-weight: 500;
   z-index: 2;
+  letter-spacing: 0.025em;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  backdrop-filter: blur(8px);
 }
 
 .producto img {
   width: 100%;
-  height: 280px;
+  height: 240px;
   object-fit: cover;
-  transition: transform 0.4s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .producto:hover img {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
 .producto-info {
-  padding: 1.5rem;
+  padding: 1.25rem;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
 }
 
 .producto-info p {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 500;
-  color: #111827;
+  color: #1f2937;
   margin: 0 0 0.5rem 0;
   line-height: 1.4;
   flex-grow: 1;
 }
 
 .producto-info span {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  color: #2d2d2d;
+  color: #1a1a1a;
   display: block;
-  margin-bottom: 1rem;
+  margin-bottom: 0.875rem;
 }
 
 .add-to-cart-btn {
   width: 100%;
-  background: transparent;
-  color: #000000;
-  border: 1px solid #2d2d2d;
+  background: #1a1a1a;
+  color: white;
+  border: none;
   padding: 0.75rem 1rem;
   border-radius: 6px;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  opacity: 0;
-  transform: translateY(10px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.025em;
+  margin-top: auto;
 }
 
 .producto:hover .add-to-cart-btn {
@@ -368,8 +372,9 @@
 }
 
 .add-to-cart-btn:hover {
-  background: #2d2d2d;
-  color: white;
+  background: #0f0f0f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Loading States */
