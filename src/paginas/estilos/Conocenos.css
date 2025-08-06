@@ -1,87 +1,358 @@
-body{
-  background-color: var(--bg-color);
+/* Modern Elegant Design for Conocenos Page */
+.conocenos-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.Container-Conocenos {
-    display: flex;
-    flex-direction: column;
+/* Hero Section */
+.conocenos-hero {
+  padding: 4rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
-  
-.Conocenos-Seccion_Uno {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0;
+
+.conocenos-hero-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.conocenos-hero-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.conocenos-image {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.conocenos-image:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+}
+
+.conocenos-hero-text {
+  padding: 2rem 0;
+}
+
+.conocenos-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
+}
+
+.conocenos-subtitle {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #718096;
+  margin-bottom: 2rem;
+  font-style: italic;
+}
+
+.conocenos-description {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #4a5568;
+  margin-bottom: 0;
+  text-align: justify;
+}
+
+/* Mission Section */
+.conocenos-mission {
+  background: white;
+  padding: 4rem 2rem;
+  margin: 2rem 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.conocenos-mission-content {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+}
+
+.conocenos-mission-icon {
+  flex-shrink: 0;
+}
+
+.conocenos-icon-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: white;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.conocenos-mission-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+}
+
+.conocenos-mission-description {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #4a5568;
+  text-align: justify;
+}
+
+/* Social Media Section */
+.conocenos-social {
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+}
+
+.conocenos-social-content {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.conocenos-social-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 3rem;
+}
+
+.conocenos-facebook-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.conocenos-facebook-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.conocenos-facebook-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Values Section */
+.conocenos-values {
+  padding: 4rem 2rem;
+  background: white;
+}
+
+.conocenos-values-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.conocenos-values-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 3rem;
+}
+
+.conocenos-values-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.conocenos-value-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 3rem 2rem;
+  border-radius: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.conocenos-value-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
+  background: white;
+}
+
+.conocenos-value-icon {
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+.conocenos-value-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+.conocenos-value-text {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #718096;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .conocenos-hero-content {
+    grid-template-columns: 1fr;
+    gap: 3rem;
     text-align: center;
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 20px;
-    gap: 20px;
-    box-sizing: border-box;
-}
+  }
   
-.resena {
-    max-width: 800px;
-    display: flex;
+  .conocenos-mission-content {
     flex-direction: column;
-    align-items: center;
     text-align: center;
-}
+  }
   
-.resena p {
-    margin: 0 auto;
-    line-height: 1.6;
-    font-size: 20px;
-    width: 90%;
-    text-align: justify;
-    color: var(--nb-text-color);
+  .conocenos-title {
+    font-size: 3rem;
+  }
 }
 
-.resena h1 {
-    color: var(--ini-titresena-color);
-}
-
-.facebook {
-    max-width: 800px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.resena, .facebook, .espaciador {
-    width: 50%;
-}
-  
-.facebook-container {
-    width: 100%;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-  
-.facebook-container .fb-page {
-    width: 100%;
-}
-
-/* RESPONSIVE para móviles o tablets */
 @media (max-width: 768px) {
-    .Conocenos-Seccion_Uno {
-      flex-direction: column-reverse;
-      align-items: center;
-      padding: 10px;
-    }
+  .conocenos-hero {
+    padding: 2rem 1rem;
+  }
   
-    .resena,
-    .facebook {
-      width: 90%;
-      max-width: 100%;
-      text-align: center;
-    }
+  .conocenos-title {
+    font-size: 2.5rem;
+  }
+  
+  .conocenos-subtitle {
+    font-size: 1.25rem;
+  }
+  
+  .conocenos-mission {
+    padding: 3rem 1rem;
+  }
+  
+  .conocenos-mission-title {
+    font-size: 2rem;
+  }
+  
+  .conocenos-social-title {
+    font-size: 2rem;
+  }
+  
+  .conocenos-values-title {
+    font-size: 2rem;
+  }
+  
+  .conocenos-facebook-container {
+    padding: 1rem;
+    margin: 0 1rem;
+  }
+  
+  .conocenos-values-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .conocenos-value-card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .conocenos-icon-circle {
+    width: 80px;
+    height: 80px;
+    font-size: 2rem;
+  }
+}
 
-    .facebook-container {
-        width: 100%;
-    }
+@media (max-width: 480px) {
+  .conocenos-hero {
+    padding: 1.5rem 1rem;
+  }
+  
+  .conocenos-title {
+    font-size: 2rem;
+  }
+  
+  .conocenos-subtitle {
+    font-size: 1.125rem;
+  }
+  
+  .conocenos-description,
+  .conocenos-mission-description {
+    font-size: 1rem;
+  }
+  
+  .conocenos-mission {
+    padding: 2rem 1rem;
+  }
+  
+  .conocenos-social {
+    padding: 2rem 1rem;
+  }
+  
+  .conocenos-values {
+    padding: 2rem 1rem;
+  }
+  
+  .conocenos-facebook-container {
+    padding: 0.5rem;
+  }
+}
+
+/* Animation keyframes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.conocenos-hero-content,
+.conocenos-mission-content,
+.conocenos-social-content,
+.conocenos-values-content {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .conocenos-image:hover,
+  .conocenos-facebook-container:hover,
+  .conocenos-value-card:hover {
+    transform: none;
+  }
+  
+  .conocenos-hero-content,
+  .conocenos-mission-content,
+  .conocenos-social-content,
+  .conocenos-values-content {
+    animation: none;
+  }
 }
