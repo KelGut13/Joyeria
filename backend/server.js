@@ -1283,24 +1283,79 @@ app.get("/api/pedidos/:id", verifyToken, (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
 
-  const query = `
-    SELECT p.*, d.alias, d.calle, d.numero_exterior, d.colonia, d.ciudad, d.estado
+  console.log(`📋 Solicitando detalles del pedido ${id} para usuario ${userId}`);
+
+  // Query para obtener datos del pedido
+  const pedidoQuery = `
+    SELECT p.*, d.alias, d.calle, d.numero_exterior, d.colonia, d.ciudad, d.estado, d.codigo_postal,
+           u.nombre as nombre_usuario, u.email
     FROM pedidos p
     LEFT JOIN direcciones d ON p.ID_direccion = d.ID_direccion
+    LEFT JOIN usuarios u ON p.ID_usuario = u.ID_usuario
     WHERE p.ID_pedido = ? AND p.ID_usuario = ?
   `;
 
-  db.query(query, [id, userId], (err, results) => {
+  db.query(pedidoQuery, [id, userId], (err, pedidoResults) => {
     if (err) {
       console.error("❌ Error al obtener pedido:", err);
       return res.status(500).json({ error: "Error al obtener pedido." });
     }
 
-    if (results.length === 0) {
+    if (pedidoResults.length === 0) {
+      console.log(`❌ Pedido ${id} no encontrado para usuario ${userId}`);
       return res.status(404).json({ error: "Pedido no encontrado." });
     }
 
-    res.json(results[0]);
+    const pedido = pedidoResults[0];
+
+    // Query para obtener productos del pedido
+    const productosQuery = `
+      SELECT dp.*, pr.nombre, pr.descripcion, pr.imagen
+      FROM detalle_pedido dp
+      LEFT JOIN productos pr ON dp.ID_producto = pr.ID_producto
+      WHERE dp.ID_pedido = ?
+    `;
+
+    db.query(productosQuery, [id], (err, productosResults) => {
+      if (err) {
+        console.error("❌ Error al obtener productos del pedido:", err);
+        return res.status(500).json({ error: "Error al obtener productos del pedido." });
+      }
+
+      // Formatear dirección de envío
+      let direccion_envio = pedido.direccion_envio;
+      if (pedido.calle && pedido.numero_exterior) {
+        direccion_envio = `${pedido.calle} ${pedido.numero_exterior}, ${pedido.colonia || ''}, ${pedido.ciudad || ''}, ${pedido.estado || ''}`.replace(/,\s*,/g, ',').trim();
+      }
+
+      // Preparar respuesta
+      const respuesta = {
+        ID_pedido: pedido.ID_pedido,
+        fecha_pedido: pedido.fecha,
+        total: pedido.total,
+        subtotal: pedido.subtotal || pedido.total,
+        costo_envio: pedido.costo_envio || 0,
+        descuento: pedido.descuento || 0,
+        estado: pedido.estado,
+        metodo_pago: pedido.metodo_pago,
+        direccion_envio: direccion_envio,
+        nombre_usuario: pedido.nombre_usuario,
+        email: pedido.email,
+        productos: productosResults.map(producto => ({
+          ID_producto: producto.ID_producto,
+          nombre: producto.nombre,
+          descripcion: producto.descripcion,
+          imagen: producto.imagen,
+          cantidad: producto.cantidad,
+          precio: producto.precio_unitario,
+          total: producto.cantidad * producto.precio_unitario
+        }))
+      };
+
+      console.log(`✅ Detalles del pedido ${id} enviados correctamente`);
+      console.log(`📦 ${productosResults.length} productos encontrados`);
+      res.json(respuesta);
+    });
   });
 });
 
