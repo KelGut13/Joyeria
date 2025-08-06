@@ -198,7 +198,7 @@ const PedidoConfirmado = () => {
               <i className="fas fa-list"></i>
               Ver Mis Pedidos
             </Link>
-            <Link to="/" className="pedido-confirmado-btn pedido-confirmado-btn-secondary">
+            <Link to="/aretes" className="pedido-confirmado-btn pedido-confirmado-btn-secondary">
               <i className="fas fa-shopping-bag"></i>
               Seguir Comprando
             </Link>

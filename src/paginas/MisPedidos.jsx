@@ -148,9 +148,9 @@ const MisPedidos = () => {
                     </Link>
                     
                     {pedido.estado === 'entregado' && (
-                      <button className="btn-recomprar">
+                      <Link to="/aretes" className="btn-recomprar">
                         Volver a Comprar
-                      </button>
+                      </Link>
                     )}
                     
                     {pedido.estado === 'enviado' && (
