@@ -99,7 +99,7 @@ const Login = () => {
           <button type="submit" className="inicio-login-btn">ACCEDER</button>
           
           <div className="inicio-login-links">
-            <a href="#" className="inicio-forgot-link">¿Olvidaste tu contraseña?</a>
+            <Link to="/recuperar-password" className="inicio-forgot-link">¿Olvidaste tu contraseña?</Link>
             <Link to="/crear-cuenta" className="inicio-create-link">Crear Cuenta Nueva</Link>
           </div>
         </form>

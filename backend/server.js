@@ -613,6 +613,195 @@ app.post("/api/login", authLimiter, (req, res) => {
   });
 });
 
+// 📧 ENDPOINT PARA SOLICITAR RECUPERACIÓN DE CONTRASEÑA
+app.post("/api/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Validar que se proporcione el email
+    if (!email) {
+      return res.status(400).json({ error: "El email es requerido." });
+    }
+
+    // Validar formato del email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: "El formato del email no es válido." });
+    }
+
+    console.log(`🔍 Buscando usuario con email: ${email}`);
+
+    // Verificar si el usuario existe
+    const checkUserQuery = "SELECT ID_usuario, nombre, email FROM usuarios WHERE email = ?";
+    const user = await new Promise((resolve, reject) => {
+      db.query(checkUserQuery, [email], (err, results) => {
+        if (err) {
+          console.error("❌ Error en consulta de usuario:", err);
+          return reject(err);
+        }
+        resolve(results[0] || null);
+      });
+    });
+
+    if (!user) {
+      // IMPORTANTE: Por seguridad, NO enviamos email si el usuario no existe
+      console.log(`❌ Usuario NO encontrado con email: ${email} - NO se enviará email`);
+      return res.status(200).json({ 
+        message: "Si el email existe en nuestro sistema, recibirás un enlace de recuperación." 
+      });
+    }
+
+    console.log(`✅ Usuario encontrado: ${user.nombre}`);
+
+    // Generar token de recuperación (válido por 1 hora)
+    const resetToken = jwt.sign(
+      { 
+        userId: user.ID_usuario, 
+        email: user.email,
+        type: 'password_reset'
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    // Crear enlace de recuperación
+    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+
+    // Configurar transporter de email
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      auth: {
+        user: process.env.CORREO_ORIGEN,
+        pass: process.env.CORREO_PASSWORD,
+      },
+    });
+
+    // Enviar email de recuperación
+    await transporter.sendMail({
+      from: `"Joyería Nancy" <${process.env.CORREO_ORIGEN}>`,
+      to: email,
+      subject: "Recuperación de Contraseña - Joyería Nancy",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
+            <h1 style="color: white; margin: 0;">Joyería Nancy</h1>
+          </div>
+          
+          <div style="padding: 30px; background: #f9f9f9;">
+            <h2 style="color: #333;">Recuperación de Contraseña</h2>
+            
+            <p style="color: #666; line-height: 1.6;">
+              Hola <strong>${user.nombre}</strong>,
+            </p>
+            
+            <p style="color: #666; line-height: 1.6;">
+              Recibimos una solicitud para restablecer tu contraseña. Si no fuiste tú, puedes ignorar este email.
+            </p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetLink}" 
+                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                        color: white; 
+                        padding: 15px 30px; 
+                        text-decoration: none; 
+                        border-radius: 8px; 
+                        display: inline-block;
+                        font-weight: bold;">
+                Restablecer Contraseña
+              </a>
+            </div>
+            
+            <p style="color: #999; font-size: 14px;">
+              Este enlace expirará en 1 hora por seguridad.
+            </p>
+            
+            <p style="color: #999; font-size: 14px;">
+              Si el botón no funciona, puedes copiar y pegar este enlace en tu navegador:<br>
+              <span style="word-break: break-all;">${resetLink}</span>
+            </p>
+          </div>
+          
+          <div style="background: #333; padding: 20px; text-align: center;">
+            <p style="color: #999; margin: 0; font-size: 14px;">
+              © 2025 Joyería Nancy. Todos los derechos reservados.
+            </p>
+          </div>
+        </div>
+      `,
+    });
+
+    console.log(`📧 Email de recuperación enviado a: ${email}`);
+
+    res.status(200).json({ 
+      message: "Si el email existe en nuestro sistema, recibirás un enlace de recuperación." 
+    });
+
+  } catch (error) {
+    console.error("❌ Error en recuperación de contraseña:", error);
+    res.status(500).json({ error: "Error interno del servidor." });
+  }
+});
+
+// 🔐 ENDPOINT PARA RESTABLECER CONTRASEÑA
+app.post("/api/reset-password", async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    // Validar datos requeridos
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: "Token y nueva contraseña son requeridos." });
+    }
+
+    // Validar longitud de contraseña
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: "La contraseña debe tener al menos 6 caracteres." });
+    }
+
+    console.log("🔍 Verificando token de recuperación...");
+
+    // Verificar y decodificar el token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      // Verificar que sea un token de reset de contraseña
+      if (decoded.type !== 'password_reset') {
+        throw new Error('Token inválido');
+      }
+    } catch (error) {
+      console.error("❌ Token inválido o expirado:", error.message);
+      return res.status(400).json({ error: "El enlace de recuperación es inválido o ha expirado." });
+    }
+
+    console.log(`✅ Token válido para usuario ID: ${decoded.userId}`);
+
+    // Hashear la nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Actualizar contraseña en la base de datos
+    const updatePasswordQuery = "UPDATE usuarios SET password = ? WHERE ID_usuario = ?";
+    await new Promise((resolve, reject) => {
+      db.query(updatePasswordQuery, [hashedPassword, decoded.userId], (err, results) => {
+        if (err) {
+          console.error("❌ Error actualizando contraseña:", err);
+          return reject(err);
+        }
+        resolve(results);
+      });
+    });
+
+    console.log(`✅ Contraseña actualizada para usuario ID: ${decoded.userId}`);
+
+    res.status(200).json({ 
+      message: "Tu contraseña ha sido actualizada exitosamente." 
+    });
+
+  } catch (error) {
+    console.error("❌ Error en restablecimiento de contraseña:", error);
+    res.status(500).json({ error: "Error interno del servidor." });
+  }
+});
+
 // Nuevo endpoint para crear Payment Intent de Stripe
 app.post("/api/create-payment-intent", verifyToken, async (req, res) => {
   try {
