@@ -1,6 +1,11 @@
-// Configuración de la API - Backend corriendo en puerto 5000 (requerimiento específico)
-// Usando 127.0.0.1 para evitar interferencia con Control Center de macOS
-const API_BASE_URL = 'http://127.0.0.1:5000';
+// Configuración forzada para desarrollo local
+// CAMBIAR A PRODUCCIÓN CUANDO SEA NECESARIO
+const API_BASE_URL = 'http://127.0.0.1:5000'; // Forzado para desarrollo local
+
+// Configuración dinámica (comentada temporalmente)
+// const API_BASE_URL = process.env.NODE_ENV === 'production' 
+//   ? 'https://api.curiosidadesnancy.shop'  // Producción
+//   : 'http://127.0.0.1:5000';              // Desarrollo
 
 export const API_ENDPOINTS = {
   // Autenticación

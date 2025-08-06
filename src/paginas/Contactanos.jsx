@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./estilos/Contactanos.css";
 import Separar from "../componentes/Separador NavBar/Separador";
 import Accesibilidad from "../componentes/Accesibilidad/Accesibilidad";
+import { API_ENDPOINTS } from '../config/api';
 
 function Contactanos() {
   const [formData, setFormData] = useState({
@@ -25,7 +26,7 @@ function Contactanos() {
     setEstado("Enviando...");
 
     try {
-      const response = await fetch("https://api.curiosidadesnancy.shop/api/contacto", {
+      const response = await fetch(API_ENDPOINTS.CONTACTO, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

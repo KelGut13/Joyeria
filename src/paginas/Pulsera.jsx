@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./estilos/Pulsera.css";
 import Separar from "../componentes/Separador NavBar/Separador";
-import { getFirstProductImage } from '../config/api';
+import { getFirstProductImage, API_ENDPOINTS } from '../config/api';
 
 const Pulsera = () => {
   const [productos, setProductos] = useState([]);
@@ -31,10 +31,10 @@ const Pulsera = () => {
           generosResponse,
           marcasResponse,
         ] = await Promise.all([
-          fetch("https://api.curiosidadesnancy.shop/api/productos"),
-          fetch("https://api.curiosidadesnancy.shop/api/materiales"),
-          fetch("https://api.curiosidadesnancy.shop/api/generos"),
-          fetch("https://api.curiosidadesnancy.shop/api/marcas"),
+          fetch(API_ENDPOINTS.PRODUCTOS),
+          fetch(API_ENDPOINTS.MATERIALES),
+          fetch(API_ENDPOINTS.GENEROS),
+          fetch(API_ENDPOINTS.MARCAS),
         ]);
 
         const [productosData, materialesData, generosData, marcasData] =
