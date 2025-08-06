@@ -3,6 +3,7 @@ import "./estilos/Juegos.css";
 import { Link } from "react-router-dom";
 import { useCarrito } from '../context/CarritoContext';
 import { getFirstProductImage, API_ENDPOINTS } from '../config/api';
+import { Filter, X, Search, ShoppingBag } from 'lucide-react';
 
 const Juegos = () => {
   const [productos, setProductos] = useState([]);
@@ -12,6 +13,7 @@ const Juegos = () => {
   const [marcas, setMarcas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filtrosMovilAbierto, setFiltrosMovilAbierto] = useState(false);
   
   const { agregarProducto, estaEnCarrito, obtenerItemCarrito } = useCarrito();
   
@@ -150,33 +152,6 @@ const Juegos = () => {
     setProductosFiltrados(productosFiltrados);
   };
 
-  const handleAgregarAlCarrito = (e, producto) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    try {
-      // Verificar que el producto tenga todos los campos necesarios
-      if (!producto.ID_producto || !producto.nombre || !producto.precio || !producto.stock) {
-        throw new Error('Datos de producto incompletos');
-      }
-
-      agregarProducto(producto, 1);
-      
-      // Mostrar confirmación más amigable
-      alert(`${producto.nombre} agregado al carrito exitosamente`);
-      
-      console.log('Producto agregado al carrito:', producto);
-      console.log('Estado actual del carrito después de agregar:', {
-        estaEnCarrito: estaEnCarrito(producto.ID_producto),
-        itemCarrito: obtenerItemCarrito(producto.ID_producto)
-      });
-      
-    } catch (error) {
-      console.error('Error al agregar al carrito:', error);
-      alert(`Error: ${error.message}`);
-    }
-  };
-
   const handleMaterialChange = (materialId) => {
     setFiltros(prev => ({
       ...prev,
@@ -221,17 +196,58 @@ const Juegos = () => {
     });
   };
 
+  const handleAgregarAlCarrito = async (e, producto) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (estaEnCarrito(producto.ID_producto)) {
+      return;
+    }
+
+    try {
+      await agregarProducto(producto);
+    } catch (error) {
+      console.error('Error al agregar producto al carrito:', error);
+    }
+  };
+
+  const toggleFiltrosMovil = () => {
+    setFiltrosMovilAbierto(!filtrosMovilAbierto);
+  };
+
   return (
     <div className="juegos-page">
-      {/* Banner principal */}
+      {/* Hero Banner */}
       <div className="banner-juegos">
-        <img src="../7.png" alt="Banner Juegos" />
+        <img src="../7.png" alt="Colección de Juegos de Joyería" />
+        <h2>Juegos de Joyería</h2>
       </div>
 
       <div className="contenido-juegos">
-        {/* Filtros */}
-        <aside className="filtros">
-          <h3>Filtrar por:</h3>
+        {/* Filtros Sidebar */}
+        <aside className={`filtros ${filtrosMovilAbierto ? 'filtros-movil-activo' : ''}`}>
+          {filtrosMovilAbierto && (
+            <button 
+              className="cerrar-filtros-movil"
+              onClick={toggleFiltrosMovil}
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: 'none',
+                border: 'none',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                color: '#6b7280'
+              }}
+            >
+              <X size={24} />
+            </button>
+          )}
+          
+          <h3>
+            Filtrar por
+          </h3>
 
           <div className="filtro-categoria">
             <label>Material</label>
@@ -318,7 +334,7 @@ const Juegos = () => {
           </div>
         </aside>
 
-        {/* Productos */}
+        {/* Products Grid */}
         <section className="productos">
           {loading ? (
             <div className="loading-container">
@@ -327,11 +343,15 @@ const Juegos = () => {
             </div>
           ) : error ? (
             <div className="error-container">
-              <p style={{ color: "red" }}>⚠️ {error}</p>
+              <p>⚠️ {error}</p>
+              <button onClick={() => window.location.reload()} className="retry-btn">
+                Reintentar
+              </button>
             </div>
           ) : productosFiltrados.length === 0 ? (
             <div className="empty-container">
-              <p>🔍 No hay juegos disponibles con los filtros seleccionados.</p>
+              <Search size={48} style={{ color: '#6b7280', marginBottom: '1rem' }} />
+              <p>No se encontraron productos con los filtros seleccionados</p>
               <button onClick={limpiarFiltros} className="retry-btn">
                 Limpiar filtros
               </button>
@@ -340,6 +360,7 @@ const Juegos = () => {
             productosFiltrados.map((producto) => (
               <div className="producto" key={producto.ID_producto}>
                 <div className="producto-badge">Nuevo</div>
+                
                 <Link to={`/producto/${producto.ID_producto}`}>
                   <img
                     src={getFirstProductImage(producto)}
@@ -348,35 +369,57 @@ const Juegos = () => {
                       e.target.src = "/logo192.png";
                     }}
                   />
+                  
                   <div className="producto-info">
                     <p>{producto.nombre}</p>
-                    <span>${producto.precio}</span>
+                    <span>${parseFloat(producto.precio).toFixed(2)}</span>
                   </div>
                 </Link>
-                <div style={{ padding: '0 1.25rem 1.25rem' }}>
-                  <button 
-                    className="add-to-cart-btn"
-                    onClick={(e) => handleAgregarAlCarrito(e, producto)}
-                  >
-                    {estaEnCarrito(producto.ID_producto) ? 'En el carrito' : 'Agregar al carrito'}
-                  </button>
-                </div>
+                
+                <button 
+                  className="add-to-cart-btn"
+                  onClick={(e) => handleAgregarAlCarrito(e, producto)}
+                  disabled={estaEnCarrito(producto.ID_producto)}
+                >
+                  {estaEnCarrito(producto.ID_producto) ? (
+                    <>
+                      <ShoppingBag size={16} style={{ marginRight: '0.5rem' }} />
+                      En el carrito
+                    </>
+                  ) : (
+                    'Agregar al carrito'
+                  )}
+                </button>
               </div>
             ))
           )}
         </section>
-        
-        {!loading && !error && productosFiltrados.length > 0 && (
-          <div className="productos-counter">
-            <span>{productosFiltrados.length} producto(s) encontrado(s)</span>
-          </div>
-        )}
       </div>
 
-      {/* Botón mostrar más */}
-      <div className="mostrar-mas-contenedor">
-        <button className="mostrar-mas-btn">Mostrar más</button>
-      </div>
+      {/* Products Counter */}
+      {!loading && !error && productosFiltrados.length > 0 && (
+        <div className="productos-counter">
+          <span>Mostrando {productosFiltrados.length} producto(s)</span>
+        </div>
+      )}
+
+      {/* Mobile Filter Toggle */}
+      <button 
+        className="filtros-toggle"
+        onClick={toggleFiltrosMovil}
+        title="Filtros"
+      >
+        <Filter size={20} />
+      </button>
+
+      {/* Show More Button */}
+      {!loading && !error && productosFiltrados.length > 0 && (
+        <div className="mostrar-mas-contenedor">
+          <button className="mostrar-mas-btn">
+            Mostrar más productos
+          </button>
+        </div>
+      )}
     </div>
   );
 };
