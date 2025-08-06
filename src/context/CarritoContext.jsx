@@ -146,19 +146,31 @@ const calcularTotales = (items) => {
 
 // Reducer para manejar las acciones del carrito
 const carritoReducer = (state, action) => {
-  console.log('🔄 Carrito reducer:', action.type, action.payload);
+  console.log('🔄 Carrito reducer:', {
+    type: action.type, 
+    payloadType: typeof action.payload,
+    isArray: Array.isArray(action.payload),
+    payload: action.payload
+  });
   
   switch (action.type) {
     case CARRITO_ACTIONS.CARGAR_CARRITO:
     case CARRITO_ACTIONS.CARGAR_CARRITO_SERVIDOR:
       console.log('🔄 Cargando carrito del servidor:', action.payload);
+      
+      // Validar que el payload sea un array
+      const itemsCarrito = Array.isArray(action.payload) ? action.payload : [];
+      console.log('📦 Items del carrito validados:', itemsCarrito);
+      
       return {
-        items: action.payload,
-        cantidadItems: action.payload.reduce((total, item) => total + item.cantidad, 0),
-        subtotal: action.payload.reduce((total, item) => total + (item.precio * item.cantidad), 0),
-        total: action.payload.reduce((total, item) => total + (item.precio * item.cantidad), 0),
+        ...state,
+        items: itemsCarrito,
+        cantidadItems: itemsCarrito.reduce((total, item) => total + (item.cantidad || 0), 0),
+        subtotal: itemsCarrito.reduce((total, item) => total + ((item.precio || 0) * (item.cantidad || 0)), 0),
+        total: itemsCarrito.reduce((total, item) => total + ((item.precio || 0) * (item.cantidad || 0)), 0),
         costoEnvio: 0,
-        descuento: 0
+        descuento: 0,
+        sincronizado: true
       };
 
     case CARRITO_ACTIONS.AGREGAR_PRODUCTO:
@@ -184,18 +196,20 @@ const carritoReducer = (state, action) => {
       const nuevoSubtotal = nuevosItems.reduce((total, item) => total + (item.precio * item.cantidad), 0);
       const nuevaCantidadItems = nuevosItems.reduce((total, item) => total + item.cantidad, 0);
 
-      // Guardar en localStorage si es usuario invitado
-      if (!obtenerUsuarioActual()) {
-        guardarCarritoEnStorage(nuevosItems);
-      }
-
-      return {
+      const nuevoEstado = {
         ...state,
         items: nuevosItems,
         cantidadItems: nuevaCantidadItems,
         subtotal: nuevoSubtotal,
         total: nuevoSubtotal
       };
+
+      // Guardar en localStorage si es usuario invitado
+      if (!obtenerUsuarioActual()) {
+        guardarCarritoEnStorage(nuevoEstado);
+      }
+
+      return nuevoEstado;
 
     case CARRITO_ACTIONS.ACTUALIZAR_CANTIDAD:
       const { productoId: idActualizar, cantidad: nuevaCantidad } = action.payload;
@@ -208,18 +222,20 @@ const carritoReducer = (state, action) => {
       const subtotalActualizado = itemsActualizados.reduce((total, item) => total + (item.precio * item.cantidad), 0);
       const cantidadActualizada = itemsActualizados.reduce((total, item) => total + item.cantidad, 0);
 
-      // Guardar en localStorage si es usuario invitado
-      if (!obtenerUsuarioActual()) {
-        guardarCarritoEnStorage(itemsActualizados);
-      }
-
-      return {
+      const nuevoEstadoActualizado = {
         ...state,
         items: itemsActualizados,
         cantidadItems: cantidadActualizada,
         subtotal: subtotalActualizado,
         total: subtotalActualizado
       };
+
+      // Guardar en localStorage si es usuario invitado
+      if (!obtenerUsuarioActual()) {
+        guardarCarritoEnStorage(nuevoEstadoActualizado);
+      }
+
+      return nuevoEstadoActualizado;
 
     case CARRITO_ACTIONS.ELIMINAR_PRODUCTO:
       const { productoId: idEliminar } = action.payload;
@@ -228,18 +244,20 @@ const carritoReducer = (state, action) => {
       const subtotalFiltrado = itemsFiltrados.reduce((total, item) => total + (item.precio * item.cantidad), 0);
       const cantidadFiltrada = itemsFiltrados.reduce((total, item) => total + item.cantidad, 0);
 
-      // Guardar en localStorage si es usuario invitado
-      if (!obtenerUsuarioActual()) {
-        guardarCarritoEnStorage(itemsFiltrados);
-      }
-
-      return {
+      const nuevoEstadoFiltrado = {
         ...state,
         items: itemsFiltrados,
         cantidadItems: cantidadFiltrada,
         subtotal: subtotalFiltrado,
         total: subtotalFiltrado
       };
+
+      // Guardar en localStorage si es usuario invitado
+      if (!obtenerUsuarioActual()) {
+        guardarCarritoEnStorage(nuevoEstadoFiltrado);
+      }
+
+      return nuevoEstadoFiltrado;
 
     case CARRITO_ACTIONS.LIMPIAR_CARRITO:
       // Limpiar localStorage si es usuario invitado
@@ -304,9 +322,19 @@ export const CarritoProvider = ({ children }) => {
         const carritoServidor = await response.json();
         console.log('✅ Carrito cargado del servidor:', carritoServidor);
         
+        // Validar que el servidor devuelva un array o un objeto con items
+        let itemsDelServidor = [];
+        if (Array.isArray(carritoServidor)) {
+          itemsDelServidor = carritoServidor;
+        } else if (carritoServidor && Array.isArray(carritoServidor.items)) {
+          itemsDelServidor = carritoServidor.items;
+        } else {
+          console.warn('⚠️ Formato de carrito del servidor no válido, usando array vacío');
+        }
+        
         dispatch({
           type: CARRITO_ACTIONS.CARGAR_CARRITO_SERVIDOR,
-          payload: carritoServidor
+          payload: itemsDelServidor
         });
 
         // Limpiar carrito de invitado después de cargar el del servidor
@@ -344,7 +372,7 @@ export const CarritoProvider = ({ children }) => {
         if (carritoLocal.items.length > 0) {
           dispatch({
             type: CARRITO_ACTIONS.CARGAR_CARRITO,
-            payload: carritoLocal
+            payload: carritoLocal.items // Enviar solo el array de items
           });
         }
       }

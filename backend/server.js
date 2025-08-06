@@ -114,6 +114,7 @@ const clearCache = (pattern = null) => {
 };
 
 const PORT = process.env.PORT || 5000; // Puerto por defecto 5000 para consistencia
+const HOST = process.env.HOST || '127.0.0.1'; // Host específico para desarrollo
 
 // CORS configurado dinámicamente según el entorno
 const allowedOrigins = [
@@ -2230,6 +2231,9 @@ process.on('uncaughtException', (error) => {
 });
 
 // Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`🚀 Servidor corriendo en http://${HOST}:${PORT}`);
+  if (HOST === '127.0.0.1') {
+    console.log(`🚀 También disponible en http://localhost:${PORT}`);
+  }
 });
