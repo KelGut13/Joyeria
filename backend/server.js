@@ -68,9 +68,10 @@ const db = mysql.createPool({
   database: process.env.DB_NAME || 'joyeria',
   port: process.env.DB_PORT || 3306,
   connectionLimit: 10,
-  acquireTimeout: 60000,
-  timeout: 60000,
-  reconnect: true
+  queueLimit: 0,
+  idleTimeout: 60000,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0
 });
 
 db.query("SELECT 1", (err) => {
