@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCarrito } from '../context/CarritoContext';
 import { API_ENDPOINTS, STRIPE_CONFIG, getFirstProductImage } from '../config/api';
 import './estilos/Checkout.css';
 import Separar from '../componentes/Separador NavBar/Separador';
+import DevPaymentForm from '../componentes/DevPaymentForm/DevPaymentForm';
+import StripeStatus from '../componentes/StripeStatus/StripeStatus';
 import { 
   ChevronLeft, 
   MapPin, 
@@ -18,13 +20,14 @@ import {
   Banknote,
   University,
   Package,
-  User,
   Home,
   Building
 } from 'lucide-react';
 
-// Configurar Stripe con tu clave pública real
-const stripePromise = loadStripe(STRIPE_CONFIG.PUBLISHABLE_KEY);
+// Configurar Stripe con modo desarrollo
+const stripePromise = STRIPE_CONFIG.DEVELOPMENT_MODE 
+  ? null // No cargar Stripe en modo desarrollo
+  : loadStripe(STRIPE_CONFIG.PUBLISHABLE_KEY);
 
 // Componente de formulario de pago con Stripe
 const PaymentForm = ({ 
@@ -43,7 +46,9 @@ const PaymentForm = ({
 
   const handleStripePayment = async () => {
     if (!stripe || !elements) {
-      setPaymentError('Stripe no está disponible');
+      const errorMsg = 'El sistema de pagos no está disponible. Recarga la página e intenta nuevamente.';
+      setPaymentError(errorMsg);
+      onPaymentError(errorMsg);
       return;
     }
 
@@ -71,7 +76,27 @@ const PaymentForm = ({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Error creating payment intent');
+        let errorMessage = 'Error al procesar el pago';
+        
+        // Manejar diferentes tipos de errores
+        switch (errorData.code) {
+          case 'STRIPE_AUTH_ERROR':
+            errorMessage = 'Error de configuración del sistema de pagos. Contacta al soporte.';
+            break;
+          case 'STRIPE_API_ERROR':
+            errorMessage = 'El servicio de pagos está temporalmente no disponible. Intenta más tarde.';
+            break;
+          case 'STRIPE_CONNECTION_ERROR':
+            errorMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
+            break;
+          case 'PAYMENT_INTENT_ERROR':
+            errorMessage = errorData.details || 'Error al crear el intent de pago';
+            break;
+          default:
+            errorMessage = errorData.error || 'Error creating payment intent';
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const { clientSecret, paymentIntentId } = await response.json();
@@ -90,8 +115,41 @@ const PaymentForm = ({
 
       if (error) {
         console.error('❌ Error en pago:', error);
-        setPaymentError(error.message);
-        onPaymentError(error.message);
+        let errorMessage = 'Error al procesar el pago';
+        
+        // Manejar diferentes tipos de errores de Stripe
+        switch (error.code) {
+          case 'card_declined':
+            errorMessage = 'Tu tarjeta fue rechazada. Verifica los datos o usa otra tarjeta.';
+            break;
+          case 'expired_card':
+            errorMessage = 'Tu tarjeta ha expirado. Usa una tarjeta válida.';
+            break;
+          case 'insufficient_funds':
+            errorMessage = 'Fondos insuficientes en tu tarjeta.';
+            break;
+          case 'incorrect_cvc':
+            errorMessage = 'El código CVC es incorrecto. Verifica los datos.';
+            break;
+          case 'incorrect_number':
+            errorMessage = 'El número de tarjeta es incorrecto.';
+            break;
+          case 'invalid_expiry_month':
+          case 'invalid_expiry_year':
+            errorMessage = 'La fecha de expiración es inválida.';
+            break;
+          case 'processing_error':
+            errorMessage = 'Error de procesamiento. Intenta nuevamente.';
+            break;
+          case 'rate_limit':
+            errorMessage = 'Demasiados intentos. Espera un momento e intenta de nuevo.';
+            break;
+          default:
+            errorMessage = error.message || 'Error desconocido al procesar el pago';
+        }
+        
+        setPaymentError(errorMessage);
+        onPaymentError(errorMessage);
       } else if (paymentIntent.status === 'succeeded') {
         console.log('✅ Pago exitoso:', paymentIntent.id);
         onPaymentSuccess(paymentIntent.id);
@@ -112,9 +170,13 @@ const PaymentForm = ({
           <Lock size={16} />
           <span>Pago seguro procesado por Stripe</span>
         </div>
-        <p className="checkout-test-card-info">
-          Para pruebas, usa la tarjeta: <code>4242 4242 4242 4242</code>
-        </p>
+        <div className="checkout-test-card-info">
+          <p><strong>Tarjetas de prueba:</strong></p>
+          <p>✅ Éxito: <code>4242 4242 4242 4242</code></p>
+          <p>❌ Rechazada: <code>4000 0000 0000 0002</code></p>
+          <p>⚠️ Fondos insuficientes: <code>4000 0000 0000 9995</code></p>
+          <p><small>Fecha: cualquier fecha futura | CVC: cualquier 3 dígitos</small></p>
+        </div>
       </div>
       
       <div className="checkout-card-element-container">
@@ -142,7 +204,11 @@ const PaymentForm = ({
       
       {paymentError && (
         <div className="checkout-payment-error">
-          <span>❌ {paymentError}</span>
+          <div className="checkout-error-icon">⚠️</div>
+          <div className="checkout-error-content">
+            <div className="checkout-error-title">Error en el pago</div>
+            <div className="checkout-error-message">{paymentError}</div>
+          </div>
         </div>
       )}
       
@@ -621,6 +687,9 @@ const Checkout = () => {
                     <h3>Método de Pago</h3>
                   </div>
 
+                  {/* Indicador de estado de Stripe */}
+                  <StripeStatus isProduction={!STRIPE_CONFIG.DEVELOPMENT_MODE} />
+
                   <div className="checkout-metodos-pago">
                     <div className="checkout-metodo-option">
                       <input
@@ -688,8 +757,8 @@ const Checkout = () => {
 
                   {/* Formulario de Stripe para tarjeta */}
                   {metodoPago === 'Tarjeta de Crédito' && (
-                    <Elements stripe={stripePromise}>
-                      <PaymentForm
+                    STRIPE_CONFIG.DEVELOPMENT_MODE ? (
+                      <DevPaymentForm
                         onPaymentSuccess={handlePaymentSuccess}
                         onPaymentError={handlePaymentError}
                         total={total}
@@ -699,7 +768,20 @@ const Checkout = () => {
                         procesandoPedido={procesandoPedido}
                         setProcesandoPedido={setProcesandoPedido}
                       />
-                    </Elements>
+                    ) : (
+                      <Elements stripe={stripePromise}>
+                        <PaymentForm
+                          onPaymentSuccess={handlePaymentSuccess}
+                          onPaymentError={handlePaymentError}
+                          total={total}
+                          productos={items}
+                          direccionSeleccionada={direccionSeleccionada}
+                          metodoPago={metodoPago}
+                          procesandoPedido={procesandoPedido}
+                          setProcesandoPedido={setProcesandoPedido}
+                        />
+                      </Elements>
+                    )
                   )}
                 </div>
 

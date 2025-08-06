@@ -1,0 +1,82 @@
+/* Test Stripe Component Styles */
+.test-stripe-container {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.test-stripe-title {
+  color: #2c3e50;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.test-stripe-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #6f42c1, #5a2d91);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 16px;
+}
+
+.test-stripe-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5a2d91, #4a2577);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(111, 66, 193, 0.3);
+}
+
+.test-stripe-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.test-stripe-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: test-stripe-spin 1s ease-in-out infinite;
+}
+
+@keyframes test-stripe-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.test-stripe-result {
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  max-width: 100%;
+  word-wrap: break-word;
+}
+
+.test-stripe-result.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.test-stripe-result.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}

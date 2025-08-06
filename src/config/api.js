@@ -50,9 +50,10 @@ export const API_ENDPOINTS = {
   DEBUG_DATABASE: `${API_BASE_URL}/api/debug/database`
 };
 
-// Stripe configuration con clave pública real
+// Stripe configuration con claves reales
 export const STRIPE_CONFIG = {
-  PUBLISHABLE_KEY: 'pk_test_51RsQ8xABK29IrJxcNKbbGlWYVVWALmR1ZcStCM89eJNWIVGfHEmgBwCi3CGxb0K961OLHibuoDgXrx5ImJSnogRB00xgdZ9umo'
+  PUBLISHABLE_KEY: 'pk_test_51RsQ8xABK29IrJxcNKbbGlWYVVWALmR1ZcStCM89eJNWIVGfHEmgBwCi3CGxb0K961OLHibuoDgXrx5ImJSnogRB00xgdZ9umo',
+  DEVELOPMENT_MODE: false // Activar modo producción con Stripe real
 };
 
 // Función para obtener la primera imagen de un producto

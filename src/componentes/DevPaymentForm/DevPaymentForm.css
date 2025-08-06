@@ -1,0 +1,213 @@
+/* Dev Payment Form Styles - Todas las clases tienen prefijo dev-payment- */
+
+.dev-payment-form {
+  margin-top: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff3cd, #fef8e1);
+  border: 2px dashed #856404;
+  border-radius: 12px;
+  position: relative;
+}
+
+.dev-payment-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.dev-payment-mode-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #6f42c1, #5a2d91);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.dev-payment-secure-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #856404;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.dev-payment-card-section {
+  margin-bottom: 20px;
+}
+
+.dev-payment-label {
+  display: block;
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.dev-payment-card-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.dev-payment-card-icon {
+  position: absolute;
+  left: 12px;
+  color: #6c757d;
+  z-index: 1;
+}
+
+.dev-payment-input {
+  width: 100%;
+  padding: 12px 12px 12px 45px;
+  border: 2px solid #ced4da;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+}
+
+.dev-payment-input:focus {
+  outline: none;
+  border-color: #6f42c1;
+  box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
+}
+
+.dev-payment-input:disabled {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+}
+
+.dev-payment-result-section {
+  margin-bottom: 20px;
+}
+
+.dev-payment-result-options {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.dev-payment-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.dev-payment-option:hover {
+  border-color: #6f42c1;
+  background-color: #f8f9fa;
+}
+
+.dev-payment-option input[type="radio"] {
+  margin: 0;
+}
+
+.dev-payment-option input[type="radio"]:checked + .dev-payment-success-icon,
+.dev-payment-option input[type="radio"]:checked + .dev-payment-error-icon {
+  color: #6f42c1;
+}
+
+.dev-payment-option:has(input:checked) {
+  border-color: #6f42c1;
+  background-color: #f3f0ff;
+}
+
+.dev-payment-success-icon {
+  color: #28a745;
+}
+
+.dev-payment-error-icon {
+  color: #dc3545;
+}
+
+.dev-payment-btn-pagar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #6f42c1, #5a2d91);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 16px;
+}
+
+.dev-payment-btn-pagar:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5a2d91, #4a2577);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(111, 66, 193, 0.3);
+}
+
+.dev-payment-btn-pagar:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.dev-payment-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: dev-payment-spin 1s ease-in-out infinite;
+}
+
+@keyframes dev-payment-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.dev-payment-info {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 4px solid #6f42c1;
+}
+
+.dev-payment-info p {
+  margin: 0 0 8px 0;
+  color: #495057;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.dev-payment-info p:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dev-payment-form {
+    padding: 16px;
+  }
+  
+  .dev-payment-input {
+    font-size: 14px;
+  }
+  
+  .dev-payment-option {
+    padding: 10px 12px;
+  }
+}

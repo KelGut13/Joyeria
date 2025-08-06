@@ -1,0 +1,52 @@
+/* Stripe Status Component - Todas las clases con prefijo stripe-status- */
+
+.stripe-status-container {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #e8f5e8, #f0fff0);
+  border: 1px solid #28a745;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.stripe-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #155724;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.stripe-status-icon {
+  color: #28a745;
+}
+
+.stripe-status-text {
+  line-height: 1;
+}
+
+.stripe-status-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #155724;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stripe-status-container {
+    padding: 10px 12px;
+  }
+  
+  .stripe-status-badge {
+    font-size: 13px;
+  }
+  
+  .stripe-status-info {
+    font-size: 11px;
+  }
+}

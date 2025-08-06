@@ -29,16 +29,23 @@ console.log("  STRIPE_SECRET_KEY:", process.env.STRIPE_SECRET_KEY ? "✅ Configu
 
 // Verificar que las claves de Stripe están configuradas
 var stripe = null;
-if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_your_stripe_secret_key_here') {
+const isDevMode = process.env.STRIPE_MODE === 'development';
+
+if (isDevMode) {
+  console.log("🧪 MODO DESARROLLO: Stripe simulado activado");
+  console.log("💡 Los pagos serán simulados para pruebas locales");
+  stripe = null; // Mantenemos stripe como null para usar simulación
+} else if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_your_stripe_secret_key_here') {
   console.warn("⚠️  STRIPE_SECRET_KEY no está configurada correctamente en .env");
   console.warn("⚠️  Stripe estará deshabilitado - solo funcionará la base de datos");
   console.warn("💡 Para habilitar Stripe, configura tus claves en el archivo .env");
 } else {
   try {
-    // Inicializar Stripe
+    // Inicializar Stripe con claves reales
     stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    console.log("💳 Stripe inicializado correctamente");
+    console.log("💳 Stripe inicializado correctamente con claves reales");
     console.log("🔑 Clave Stripe (últimos 4 chars):", process.env.STRIPE_SECRET_KEY.slice(-4));
+    console.log("🌍 Modo:", process.env.STRIPE_SECRET_KEY.includes('_test_') ? 'TEST' : 'LIVE');
   } catch (error) {
     console.error("❌ Error inicializando Stripe:", error.message);
     stripe = null;
@@ -646,7 +653,8 @@ app.post("/api/create-payment-intent", verifyToken, async (req, res) => {
 
     // Crear Payment Intent solo si Stripe está disponible
     let paymentIntent = null;
-    if (stripe) {
+    if (stripe && !isDevMode) {
+      // Modo producción con Stripe real
       paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(total * 100), // Stripe usa centavos
         currency: currency,
@@ -665,12 +673,21 @@ app.post("/api/create-payment-intent", verifyToken, async (req, res) => {
         description: `Pedido para ${usuario.nombre} ${usuario.primer_apellido}`
       });
     } else {
-      console.warn("⚠️  Stripe no disponible - creando intent simulado");
+      // Modo desarrollo o sin Stripe - simular payment intent
+      console.log("🧪 Creando Payment Intent simulado para desarrollo");
+      const timestamp = Date.now();
       paymentIntent = {
-        id: 'pi_test_' + Date.now(),
-        client_secret: 'pi_test_' + Date.now() + '_secret_test',
+        id: `pi_dev_${timestamp}`,
+        client_secret: `pi_dev_${timestamp}_secret_development`,
         amount: Math.round(total * 100),
-        currency: currency
+        currency: currency,
+        status: 'requires_payment_method',
+        metadata: {
+          userId: userId.toString(),
+          userEmail: usuario.email,
+          userName: `${usuario.nombre} ${usuario.primer_apellido}`,
+          development_mode: 'true'
+        }
       };
     }
 
@@ -683,9 +700,37 @@ app.post("/api/create-payment-intent", verifyToken, async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error creando Payment Intent:', error);
+    
+    // Verificar si es un error de Stripe específico
+    if (error.type === 'StripeAuthenticationError') {
+      return res.status(401).json({
+        error: "Error de autenticación con Stripe",
+        details: "Las claves de Stripe no son válidas. Verifica tu configuración.",
+        code: "STRIPE_AUTH_ERROR"
+      });
+    }
+    
+    if (error.type === 'StripeAPIError') {
+      return res.status(502).json({
+        error: "Error del servicio de pagos",
+        details: "Stripe no está disponible temporalmente. Intenta más tarde.",
+        code: "STRIPE_API_ERROR"
+      });
+    }
+    
+    if (error.type === 'StripeConnectionError') {
+      return res.status(503).json({
+        error: "Error de conexión con el servicio de pagos",
+        details: "No se pudo conectar con Stripe. Verifica tu conexión a internet.",
+        code: "STRIPE_CONNECTION_ERROR"
+      });
+    }
+    
+    // Error genérico
     res.status(500).json({
       error: "Error al crear el intent de pago",
-      details: error.message
+      details: error.message,
+      code: "PAYMENT_INTENT_ERROR"
     });
   }
 });
