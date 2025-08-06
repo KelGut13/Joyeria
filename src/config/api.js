@@ -57,7 +57,11 @@ export const STRIPE_CONFIG = {
 
 // Función para obtener la primera imagen de un producto
 export const getFirstProductImage = (producto) => {
-  if (!producto.imagen) return '/logo192.png';
+  // Verificar que el producto existe y tiene imagen
+  if (!producto || !producto.imagen) {
+    console.warn('Producto sin imagen:', producto);
+    return '/logo192.png';
+  }
   
   // Si es un array JSON string, parsearlo
   if (producto.imagen.startsWith('[')) {
@@ -66,6 +70,7 @@ export const getFirstProductImage = (producto) => {
       return imagenesArray[0] || '/logo192.png';
     } catch (error) {
       console.error('Error parsing product images:', error);
+      return '/logo192.png';
     }
   }
   
@@ -80,7 +85,11 @@ export const getFirstProductImage = (producto) => {
 
 // Función para obtener todas las imágenes de un producto
 export const getProductImages = (producto) => {
-  if (!producto.imagen) return ['/logo192.png'];
+  // Verificar que el producto existe y tiene imagen
+  if (!producto || !producto.imagen) {
+    console.warn('Producto sin imagen:', producto);
+    return ['/logo192.png'];
+  }
   
   // Si es un array JSON string, parsearlo
   if (producto.imagen.startsWith('[')) {
