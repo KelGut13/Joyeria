@@ -70,7 +70,7 @@
   border: none;
   cursor: pointer;
   padding: 0.5rem;
-  color: #009ca6;
+  color: #D4A2F4;
   border-radius: 50%;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
@@ -179,7 +179,7 @@
 }
 
 .minimal-search-btn {
-  display: none !important;
+  display: none;
 }
 
 /* Categorías debajo del navbar */
@@ -195,7 +195,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 40px;
+  gap: 15px;
   list-style: none;
   margin: 0;
   padding: 12px 0;
@@ -498,20 +498,22 @@
 @media screen and (max-width: 768px) {
   .navbar {
     padding: 0;
-    overflow: visible;
+    height: 56px;
   }
 
   .navbar-content {
-    padding: 0 8px;
+    padding: 0 12px;
     height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     position: relative;
-    overflow: visible;
   }
 
-  /* Logo centrado con espacio para hamburguesa e iconos */
+  /* Logo centrado */
   .navbar-logo-link {
     position: absolute;
-    left: 50%;
+    left: 25%;
     top: 50%;
     transform: translate(-50%, -50%);
     z-index: 2;
@@ -531,61 +533,73 @@
     display: none;
   }
 
-  /* Mostrar iconos móviles */
+  /* Mostrar iconos móviles - perfectamente alineados */
   .navbar-mobile-icons {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     position: absolute;
-    right: 8px;
+    right: 12px;
     top: 50%;
     transform: translateY(-50%);
     z-index: 3;
-    background: transparent;
-    padding: 0;
+    height: 40px;
   }
 
   .navbar-mobile-icons button,
-  .navbar-mobile-icons a {
+  .navbar-mobile-icons a,
+  .navbar-mobile-icons .user-dropdown {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--navbar-icon);
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    margin: 0;
     background: none;
     border: none;
     cursor: pointer;
     border-radius: 8px;
-    padding: 8px;
     transition: all 0.2s ease;
-    min-width: 40px;
-    height: 40px;
     text-decoration: none;
+    color: var(--navbar-icon);
     flex-shrink: 0;
   }
 
   .navbar-mobile-icons button:hover,
-  .navbar-mobile-icons a:hover {
+  .navbar-mobile-icons a:hover,
+  .navbar-mobile-icons .user-dropdown:hover {
+    background: none;
     color: var(--navbar-icon-hover);
-    background: rgba(0, 156, 166, 0.1);
   }
 
   .navbar-mobile-icons svg {
     width: 20px;
     height: 20px;
-    transition: color 0.2s ease;
+    color: inherit;
     flex-shrink: 0;
   }
 
-  /* Orden específico de iconos */
+  /* Estilos específicos para cada icono */
   .navbar-mobile-icons .minimal-search-btn {
     order: 1;
+    display: flex;
   }
 
   .navbar-mobile-icons .carrito-contenedor {
     order: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
   }
 
-  .navbar-mobile-icons .user-dropdown,
+  .navbar-mobile-icons .user-dropdown {
+    order: 3;
+    position: relative;
+  }
+
   .navbar-mobile-icons .login-btn {
     order: 3;
   }
@@ -594,35 +608,27 @@
     order: 4;
   }
 
-  /* Estilos específicos para el dropdown de usuario */
-  .navbar-mobile-icons .user-dropdown {
-    position: relative;
-  }
-
+  /* User dropdown button específicamente */
   .navbar-mobile-icons .user-dropdown .user-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--navbar-icon);
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    margin: 0;
     background: none;
     border: none;
     cursor: pointer;
     border-radius: 8px;
-    padding: 8px;
-    min-width: 40px;
-    height: 40px;
-  }
-
-  /* Asegurar visibilidad del botón de búsqueda */
-  .minimal-search-btn {
-    display: flex !important;
+    color: var(--navbar-icon);
   }
 
   /* Botón hamburguesa */
   .hamburger-btn {
     display: flex;
     position: absolute;
-    left: 8px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
     z-index: 3;
@@ -634,16 +640,81 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     border-radius: 8px;
     transition: background 0.2s ease;
   }
 
   .hamburger-btn:hover {
-    background: rgba(0, 156, 166, 0.1);
+    background: none;
   }
 
-  /* Ajustar dropdown menu en móvil */
+  /* Líneas del hamburger */
+  .hamburger-line {
+    width: 18px;
+    height: 2px;
+    background: var(--navbar-icon);
+    transition: all 0.3s ease;
+    border-radius: 1px;
+  }
+
+  .hamburger-btn.open .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(4px, 3px);
+  }
+
+  .hamburger-btn.open .hamburger-line:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger-btn.open .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(4px, -3px);
+  }
+
+  /* Menú de categorías */
+  .navbar-categorias {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    background: var(--navbar-bg);
+    border-bottom: 1px solid var(--navbar-border);
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    z-index: 101;
+  }
+
+  .navbar-categorias.open {
+    max-height: 200px;
+  }
+
+  .categorias-list {
+    flex-direction: column;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    gap: 0;
+  }
+
+  .categorias-list li {
+    border-bottom: 1px solid rgba(209, 231, 228, 0.3);
+  }
+
+  .categorias-list li a {
+    display: block;
+    padding: 8px 20px;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: background 0.2s ease;
+  }
+
+  .categorias-list li a:hover,
+  .categorias-list li a.active {
+    background: rgba(0, 156, 166, 0.1);
+    color: var(--navbar-icon-hover);
+  }
+
+  /* Dropdown menu ajustes */
   .navbar-mobile-icons .dropdown-menu {
     position: absolute;
     top: 100%;
@@ -651,22 +722,48 @@
     background: var(--navbar-bg);
     border: 1px solid var(--navbar-border);
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     min-width: 160px;
     z-index: 1000;
     margin-top: 4px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+  }
+
+  .navbar-mobile-icons .user-dropdown:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .dropdown-menu a,
+  .dropdown-menu button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    color: var(--text-color);
+    text-decoration: none;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .dropdown-menu a:hover,
+  .dropdown-menu button:hover {
+    background: rgba(0, 156, 166, 0.1);
   }
 }
 
 /* Para pantallas muy pequeñas (móviles pequeños) */
 @media screen and (max-width: 480px) {
   .navbar-content {
-    padding: 0 4px;
-  }
-
-  .navbar-logo-link {
-    left: 50%;
-    transform: translate(-50%, -50%);
+    padding: 0 8px;
   }
 
   .logo {
@@ -675,15 +772,15 @@
   }
 
   .navbar-mobile-icons {
-    right: 4px;
-    gap: 6px;
+    right: 8px;
+    gap: 2px;
   }
 
   .navbar-mobile-icons button,
-  .navbar-mobile-icons a {
-    min-width: 36px;
+  .navbar-mobile-icons a,
+  .navbar-mobile-icons .user-dropdown {
+    width: 36px;
     height: 36px;
-    padding: 6px;
   }
 
   .navbar-mobile-icons svg {
@@ -692,8 +789,12 @@
   }
 
   .hamburger-btn {
-    left: 4px;
+    left: 8px;
     width: 36px;
     height: 36px;
+  }
+
+  .hamburger-line {
+    width: 16px;
   }
 }

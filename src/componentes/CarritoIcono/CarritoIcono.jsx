@@ -40,18 +40,36 @@ const CarritoIcono = () => {
     }
   };
 
+  const toggleDropdown = (e) => {
+    e.preventDefault();
+    setMostrarDropdown(!mostrarDropdown);
+  };
+
+  const handleCarritoClick = (e) => {
+    // Si se mantiene presionado por más tiempo, navegar al carrito
+    if (e.detail === 2) { // Doble clic
+      navigate('/carrito');
+    } else {
+      toggleDropdown(e);
+    }
+  };
+
   return (
     <div 
       className="carrito-contenedor"
       onMouseEnter={() => setMostrarDropdown(true)}
       onMouseLeave={() => setMostrarDropdown(false)}
     >
-      <Link to="/carrito" className="carrito-icono">
+      <button 
+        onClick={handleCarritoClick}
+        className="carrito-icono"
+        title="Clic para abrir/cerrar - Doble clic para ir al carrito"
+      >
         <ShoppingBag size={20} strokeWidth={1.8} />
         {cantidadItems > 0 && (
           <span className="carrito-badge">{cantidadItems}</span>
         )}
-      </Link>
+      </button>
 
       {mostrarDropdown && items.length > 0 && (
         <div className="carrito-dropdown">
@@ -115,7 +133,7 @@ const CarritoIcono = () => {
           <div className="carrito-vacio-mensaje">
             <ShoppingBag size={32} strokeWidth={1.5} />
             <p>Tu carrito está vacío</p>
-            <Link to="/" onClick={() => setMostrarDropdown(false)}>
+            <Link to="/" className="btn-explorar-carrito" onClick={() => setMostrarDropdown(false)}>
               Explorar productos
             </Link>
           </div>
