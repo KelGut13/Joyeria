@@ -11,6 +11,8 @@ export const API_ENDPOINTS = {
   // Autenticación
   LOGIN: `${API_BASE_URL}/api/login`,
   CREAR_CUENTA: `${API_BASE_URL}/api/crear-cuenta`,
+  FORGOT_PASSWORD: `${API_BASE_URL}/api/forgot-password`,
+  RESET_PASSWORD: `${API_BASE_URL}/api/reset-password`,
   
   // Productos y catálogo
   PRODUCTOS: `${API_BASE_URL}/api/productos`,

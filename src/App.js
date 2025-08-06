@@ -10,6 +10,8 @@ import Footer from "./componentes/Footer/Footer";
 import Login from "./paginas/login";
 import CrearCuenta from "./paginas/CrearCuenta";
 import PanelUsuario from "./paginas/PanelUsuario";
+import RecuperarPassword from "./paginas/RecuperarPassword";
+import ResetPassword from "./paginas/ResetPassword";
 import "./paginas/estilos/variables.css";
 import Aretes from "./paginas/Aretes";
 import Anillos from "./paginas/Anillos";
@@ -31,6 +33,8 @@ const LanguageWrapper = () => {
     <>
       {location.pathname !== "/login" &&
         location.pathname !== "/crear-cuenta" &&
+        location.pathname !== "/recuperar-password" &&
+        location.pathname !== "/reset-password" &&
         <Navbar />}
       <Routes>
         <Route path="/" element={<Inicio />} />
@@ -40,6 +44,8 @@ const LanguageWrapper = () => {
         <Route path="/contactanos" element={<Contactanos />} />
         <Route path="/login" element={<Login />} />
         <Route path="/crear-cuenta" element={<CrearCuenta />} />
+        <Route path="/recuperar-password" element={<RecuperarPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/perfil" element={<PanelUsuario />} />
         <Route path="/panel-usuario" element={<PanelUsuario />} />
         <Route path="/aretes" element={<Aretes />} />
