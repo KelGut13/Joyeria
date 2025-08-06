@@ -338,197 +338,7 @@
   color: #dc2626;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-  .navbar-content {
-    height: 56px;
-    padding: 0 4px; /* Reducir padding lateral */
-    gap: 0;
-    justify-content: center;
-    position: relative;
-    max-width: 100%; /* Asegurar que no haga overflow */
-    overflow: hidden; /* Prevenir overflow */
-  }
-
-  /* Se posiciona el logo al centro con mejor cálculo */
-  .navbar-logo-link {
-    position: absolute;
-    left: 8%; /* Mover más a la izquierda para dar espacio a los iconos */
-    z-index: 2;
-  }
-
-  .logo {
-    height: 32px;
-    max-width: 120px; /* Aumentar un poco el tamaño máximo */
-  }
-
-  /* Solo muestra la lupa, oculta la barra de búsqueda */
-  .navbar-search {
-    display: none;
-  }
-
-  /* Ajusta los iconos a la derecha */
-  .navbar-icons {
-    display: none; /* Ocultar en móvil */
-  }
-
-  /* Mostrar iconos móviles */
-  .navbar-mobile-icons {
-    display: flex;
-    align-items: center;
-    gap: 2px; /* Gap mínimo para máximo espacio */
-    position: absolute;
-    right: 0px; /* Pegar completamente al borde */
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 2;
-    padding-right: 0;
-    width: auto; /* Eliminar restricción de ancho */
-    overflow: visible; /* Asegurar que nada se corte */
-    white-space: nowrap; /* Evitar que se envuelvan los iconos */
-    background: var(--navbar-bg); /* Fondo para que se vean bien */
-    border-radius: 8px; /* Esquinas redondeadas */
-    padding: 2px; /* Padding mínimo alrededor */
-  }
-
-  .navbar-mobile-icons button,
-  .navbar-mobile-icons a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--navbar-icon);
-    background: none;
-    border: none;
-    cursor: pointer;
-    border-radius: 8px;
-    padding: 0.15rem; /* Padding muy reducido */
-    transition: color 0.3s ease;
-    min-width: 28px; /* Tamaño muy compacto */
-    height: 28px;
-    flex-shrink: 0; /* Evitar que se compriman */
-    position: relative;
-    text-decoration: none;
-  }
-
-  /* Estilos específicos para el botón del tema en móvil */
-  .navbar-mobile-icons .theme-toggle-switch {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    color: var(--navbar-icon) !important;
-    background: none !important;
-    border: none !important;
-    cursor: pointer !important;
-    border-radius: 8px !important;
-    padding: 0.15rem !important;
-    min-width: 28px !important;
-    height: 28px !important;
-    order: 4; /* Forzar que aparezca al final */
-  }
-
-  .navbar-mobile-icons button:hover,
-  .navbar-mobile-icons a:hover {
-    color: var(--navbar-icon-hover);
-  }
-
-  .navbar-mobile-icons svg {
-    width: 16px !important; /* Tamaño compacto para que quepan todos */
-    height: 16px !important;
-    transition: color 0.3s ease;
-    flex-shrink: 0;
-    display: block !important;
-  }
-
-  /* Estilos específicos para el dropdown de usuario en móvil */
-  .navbar-mobile-icons .user-dropdown {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 28px;
-    min-width: 28px;
-    order: 3; /* Orden específico */
-  }
-
-  .navbar-mobile-icons .user-dropdown .user-btn {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    color: var(--navbar-icon) !important;
-    background: none !important;
-    border: none !important;
-    cursor: pointer !important;
-    border-radius: 8px !important;
-    padding: 0.15rem !important;
-    min-width: 28px !important;
-    height: 28px !important;
-    margin: 0 !important;
-  }
-
-  /* Asegurar que el tema toggle funcione correctamente */
-  .navbar-mobile-icons .theme-toggle-switch svg {
-    width: 16px !important;
-    height: 16px !important;
-    color: var(--navbar-icon) !important;
-    display: block !important;
-  }
-
-  /* Órdenes específicos para cada icono */
-  .navbar-mobile-icons .minimal-search-btn {
-    order: 1;
-  }
-
-  .navbar-mobile-icons .carrito-contenedor {
-    order: 2;
-  }
-
-  .navbar-mobile-icons button:hover svg,
-  .navbar-mobile-icons a:hover svg {
-    color: var(--navbar-icon-hover);
-  }
-
-  .minimal-search-btn {
-    display: flex !important;
-  }
-
-  /* Muestra el menú hamburguesa a la izquierda */
-  .hamburger-btn {
-    display: flex;
-    position: absolute;
-    left: 4px; /* Menos espacio desde el borde */
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 2;
-  }
-
-  /* Menú de categorías con animación deslizante */
-  .navbar-categorias {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease-in-out, padding 0.3s ease-in-out;
-    background: var(--navbar-bg);
-    border-bottom: 1px solid #d1e7e4;
-    position: absolute;
-    top: 56px;
-    left: 0;
-    right: 0;
-    z-index: 101;
-    padding: 0 0;
-  }
-  .navbar-categorias.open {
-    max-height: 300px; /* ajusta según el contenido */
-    padding: 12px 0;
-  }
-  .categorias-list {
-    flex-direction: column;
-    gap: 0;
-    padding: 0;
-  }
-  .categorias-list li {
-    text-align: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #d1e7e4;
-  }
-}
+/* Estilos generales continuados... */
 
 /* Modal de búsqueda en móvil */
 .mobile-search-modal {
@@ -653,106 +463,237 @@
   }
 }
 
-/* Responsive - Móvil */
-@media screen and (max-width: 768px) {
-  .navbar {
-    padding: 0; /* Quitar padding extra en móvil */
-  }
-
+/* Responsive - Tabletas y dispositivos medianos */
+@media screen and (max-width: 1024px) and (min-width: 769px) {
   .navbar-content {
-    padding: 0 2px !important; /* Padding mínimo */
-    overflow: visible !important; /* Permitir que los iconos sean visibles */
+    padding: 0 20px;
+    gap: 16px;
   }
 
-  /* Ajustar posición del logo en pantallas muy pequeñas */
-  .navbar-logo-link {
-    left: 6% !important; /* Mover aún más a la izquierda */
-  }
-
-  .logo {
-    height: 26px !important; /* Logo más pequeño */
-    max-width: 90px !important;
+  .navbar-search {
+    max-width: 300px;
+    margin: 0 16px;
   }
 
   .navbar-icons {
-    gap: 0.25rem; /* Reducir gap en móvil */
-    padding-right: 0.5rem; /* Menos padding en móvil */
-  }
-  
-  .login-btn span,
-  .user-name {
-    display: none;
-  }
-  
-  .login-btn {
-    padding: 0.5rem;
-    min-width: 40px;
-    justify-content: center;
-  }
-  
-  .user-btn {
-    padding: 0.5rem;
-    min-width: 40px;
-    justify-content: center;
+    gap: 0.75rem;
+    width: auto;
+    min-width: 140px;
   }
 
-  .navbar-center {
+  .navbar-icons button,
+  .navbar-icons a {
+    min-width: 40px;
+    height: 40px;
+    padding: 0 0.4rem;
+  }
+
+  .logo {
+    height: 36px;
+    max-width: 130px;
+  }
+}
+
+/* Responsive - Móvil */
+@media screen and (max-width: 768px) {
+  .navbar {
+    padding: 0;
+    overflow: visible;
+  }
+
+  .navbar-content {
+    padding: 0 8px;
+    height: 56px;
+    position: relative;
+    overflow: visible;
+  }
+
+  /* Logo centrado con espacio para hamburguesa e iconos */
+  .navbar-logo-link {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+  }
+
+  .logo {
+    height: 28px;
+    max-width: 100px;
+  }
+
+  /* Ocultar barra de búsqueda y iconos de escritorio */
+  .navbar-search {
     display: none;
   }
 
-  .mobile-menu-toggle {
-    display: block;
+  .navbar-icons {
+    display: none;
   }
-  
-  /* Iconos móviles más compactos en pantallas muy pequeñas */
+
+  /* Mostrar iconos móviles */
   .navbar-mobile-icons {
-    gap: 3px !important; /* Gap aún más reducido */
-    right: 2px !important; /* Pegar más al borde */
-    padding-right: 0.125rem !important; /* Padding mínimo */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    background: transparent;
+    padding: 0;
   }
 
   .navbar-mobile-icons button,
   .navbar-mobile-icons a {
-    padding: 0.2rem !important; /* Padding mínimo */
-    min-width: 30px !important; /* Tamaño muy reducido */
-    height: 30px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--navbar-icon);
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 8px;
+    transition: all 0.2s ease;
+    min-width: 40px;
+    height: 40px;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .navbar-mobile-icons button:hover,
+  .navbar-mobile-icons a:hover {
+    color: var(--navbar-icon-hover);
+    background: rgba(0, 156, 166, 0.1);
   }
 
   .navbar-mobile-icons svg {
-    width: 16px !important; /* Iconos más pequeños en móvil */
-    height: 16px !important;
+    width: 20px;
+    height: 20px;
+    transition: color 0.2s ease;
+    flex-shrink: 0;
   }
 
-  /* Asegurar que el botón del tema sea visible */
+  /* Orden específico de iconos */
+  .navbar-mobile-icons .minimal-search-btn {
+    order: 1;
+  }
+
+  .navbar-mobile-icons .carrito-contenedor {
+    order: 2;
+  }
+
+  .navbar-mobile-icons .user-dropdown,
+  .navbar-mobile-icons .login-btn {
+    order: 3;
+  }
+
   .navbar-mobile-icons .theme-toggle-switch {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 0.2rem !important;
-    min-width: 30px !important;
-    height: 30px !important;
+    order: 4;
   }
 
-  .navbar-mobile-icons .theme-toggle-switch svg {
-    width: 16px !important;
-    height: 16px !important;
-    color: var(--navbar-icon) !important;
-  }
-
+  /* Estilos específicos para el dropdown de usuario */
   .navbar-mobile-icons .user-dropdown {
-    height: 30px !important;
-    min-width: 30px !important;
+    position: relative;
   }
 
   .navbar-mobile-icons .user-dropdown .user-btn {
-    padding: 0.2rem !important;
-    min-width: 30px !important;
-    height: 30px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--navbar-icon);
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 8px;
+    min-width: 40px;
+    height: 40px;
   }
 
-  /* Ajustar dropdown en móvil */
+  /* Asegurar visibilidad del botón de búsqueda */
+  .minimal-search-btn {
+    display: flex !important;
+  }
+
+  /* Botón hamburguesa */
+  .hamburger-btn {
+    display: flex;
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+  }
+
+  .hamburger-btn:hover {
+    background: rgba(0, 156, 166, 0.1);
+  }
+
+  /* Ajustar dropdown menu en móvil */
   .navbar-mobile-icons .dropdown-menu {
-    right: -8px; /* Ajustar posición para que no se corte */
-    min-width: 180px; /* Reducir ancho mínimo */
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--navbar-bg);
+    border: 1px solid var(--navbar-border);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 160px;
+    z-index: 1000;
+    margin-top: 4px;
+  }
+}
+
+/* Para pantallas muy pequeñas (móviles pequeños) */
+@media screen and (max-width: 480px) {
+  .navbar-content {
+    padding: 0 4px;
+  }
+
+  .navbar-logo-link {
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .logo {
+    height: 24px;
+    max-width: 80px;
+  }
+
+  .navbar-mobile-icons {
+    right: 4px;
+    gap: 6px;
+  }
+
+  .navbar-mobile-icons button,
+  .navbar-mobile-icons a {
+    min-width: 36px;
+    height: 36px;
+    padding: 6px;
+  }
+
+  .navbar-mobile-icons svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .hamburger-btn {
+    left: 4px;
+    width: 36px;
+    height: 36px;
   }
 }
