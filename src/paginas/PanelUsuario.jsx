@@ -113,7 +113,12 @@ const PanelUsuario = () => {
 			</div>
 			<div className="panel-dashboard-grid">
 				{tarjetas.map((card, idx) => (
-					<div className={`panel-dashboard-card ${card.id === 'cerrar-sesion' ? 'logout-card' : ''}`} key={idx}>
+					<div 
+						className={`panel-dashboard-card ${card.id === 'cerrar-sesion' ? 'logout-card' : ''}`} 
+						key={idx}
+						onClick={() => abrirModal(card.id)}
+						style={{ cursor: 'pointer' }}
+					>
 						<div className="panel-dashboard-card-icon">{card.icon}</div>
 						<div className="panel-dashboard-card-content">
 							<div className="panel-dashboard-card-title">{card.titulo}</div>
@@ -122,13 +127,9 @@ const PanelUsuario = () => {
 								<span className="panel-dashboard-card-validado">✔ Validado</span>
 							)}
 						</div>
-						<button 
-							className="panel-dashboard-card-edit" 
-							aria-label="Editar"
-							onClick={() => abrirModal(card.id)}
-						>
+						<div className="panel-dashboard-card-edit">
 							<Edit size={20} />
-						</button>
+						</div>
 					</div>
 				))}
 			</div>
