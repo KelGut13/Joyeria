@@ -8,20 +8,28 @@ import jwt from "jsonwebtoken";
 import Stripe from "stripe";
 import { verifyToken } from "./middlewares/verifyToken.js";
 
-dotenv.config();
+dotenv.config({ path: '../.env' });
 
 // Verificar que las claves de Stripe están configuradas
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.error("❌ STRIPE_SECRET_KEY no está configurada en .env");
-  process.exit(1);
+if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_your_stripe_secret_key_here') {
+  console.warn("⚠️  STRIPE_SECRET_KEY no está configurada correctamente en .env");
+  console.warn("⚠️  Stripe estará deshabilitado - solo funcionará la base de datos");
+  var stripe = null;
+} else {
+  // Inicializar Stripe
+  var stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  console.log("💳 Stripe inicializado correctamente");
+  console.log("🔑 Clave Stripe (últimos 4 chars):", process.env.STRIPE_SECRET_KEY.slice(-4));
 }
 
-// Inicializar Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 console.log("🚀 Ejecutando server.js correcto...");
-console.log("💳 Stripe inicializado correctamente");
-console.log("🔑 Clave Stripe (últimos 4 chars):", process.env.STRIPE_SECRET_KEY.slice(-4));
+
+// Debug de variables de entorno
+console.log("🔧 Variables de DB:");
+console.log("  DB_HOST:", process.env.DB_HOST);
+console.log("  DB_USER:", process.env.DB_USER);
+console.log("  DB_NAME:", process.env.DB_NAME);
+console.log("  DB_PORT:", process.env.DB_PORT);
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -54,12 +62,15 @@ app.use(express.json());
 
 // MySQL Pool
 const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: 3306,
-  connectionLimit: 10
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'joyeria',
+  port: process.env.DB_PORT || 3306,
+  connectionLimit: 10,
+  acquireTimeout: 60000,
+  timeout: 60000,
+  reconnect: true
 });
 
 db.query("SELECT 1", (err) => {
@@ -338,24 +349,35 @@ app.post("/api/create-payment-intent", verifyToken, async (req, res) => {
 
     const usuario = userResults[0];
 
-    // Crear Payment Intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(total * 100), // Stripe usa centavos
-      currency: currency,
-      metadata: {
-        userId: userId.toString(),
-        userEmail: usuario.email,
-        userName: `${usuario.nombre} ${usuario.primer_apellido}`,
-        productos: JSON.stringify(productos?.map(p => ({
-          id: p.id_producto,
-          nombre: p.nombre,
-          cantidad: p.cantidad,
-          precio: p.precio
-        })) || [])
-      },
-      receipt_email: usuario.email,
-      description: `Pedido para ${usuario.nombre} ${usuario.primer_apellido}`
-    });
+    // Crear Payment Intent solo si Stripe está disponible
+    let paymentIntent = null;
+    if (stripe) {
+      paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(total * 100), // Stripe usa centavos
+        currency: currency,
+        metadata: {
+          userId: userId.toString(),
+          userEmail: usuario.email,
+          userName: `${usuario.nombre} ${usuario.primer_apellido}`,
+          productos: JSON.stringify(productos?.map(p => ({
+            id: p.id_producto,
+            nombre: p.nombre,
+            cantidad: p.cantidad,
+            precio: p.precio
+          })) || [])
+        },
+        receipt_email: usuario.email,
+        description: `Pedido para ${usuario.nombre} ${usuario.primer_apellido}`
+      });
+    } else {
+      console.warn("⚠️  Stripe no disponible - creando intent simulado");
+      paymentIntent = {
+        id: 'pi_test_' + Date.now(),
+        client_secret: 'pi_test_' + Date.now() + '_secret_test',
+        amount: Math.round(total * 100),
+        currency: currency
+      };
+    }
 
     console.log('✅ Payment Intent creado:', paymentIntent.id);
 
@@ -420,8 +442,8 @@ app.post("/api/pedidos", verifyToken, async (req, res) => {
 
   console.log("✅ Validaciones pasadas, creando pedido...");
 
-  // Verificar Payment Intent si es pago con tarjeta
-  if (metodoPago === 'Tarjeta de Crédito' && paymentIntentId) {
+  // Verificar Payment Intent si es pago con tarjeta y Stripe está disponible
+  if (metodoPago === 'Tarjeta de Crédito' && paymentIntentId && stripe) {
     try {
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
       
@@ -438,6 +460,8 @@ app.post("/api/pedidos", verifyToken, async (req, res) => {
       console.error("❌ Error verificando Payment Intent:", stripeError);
       return res.status(400).json({ error: "Error verificando el pago" });
     }
+  } else if (metodoPago === 'Tarjeta de Crédito' && !stripe) {
+    console.warn("⚠️  Stripe no disponible - saltando verificación de pago");
   }
 
   // Obtener información del usuario para el email
@@ -677,8 +701,13 @@ const enviarEmailConfirmacionPedido = async (pedidoId, usuario, total, productos
   }
 };
 
-// Webhook de Stripe para manejar eventos - AHORA HABILITADO
+// Webhook de Stripe para manejar eventos - Solo si Stripe está disponible
 app.post('/api/webhook/stripe', express.raw({type: 'application/json'}), (req, res) => {
+  if (!stripe) {
+    console.warn("⚠️  Stripe no disponible - webhook ignorado");
+    return res.status(200).json({ message: "Stripe no configurado" });
+  }
+
   const sig = req.headers['stripe-signature'];
 
   let event;
