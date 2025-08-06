@@ -24,6 +24,7 @@ import Carrito from "./paginas/Carrito";
 import Checkout from "./paginas/Checkout";
 import PedidoConfirmado from "./paginas/PedidoConfirmado";
 import MisPedidos from "./paginas/MisPedidos";
+import DetallePedido from "./paginas/DetallePedido";
 import DetalleProducto from "./paginas/DetalleProducto";
 
 const LanguageWrapper = () => {
@@ -56,6 +57,7 @@ const LanguageWrapper = () => {
         <Route path="/Juegos" element={<Juegos />} />
         <Route path="/carrito" element={<Carrito />} />
         <Route path="/mis-pedidos" element={<MisPedidos />} />
+        <Route path="/pedido/:pedidoId" element={<DetallePedido />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/pedido-confirmado/:pedidoId" element={<PedidoConfirmado />} />
         <Route path="/producto/:id" element={<DetalleProducto />} />
