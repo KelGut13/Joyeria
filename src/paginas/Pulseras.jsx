@@ -72,8 +72,8 @@ const Pulseras = () => {
         console.log("✅ Géneros obtenidos:", generosData);
         console.log("✅ Marcas obtenidas:", marcasData);
 
-        // Filtrar productos de pulseras (categoría 3)
-        const productosPulseras = productosData.filter((producto) => producto.id_categoria === 3);
+        // Filtrar productos de pulseras (categoría 4)
+        const productosPulseras = productosData.filter((producto) => producto.id_categoria === 4);
         
         console.log("🔍 Pulseras filtradas:", productosPulseras);
         
@@ -423,7 +423,7 @@ const Pulseras = () => {
                     src={getFirstProductImage(producto)}
                     alt={producto.nombre}
                     onError={(e) => {
-                      e.target.src = "/logo192.png";
+                      e.target.src = "/placeholder-jewelry.svg";
                     }}
                   />
                   

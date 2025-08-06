@@ -100,7 +100,7 @@ const CarritoIcono = () => {
                 <img 
                   src={getFirstProductImage(item)}
                   alt={item.nombre}
-                  onError={(e) => { e.target.src = "/logo192.png"; }}
+                  onError={(e) => { e.target.src = "/placeholder-jewelry.svg"; }}
                 />
                 <div className="item-info">
                   <span className="item-nombre">{item.nombre}</span>

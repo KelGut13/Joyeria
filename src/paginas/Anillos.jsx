@@ -75,7 +75,7 @@ const Anillos = () => {
                 <img
                   src={getFirstProductImage(producto)}
                   alt={producto.nombre}
-                  onError={(e) => { e.target.src = "/logo192.png"; }}
+                  onError={(e) => { e.target.src = "/placeholder-jewelry.svg"; }}
                 />
                 <div className="producto-info">
                   <p>{producto.nombre}</p>

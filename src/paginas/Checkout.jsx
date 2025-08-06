@@ -739,7 +739,7 @@ const Checkout = () => {
                           src={getFirstProductImage(item)}
                           alt={item.nombre}
                           onError={(e) => {
-                            e.target.src = "/logo192.png";
+                            e.target.src = "/placeholder-jewelry.svg";
                           }}
                         />
                         <span className="checkout-cantidad-badge">{item.cantidad}</span>

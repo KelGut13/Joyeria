@@ -371,7 +371,7 @@ const Collares = () => {
                   src={getFirstProductImage(producto)}
                   alt={producto.nombre}
                   onError={(e) => {
-                    e.target.src = "/logo192.png";
+                    e.target.src = "/placeholder-jewelry.svg";
                   }}
                 />
                 <div className="producto-info">

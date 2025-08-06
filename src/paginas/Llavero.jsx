@@ -72,8 +72,8 @@ const Llavero = () => {
         console.log("✅ Géneros obtenidos:", generosData);
         console.log("✅ Marcas obtenidas:", marcasData);
 
-        // Filtrar productos de llaveros (categoría 4)
-        const productosLlaveros = productosData.filter((producto) => producto.id_categoria === 4);
+        // Filtrar productos de llaveros (categoría 5)
+        const productosLlaveros = productosData.filter((producto) => producto.id_categoria === 5);
         
         console.log("🔍 Llaveros filtrados:", productosLlaveros);
         
@@ -423,7 +423,7 @@ const Llavero = () => {
                     src={getFirstProductImage(producto)}
                     alt={producto.nombre}
                     onError={(e) => {
-                      e.target.src = "/logo192.png";
+                      e.target.src = "/placeholder-jewelry.svg";
                     }}
                   />
                   

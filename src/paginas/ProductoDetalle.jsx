@@ -215,7 +215,7 @@ const ProductoDetalle = () => {
                   src={imagenes[imagenSeleccionada]}
                   alt={producto.nombre}
                   onError={(e) => {
-                    e.target.src = "/logo192.png";
+                    e.target.src = "/placeholder-jewelry.svg";
                   }}
                 />
                 <button 
@@ -238,7 +238,7 @@ const ProductoDetalle = () => {
                         src={img}
                         alt={`${producto.nombre} ${index + 1}`}
                         onError={(e) => {
-                          e.target.src = "/logo192.png";
+                          e.target.src = "/placeholder-jewelry.svg";
                         }}
                       />
                     </button>
@@ -370,7 +370,7 @@ const ProductoDetalle = () => {
                     src={getFirstProductImage(prod)}
                     alt={prod.nombre}
                     onError={(e) => {
-                      e.target.src = "/logo192.png";
+                      e.target.src = "/placeholder-jewelry.svg";
                     }}
                   />
                   <div className="producto-card-info">

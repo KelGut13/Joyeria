@@ -149,10 +149,10 @@ const Carrito = () => {
                 >
                   <div className="producto-imagen">
                     <img
-                      src={producto.imagen || '/logo192.png'}
+                      src={producto.imagen || '/placeholder-jewelry.svg'}
                       alt={producto.nombre}
                       onError={(e) => {
-                        e.target.src = '/logo192.png';
+                        e.target.src = '/placeholder-jewelry.svg';
                       }}
                     />
                   </div>

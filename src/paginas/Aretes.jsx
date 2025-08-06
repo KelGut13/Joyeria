@@ -423,7 +423,7 @@ const Aretes = () => {
                     src={getFirstProductImage(producto)}
                     alt={producto.nombre}
                     onError={(e) => {
-                      e.target.src = "/logo192.png";
+                      e.target.src = "/placeholder-jewelry.svg";
                     }}
                   />
                   
