@@ -24,7 +24,7 @@ const Conocenos = () => {
         <div className="conocenos-hero-content">
           <div className="conocenos-hero-image">
             <img 
-              src="/placeholder-jewelry.svg" 
+              src="/logo-conocenos.svg" 
               alt="Joyería artesanal elegante"
               className="conocenos-image"
             />
