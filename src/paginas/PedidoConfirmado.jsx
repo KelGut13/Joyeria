@@ -214,7 +214,7 @@ const PedidoConfirmado = () => {
               <p>Contáctanos para cualquier duda sobre tu pedido</p>
               <div className="pedido-confirmado-contacto-info">
                 <span><strong>contacto@joyeria.com</strong></span>
-                <span><strong>+52 311 444 1683</strong></span>
+                <span><strong>+52 311 128 1177</strong></span>
               </div>
             </div>
           </div>
