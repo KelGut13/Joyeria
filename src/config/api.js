@@ -1,11 +1,7 @@
-// Configuración forzada para desarrollo local
-// CAMBIAR A PRODUCCIÓN CUANDO SEA NECESARIO
-const API_BASE_URL = 'http://127.0.0.1:5000'; // Backend debe correr en puerto 5000
-
-// Configuración dinámica (comentada temporalmente)
-// const API_BASE_URL = process.env.NODE_ENV === 'production' 
-//   ? 'https://api.curiosidadesnancy.shop'  // Producción
-//   : 'http://127.0.0.1:5000';              // Desarrollo
+// Configuración dinámica para desarrollo y producción
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://api-joyeria.curiosidadesnancy.shop'  // Producción
+  : 'http://127.0.0.1:5000';                      // Desarrollo
 
 export const API_ENDPOINTS = {
   // Autenticación

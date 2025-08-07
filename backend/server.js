@@ -128,6 +128,8 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'http://127.0.0.1:3000',
+  'https://curiosidadesnancy.shop',
+  'https://www.curiosidadesnancy.shop',
   'https://joyeria-frontend.vercel.app', // Para producción
   'https://kelgut13.github.io' // Para GitHub Pages si se usa
 ];
